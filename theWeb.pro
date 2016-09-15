@@ -6,24 +6,39 @@
 
 QT       += core gui
 CONFIG   += c++11
-LIBS     += -shared -o libcef.so
+LIBS     += libcef.so libcef_dll_wrapper.a
 INCLUDEPATH += "$$PWD/cef"
+QMAKE_LFLAGS += -Wl,-R -Wl,$$OUT_PWD
+QMAKE_CXXFLAGS += -Wno-unused-parameter
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = theWeb
+TARGET = theweb
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
-        mainwindow.cpp \
-    cefengine.cpp
+    mainwindow.cpp \
+    cefengine.cpp \
+    cefhandler.cpp \
+    signalbroker.cpp \
+    spacesearchbox.cpp \
+    completioncallback.cpp \
+    thewebschemes.cpp \
+    thewebsettingsaccessor.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
     cefheaders.h \
-    cefengine.h
+    mainwindow.h \
+    cefengine.h \
+    cefhandler.h \
+    signalbroker.h \
+    spacesearchbox.h \
+    completioncallback.h \
+    thewebschemes.h \
+    thewebsettingsaccessor.h
 
-FORMS    += mainwindow.ui
+FORMS    += \
+    mainwindow.ui
 
 RESOURCES += \
     resources.qrc

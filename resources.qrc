@@ -1,5 +1,12 @@
 <RCC>
     <qresource prefix="/icons">
-        <file>icon.svg</file>
+        <file>icon</file>
+    </qresource>
+    <qresource prefix="/thewebscheme">
+        <file alias="theweb">thewebschemes/theweb.html</file>
+        <file alias="css.css">thewebschemes/css.css</file>
+        <file alias="icon.svg">thewebschemes/icon.svg</file>
+        <file alias="images/triangles.png">thewebschemes/images/triangles.png</file>
+        <file alias="settings">thewebschemes/settings.html</file>
     </qresource>
 </RCC>

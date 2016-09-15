@@ -23,11 +23,11 @@
        inkscape:collect="always"
        id="linearGradient4142">
       <stop
-         style="stop-color:#c80000;stop-opacity:1"
+         style="stop-color:#9b0000;stop-opacity:1"
          offset="0"
          id="stop4144" />
       <stop
-         style="stop-color:#ff6464;stop-opacity:1"
+         style="stop-color:#c80000;stop-opacity:1"
          offset="1"
          id="stop4146" />
     </linearGradient>
@@ -48,15 +48,15 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="11.2"
-     inkscape:cx="11.717076"
-     inkscape:cy="15.896907"
+     inkscape:zoom="15.839192"
+     inkscape:cx="14.028506"
+     inkscape:cy="14.084931"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      units="px"
-     inkscape:window-width="1680"
-     inkscape:window-height="1007"
+     inkscape:window-width="1280"
+     inkscape:window-height="757"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1">
@@ -99,10 +99,11 @@
        id="g4202"
        transform="matrix(1.5892847,0,0,1.5892847,-12.607124,-612.30165)">
       <path
+         id="path4154-6-1"
+         d="m 16,12 a 5,5 0 0 0 -5,5 5,5 0 0 0 5,5 5,5 0 0 0 0.990234,-0.103516 A 5,5 0 0 1 13,17 5,5 0 0 1 17.009766,12.103516 5,5 0 0 0 16,12 Z"
          style="opacity:0.5;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         d="M 10.947266 8.0527344 A 7.9464235 7.9464235 0 0 0 3 16 A 7.9464235 7.9464235 0 0 0 10.947266 23.947266 A 7.9464235 7.9464235 0 0 0 13.46875 23.525391 A 7.9464235 7.9464235 0 0 1 8.0527344 16 A 7.9464235 7.9464235 0 0 1 13.478516 8.4746094 A 7.9464235 7.9464235 0 0 0 10.947266 8.0527344 z "
-         transform="matrix(0.62921388,0,0,0.62921388,7.9325775,1027.2948)"
-         id="path4154-6-4" />
+         inkscape:connector-curvature="0"
+         transform="translate(0,1020.3622)" />
       <circle
          r="5"
          cy="1037.3622"
@@ -112,7 +113,7 @@
       <circle
          r="5"
          cy="1037.3622"
-         cx="21.258429"
+         cx="20"
          id="path4154"
          style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>

@@ -2,21 +2,35 @@
 #define CEFENGINE_H
 
 #include <QObject>
+#include <QDebug>
+#include <QSettings>
 #include "cefheaders.h"
 
-class CefEngine : public QObject, public CefApp, public CefBrowserProcessHandler
+class CefEngine : public CefApp, public CefRefCount, public CefBrowserProcessHandler, public CefRenderProcessHandler
 {
-    Q_OBJECT
 public:
-    explicit CefEngine(QObject *parent = 0);
+    explicit CefEngine();
 
     void AddRef() const;
     bool Release() const;
     bool HasOneRef() const;
 
-signals:
+    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
+        return this;
+    }
+    virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override {
+        return this;
+    }
 
-public slots:
+    void OnContextInitialized() override;
+    void OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) override;
+    void OnContextReleased(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) override;
+    bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
+
+    QSettings settings;
 };
+
+#include "thewebschemes.h"
+#include "thewebsettingsaccessor.h"
 
 #endif // CEFENGINE_H
