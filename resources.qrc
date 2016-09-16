@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/icons">
         <file>icon</file>
+        <file alias="lock-d">icons/lock-dark.svg</file>
+        <file alias="lock-l">icons/lock-light.svg</file>
     </qresource>
     <qresource prefix="/thewebscheme">
         <file alias="theweb">thewebschemes/theweb.html</file>

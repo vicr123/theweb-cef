@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QDebug>
 #include <QSettings>
+#include <QMessageBox>
 #include "cefheaders.h"
 
 class CefEngine : public CefApp, public CefRefCount, public CefBrowserProcessHandler, public CefRenderProcessHandler

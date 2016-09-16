@@ -20,16 +20,18 @@ bool CefEngine::HasOneRef() const {
 }
 
 void CefEngine::OnContextInitialized() {
-    qDebug() << CefRegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+    CefRegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
 }
 
 void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) {
     if (QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).scheme() == "theweb") {
+        //Register the theWebSettingsObject JavaScript object
         CefRefPtr<theWebSettingsAccessor> accessor = new theWebSettingsAccessor(browser);
         CefRefPtr<CefV8Value> JsObject = CefV8Value::CreateObject(accessor);
         JsObject.get()->SetValue("dnt", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+        JsObject.get()->SetValue("home", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
         JsObject.get()->SetValue("resetBrowser", CefV8Value::CreateFunction("resetBrowser", new V8Function([]() {
-            qDebug() << "theWeb Reset requested.";
+
         })), V8_PROPERTY_ATTRIBUTE_NONE);
 
         context.get()->GetGlobal()->SetValue("theWebSettingsObject", JsObject, V8_PROPERTY_ATTRIBUTE_NONE);
@@ -37,9 +39,7 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
 }
 
 void CefEngine::OnContextReleased(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) {
-    /*if (QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).scheme() == "theweb") {
-        CefRefPtr<CefV8Value> JsObject = context.get()->GetGlobal().get()->GetValue("theWebSettingsObject");
-    }*/
+
 }
 
 bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) {

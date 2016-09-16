@@ -11,6 +11,8 @@
     <script>
       function initPage() {
     		document.getElementById("doNotTrack").checked = theWebSettingsObject.dnt;
+    		document.getElementById("homepage").value = theWebSettingsObject.home;
+        
       }
       
       function setDoNotTrack() {
@@ -39,8 +41,8 @@
       <h1>Settings</h1>
       Change how theWeb works </div>
     <div class="sectionHeader">Home Page</div>
-    <div class="pageContent"> Home Page: <input type="text">
-      <p style="text-align: right;"><button>Use New Tab Page</button></p>
+    <div class="pageContent"> Home Page: <input type="text" id="homepage", onchange="theWebSettingsObject.home = document.getElementById('homepage').value">
+      <p style="text-align: right;"><button onclick="document.getElementById('homepage').value = 'theweb://newtab'">Use New Tab Page</button></p>
     </div>
     <div class="sectionHeader">Data</div>
     <div class="pageContent"> <button>Clear Data...</button><br>

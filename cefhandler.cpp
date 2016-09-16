@@ -90,8 +90,10 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
     if (message.get()->GetName() == "theWebSettings") {
         CefRefPtr<CefListValue> args = message.get()->GetArgumentList();
         QString key = QString::fromStdString(args.get()->GetString(0).ToString());
-        if (args->GetString(1) == "bool") {
+        if (args.get()->GetString(1) == "bool") {
             settings.setValue(key, args.get()->GetBool(2));
+        } else if (args.get()->GetString(2) == "string") {
+            settings.setValue(key, QString::fromStdString(args.get()->GetString(2).ToString()));
         }
     } else if (message.get()->GetName() == "theWebSettings_get") {
         CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("theWebSettings_reply");
@@ -101,6 +103,8 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         for (QString key : settings.allKeys()) {
             if (settings.value(key).canConvert<bool>()) {
                 settingsDictionary.get()->SetBool(key.toStdString(), settings.value(key).toBool());
+            } else if (settings.value(key).canConvert<QString>()) {
+                settingsDictionary.get()->SetString(key.toStdString(), settings.value(key).toString().toStdString());
             }
         }
 

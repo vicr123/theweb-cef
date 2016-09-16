@@ -11,6 +11,16 @@
 #include <QToolButton>
 #include <QMessageBox>
 #include <QTimer>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QJsonDocument>
+#include <QNetworkReply>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QSslSocket>
+#include <QSslCertificate>
+#include <QSslCertificateExtension>
+#include <QMap>
 
 class CefHandler;
 
@@ -90,6 +100,10 @@ private slots:
     void on_actionAbout_theWeb_triggered();
 
     void on_actionSettings_triggered();
+
+    void on_fraudIgnore_clicked();
+
+    void on_fraudBack_clicked();
 
 private:
     Ui::MainWindow *ui;

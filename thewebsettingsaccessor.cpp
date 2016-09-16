@@ -34,6 +34,20 @@ bool theWebSettingsAccessor::Set(const CefString &name, const CefRefPtr<CefV8Val
             exception = "Invalid Value Type";
         }
         return true;
+    } else if (name == "home") {
+        if (value.get()->IsString()) {
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("theWebSettings");
+            CefRefPtr<CefListValue> args = message.get()->GetArgumentList();
+            args.get()->SetString(0, "browser/home");
+            args.get()->SetString(1, "string");
+            args.get()->SetString(2, value.get()->GetStringValue());
+            this->associatedBrowser.get()->SendProcessMessage(PID_BROWSER, message);
+
+            settingsData.insert("data/dnt", value.get()->GetBoolValue());
+        } else {
+            exception = "Invalid Value Type";
+        }
+        return true;
     }
     return false;
 }
@@ -41,6 +55,9 @@ bool theWebSettingsAccessor::Set(const CefString &name, const CefRefPtr<CefV8Val
 bool theWebSettingsAccessor::Get(const CefString &name, const CefRefPtr<CefV8Value> object, CefRefPtr<CefV8Value> &retval, CefString &exception) {
     if (name == "dnt") {
         retval = CefV8Value::CreateBool(settingsData.value("data/dnt", false).toBool());
+        return true;
+    } else if (name == "home") {
+        retval = CefV8Value::CreateString(settingsData.value("browser/home", "http://www.google.com/").toString().toStdString());
         return true;
     }
     return false;

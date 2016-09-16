@@ -16,8 +16,23 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     ui->menubar->setVisible(false);
     ui->JsDialogFrame->setVisible(false);
     ui->AuthFrame->setVisible(false);
+    ui->fraudFrame->setVisible(false);
+    ui->fraudExtraFrame->setVisible(false);
+    ui->securityEVName->setVisible(false);
 
+    QPalette oldFraudContentPalette = ui->fraudContent->palette();
+    oldFraudContentPalette.setColor(QPalette::Window, oldFraudContentPalette.color(QPalette::Window));
+    QPalette oldFraudPalette = ui->fraudFrame->palette();
+    oldFraudPalette.setColor(QPalette::Window, QColor::fromRgb(100, 0, 0));
+    ui->fraudFrame->setPalette(oldFraudPalette);
+    ui->fraudContent->setPalette(oldFraudContentPalette);
+
+    ui->securityPadlock->setPixmap(QIcon::fromTheme("text-html").pixmap(16, 16));
+
+    ui->toolBar->addWidget(ui->securityFrame);
     ui->toolBar->addWidget(ui->spaceSearch);
+
+    ui->securityFrame->setAutoFillBackground(true);
 
     QMenu* menu = new QMenu();
     menu->addAction(ui->actionNew_Window);
@@ -110,6 +125,8 @@ void MainWindow::on_actionGo_Forward_triggered()
 void MainWindow::on_reloadErrorButton_clicked()
 {
     ui->actionReload->trigger();
+    ui->errorFrame->setVisible(false);
+    browserWidget->setVisible(true);
 }
 
 void MainWindow::on_actionReload_triggered()
@@ -156,7 +173,155 @@ void MainWindow::on_spaceSearch_returnPressed()
 
 void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const CefString &url) {
     if (IsCorrectBrowser(browser) && frame.get()->IsMain()) {
-        ui->spaceSearch->setCurrentUrl(QUrl(QString::fromStdString(url.ToString())));
+        QUrl currentUrl(QString::fromStdString(url.ToString()));
+        ui->fraudFrame->setVisible(false);
+        ui->fraudExtraFrame->setVisible(false);
+        ui->fraudIgnore->setText("More Info");
+
+        ui->spaceSearch->setCurrentUrl(currentUrl);
+
+        if (QUrl(QString::fromStdString(url.ToString())).scheme() == "theweb") {
+            ui->securityEVName->setText("theWeb Generated Content");
+            ui->securityEVName->setVisible(true);
+            ui->securityPadlock->setPixmap(QIcon(":/icons/icon").pixmap(16, 16));
+
+        } else {
+            if (currentUrl.scheme() == "https") {
+                QSslSocket *sslSock = new QSslSocket();
+                connect(sslSock, &QSslSocket::encrypted, [=]() {
+                    QSslCertificate certificate = sslSock->peerCertificate();
+                    QList<QSslCertificate> certificateChain = sslSock->peerCertificateChain();
+                    sslSock->close();
+                    sslSock->deleteLater();
+
+                    bool isEv = false;
+                    if (certificateChain.count() > 2) {
+                        QMap<QString, QString> EVOids;
+                        EVOids.insert("Actalis", "1.3.159.1.17.1");
+                        EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.1");
+                        EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.2");
+                        EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.3");
+                        EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.4");
+                        EVOids.insert("A-Trust", "1.2.40.0.17.1.22");
+                        EVOids.insert("Buypass Class 3 Root CA", "2.16.578.1.26.1.3.3");
+                        EVOids.insert("Camerfirma", "1.3.6.1.4.1.17326.10.14.2.1.2");
+                        EVOids.insert("Camerfirma", "1.3.6.1.4.1.17326.10.8.12.1.2");
+                        EVOids.insert("COMODO SECURE™", "1.3.6.1.4.1.6449.1.2.1.5.1");
+                        EVOids.insert("DigiCert", "2.16.840.1.114412.2.1");
+                        EVOids.insert("Entrust.net", "2.16.840.1.114028.10.1.2");
+                        EVOids.insert("GeoTrust Primary Certificate Authority - G3", "1.3.6.1.4.1.14370.1.6");
+                        EVOids.insert("GlobalSign", "1.3.6.1.4.1.4146.1.1");
+                        EVOids.insert("Go Daddy Root Certificate Authority – G2", "2.16.840.1.114413.1.7.23.3");
+                        EVOids.insert("Izenpe", "1.3.6.1.4.1.14777.6.1.1");
+                        EVOids.insert("Izenpe", "1.3.6.1.4.1.14777.6.1.2");
+                        EVOids.insert("Keynectis", "1.3.6.1.4.1.22234.2.5.2.3.1");
+                        EVOids.insert("Network Solutions", "1.3.6.1.4.1.782.1.2.1.8.1");
+                        EVOids.insert("QuoVadis Root CA 2", "1.3.6.1.4.1.8024.0.2.100.1.2");
+                        EVOids.insert("SECOM Trust Systems", "1.2.392.200091.100.721.1");
+                        EVOids.insert("Starfield Root Certificate Authority – G2", "2.16.840.1.114414.1.7.23.3");
+                        EVOids.insert("StartCom Certification Authority", "1.3.6.1.4.1.23223.2");
+                        EVOids.insert("StartCom Certification Authority", "1.3.6.1.4.1.23223.1.1.1");
+                        EVOids.insert("SwissSign", "2.16.756.1.89.1.2.1.1");
+                        EVOids.insert("thawte Primary Root CA - G3", "2.16.840.1.113733.1.7.48.1");
+                        EVOids.insert("Trustwave", "2.16.840.1.114404.1.1.2.4.1");
+                        EVOids.insert("VeriSign", "2.16.840.1.113733.1.7.23.6");
+                        EVOids.insert("Verizon Business", "1.3.6.1.4.1.6334.1.100.1");
+
+                        for (QSslCertificateExtension ext : certificate.extensions()) {
+                            if (!isEv) {
+                                if (ext.oid() == "2.5.29.32") {
+                                    qDebug() << ext.value().toByteArray();
+                                    for (QString auths : EVOids.keys()) {
+                                        QString oid = EVOids.value(auths);
+                                        if (ext.value().toString().contains(oid)) {
+                                            //if (auths == certificateChain.at(1).issuerInfo(QSslCertificate::CommonName).first()) {
+                                                isEv = true;
+                                            //}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (isEv) {
+                        QString commonName = "";
+                        QString countryName = "";
+                        if (certificate.subjectInfo(QSslCertificate::CommonName).count() != 0) {
+                            commonName = certificate.subjectInfo(QSslCertificate::Organization).first();
+                        }
+
+                        if (certificate.subjectInfo(QSslCertificate::CountryName).count() != 0) {
+                            countryName = certificate.subjectInfo(QSslCertificate::CountryName).first();
+                        }
+
+                        ui->securityEVName->setText(commonName + " [" + countryName + "]");
+                        ui->securityEVName->setVisible(true);
+                        ui->securityFrame->setStyleSheet("background-color: #006400; color: white;");
+                        ui->securityPadlock->setPixmap(QIcon(":/icons/lock-d").pixmap(16, 16));
+                    } else {
+                        ui->securityEVName->setVisible(false);
+                        ui->securityFrame->setStyleSheet("");
+
+                        QColor panelColor = ui->securityFrame->palette().color(QPalette::Window);
+                        if (((qreal) panelColor.red() + (qreal) panelColor.green() + (qreal) panelColor.red()) / (qreal) 3 < 127) {
+                            ui->securityPadlock->setPixmap(QIcon(":/icons/lock-d").pixmap(16, 16));
+                        } else {
+                            ui->securityPadlock->setPixmap(QIcon(":/icons/lock-l").pixmap(16, 16));
+                        }
+                    }
+                });
+                sslSock->connectToHostEncrypted(currentUrl.host(), currentUrl.port(443));
+            } else {
+                ui->securityPadlock->setPixmap(QIcon::fromTheme("text-html").pixmap(16, 16));
+                ui->securityEVName->setVisible(false);
+                ui->securityFrame->setStyleSheet("");
+            }
+
+            QNetworkAccessManager* manager = new QNetworkAccessManager;
+
+            QNetworkRequest request(QUrl("https://safebrowsing.googleapis.com/v4/threatMatches:find?key=AIzaSyAbf9-1icT5zrHDsM0z5YSk-23lj-shvIM"));
+            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+            QString requestBody = "{\n"
+                                  "    \"client\": {\n"
+                                  "        \"clientId\":        \"theWeb\","
+                                  "        \"clientVersion\":   \"15.0\""
+                                  "    },"
+                                  "    \"threatInfo\": {"
+                                  "        \"threatTypes\":     [\"MALWARE\", \"SOCIAL_ENGINEERING\"],"
+                                  "        \"platformTypes\":   [\"ANY_PLATFORM\"],"
+                                  "        \"threatEntryTypes\":[\"URL\"],"
+                                  "        \"threatEntries\": ["
+                                  "            {\"url\": \"" + QString::fromStdString(url.ToString()) + "\"}"
+                                  "        ]"
+                                  "    }"
+                                  "}";
+            connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply* reply) {
+                QString replyString = reply->readAll();
+                QJsonDocument JsonDoc = QJsonDocument::fromJson(replyString.toUtf8());
+                QJsonObject object = JsonDoc.object();
+                if (object.contains("matches")) { //Something was found!
+                    QString threatType = object.value("matches").toArray().first().toObject().value("threatType").toString();
+                    if (threatType == "MALWARE") {
+                        ui->fraudExplanation->setText("This website may contain malware. <b>We suggest that you don't visit "
+                                                      "this website.</b>");
+                        ui->fraudExtraText->setText("Google Safe Browsing found malware on this site. Malware can cause your "
+                                                    "PC to slow down or act erratically.");
+                    } else if (threatType == "SOCIAL_ENGINEERING") {
+                        ui->fraudExplanation->setText("This website may trick you into doing something into revealing your "
+                                                      "personal information (such as passwords or credit card information) or "
+                                                      "installing software that you may not want. <b>We suggest that you don't visit "
+                                                      "this website and enter any personal information.</b>");
+                        ui->fraudExtraText->setText("Google Safe Browsing found this site to be deceptive. These websites trick "
+                                                    "users into doing something dangerous.");
+                    }
+                    ui->fraudFrame->setVisible(true);
+                    browserWidget->setVisible(false);
+                }
+            });
+            manager->post(request, requestBody.toUtf8());
+
+        }
     }
 }
 
@@ -305,10 +470,15 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
                 break;
             case ERR_CACHE_MISS:
                 ui->errorTitle->setText("Confirm Form Resubmission");
-                ui->errorText->setText("Clicking \"Reload\" will send the form again. If you have done an action through this webpage, such as a purchase, it will be repeated.");
+                ui->errorText->setText("To display this webpage, data that you entered previously needs to be sent again. To do so, "
+                                       "click \"Reload.\" However, note that by doing this, you will repeat any action that this page "
+                                       "performed.");
                 break;
             case ERR_CONNECTION_RESET:
                 ui->errorText->setText("The connection was reset");
+                break;
+            case ERR_CONNECTION_REFUSED:
+                ui->errorText->setText("The server refused the connection");
                 break;
             case ERR_CONNECTION_CLOSED:
             case ERR_EMPTY_RESPONSE:
@@ -498,4 +668,24 @@ void MainWindow::on_actionAbout_theWeb_triggered()
 void MainWindow::on_actionSettings_triggered()
 {
     browser.get()->GetMainFrame().get()->LoadURL("theweb://settings");
+}
+
+void MainWindow::on_fraudIgnore_clicked()
+{
+    if (!ui->fraudExtraFrame->isVisible()) {
+        ui->fraudExtraFrame->setVisible(true);
+        ui->fraudIgnore->setText("Continue anyway");
+    } else {
+        ui->fraudFrame->setVisible(false);
+        ui->fraudIgnore->setText("More Info");
+        ui->fraudExtraFrame->setVisible(false);
+        browserWidget->setVisible(true);
+    }
+}
+
+void MainWindow::on_fraudBack_clicked()
+{
+    ui->actionGo_Back->trigger();
+    ui->fraudFrame->setVisible(false);
+    browserWidget->setVisible(true);
 }

@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 CONFIG   += c++11
 LIBS     += libcef.so libcef_dll_wrapper.a
 INCLUDEPATH += "$$PWD/cef"
