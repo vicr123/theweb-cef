@@ -123,3 +123,8 @@ CefHandler::ReturnValue CefHandler::OnBeforeResourceLoad(Browser browser, CefRef
     }
     return RV_CONTINUE;
 }
+
+bool CefHandler::OnCertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) {
+    emit signalBroker->CertificateError(browser, cert_error, request_url, ssl_info, callback);
+    return true;
+}

@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     spacesearchbox.cpp \
     completioncallback.cpp \
     thewebschemes.cpp \
-    thewebsettingsaccessor.cpp
+    thewebsettingsaccessor.cpp \
+    clickableframe.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -35,7 +36,8 @@ HEADERS  += \
     spacesearchbox.h \
     completioncallback.h \
     thewebschemes.h \
-    thewebsettingsaccessor.h
+    thewebsettingsaccessor.h \
+    clickableframe.h
 
 FORMS    += \
     mainwindow.ui

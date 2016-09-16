@@ -21,6 +21,8 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     ui->fraudExtraFrame->setVisible(false);
     ui->securityEVName->setVisible(false);
     ui->securityInfoFrame->setVisible(false);
+    ui->badCertificateFrame->setVisible(false);
+    ui->certMoreInfo->setVisible(false);
 
     QPalette oldFraudContentPalette = ui->fraudContent->palette();
     oldFraudContentPalette.setColor(QPalette::Window, oldFraudContentPalette.color(QPalette::Window));
@@ -75,6 +77,7 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     connect(signalBroker, SIGNAL(AuthCredentials(Browser,CefRefPtr<CefFrame>,bool,CefString,int,CefString,CefString,CefRefPtr<CefAuthCallback>)), this, SLOT(AuthCredentials(Browser,CefRefPtr<CefFrame>,bool,CefString,int,CefString,CefString,CefRefPtr<CefAuthCallback>)));
     connect(signalBroker, SIGNAL(BeforeUnloadDialog(Browser,CefString,bool,CefRefPtr<CefJSDialogCallback>)), this, SLOT(BeforeUnloadDialog(Browser,CefString,bool,CefRefPtr<CefJSDialogCallback>)));
     connect(signalBroker, SIGNAL(BeforePopup(Browser,CefRefPtr<CefFrame>,CefString,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool,CefPopupFeatures,CefWindowInfo*,CefBrowserSettings,bool*)), this, SLOT(BeforePopup(Browser,CefRefPtr<CefFrame>,CefString,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool,CefPopupFeatures,CefWindowInfo*,CefBrowserSettings,bool*)));
+    connect(signalBroker, SIGNAL(CertificateError(Browser,cef_errorcode_t,CefString,CefRefPtr<CefSSLInfo>,CefRefPtr<CefRequestCallback>)), this, SLOT(CertificateError(Browser,cef_errorcode_t,CefString,CefRefPtr<CefSSLInfo>,CefRefPtr<CefRequestCallback>)));
 
     CefWindowInfo windowInfo;
     //windowInfo.SetAsChild(0, CefRect(0, 0, 100, 100));
@@ -89,6 +92,7 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
 
     QWindow* window = QWindow::fromWinId(browser.get()->GetHost()->GetWindowHandle());
     browserWidget = QWidget::createWindowContainer(window);
+    browserWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
     ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->loadingProgressBar), browserWidget);
 }
@@ -179,6 +183,9 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
         ui->fraudFrame->setVisible(false);
         ui->fraudExtraFrame->setVisible(false);
         ui->fraudIgnore->setText("More Info");
+        ui->badCertificateFrame->setVisible(false);
+        ui->certMoreInfo->setVisible(false);
+        ui->certIgnore->setText("More Info");
 
         ui->spaceSearch->setCurrentUrl(currentUrl);
 
@@ -189,99 +196,116 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
 
         } else {
             if (currentUrl.scheme() == "https") {
-                QSslSocket *sslSock = new QSslSocket();
-                connect(sslSock, &QSslSocket::encrypted, [=]() {
-                    QSslCertificate certificate = sslSock->peerCertificate();
-                    QList<QSslCertificate> certificateChain = sslSock->peerCertificateChain();
-                    sslSock->close();
-                    sslSock->deleteLater();
+                if (certErrorUrls.contains(QString::fromStdString(url.ToString()))) {
+                    ui->securityEVName->setText("Insecure Connection!");
+                    ui->securityEVName->setVisible(true);
+                    ui->securityFrame->setStyleSheet("background-color: #640000; color: white;");
+                    ui->securityPadlock->setPixmap(QIcon(":/icons/badsecure").pixmap(16, 16));
 
-                    bool isEv = false;
-                    if (certificateChain.count() > 2) {
-                        QMap<QString, QString> EVOids;
-                        EVOids.insert("Actalis", "1.3.159.1.17.1");
-                        EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.1");
-                        EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.2");
-                        EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.3");
-                        EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.4");
-                        EVOids.insert("A-Trust", "1.2.40.0.17.1.22");
-                        EVOids.insert("Buypass Class 3 Root CA", "2.16.578.1.26.1.3.3");
-                        EVOids.insert("AC Camerfirma S.A. Chambers of Commerce Root - 2008", "1.3.6.1.4.1.17326.10.14.2.1.2");
-                        EVOids.insert("AC Camerfirma S.A. Global Chambersign Root - 2008", "1.3.6.1.4.1.17326.10.8.12.1.2");
-                        EVOids.insert("COMODO SECURE™", "1.3.6.1.4.1.6449.1.2.1.5.1");
-                        EVOids.insert("DigiCert", "2.16.840.1.114412.2.1");
-                        EVOids.insert("Entrust.net", "2.16.840.1.114028.10.1.2");
-                        EVOids.insert("GeoTrust Primary Certificate Authority - G3", "1.3.6.1.4.1.14370.1.6");
-                        EVOids.insert("GlobalSign", "1.3.6.1.4.1.4146.1.1");
-                        EVOids.insert("Go Daddy Root Certificate Authority – G2", "2.16.840.1.114413.1.7.23.3");
-                        EVOids.insert("Izenpe", "1.3.6.1.4.1.14777.6.1.1");
-                        EVOids.insert("Izenpe", "1.3.6.1.4.1.14777.6.1.2");
-                        EVOids.insert("Keynectis", "1.3.6.1.4.1.22234.2.5.2.3.1");
-                        EVOids.insert("Network Solutions", "1.3.6.1.4.1.782.1.2.1.8.1");
-                        EVOids.insert("QuoVadis Root CA 2", "1.3.6.1.4.1.8024.0.2.100.1.2");
-                        EVOids.insert("SECOM Trust Systems", "1.2.392.200091.100.721.1");
-                        EVOids.insert("Starfield Root Certificate Authority – G2", "2.16.840.1.114414.1.7.23.3");
-                        EVOids.insert("StartCom Certification Authority", "1.3.6.1.4.1.23223.2");
-                        EVOids.insert("StartCom Certification Authority", "1.3.6.1.4.1.23223.1.1.1");
-                        EVOids.insert("SwissSign", "2.16.756.1.89.1.2.1.1");
-                        EVOids.insert("thawte Primary Root CA - G3", "2.16.840.1.113733.1.7.48.1");
-                        EVOids.insert("Trustwave", "2.16.840.1.114404.1.1.2.4.1");
-                        EVOids.insert("VeriSign Class 3 Public Primary Certification Authority - G5", "2.16.840.1.113733.1.7.23.6");
-                        EVOids.insert("Verizon Business", "1.3.6.1.4.1.6334.1.100.1");
+                    ui->securityText->setText("This connection may have been intercepted.");
+                } else {
+                    QSslSocket *sslSock = new QSslSocket();
+                    connect(sslSock, &QSslSocket::encrypted, [=]() {
+                        QSslCertificate certificate = sslSock->peerCertificate();
+                        QList<QSslCertificate> certificateChain = sslSock->peerCertificateChain();
+                        sslSock->close();
+                        sslSock->deleteLater();
 
-                        for (QSslCertificateExtension ext : certificate.extensions()) {
-                            if (!isEv) {
-                                if (ext.oid() == "2.5.29.32") {
-                                    qDebug() << ext.value().toByteArray();
-                                    for (QString auths : EVOids.keys()) {
-                                        QString oid = EVOids.value(auths);
-                                        if (ext.value().toString().contains(oid)) {
-                                            //if (auths == certificateChain.at(1).issuerInfo(QSslCertificate::CommonName).first()) {
-                                                isEv = true;
-                                            //}
+                        bool isEv = false;
+                        //if (certificateChain.count() > 2) {
+                            QMap<QString, QString> EVOids;
+                            EVOids.insert("Actalis", "1.3.159.1.17.1");
+                            EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.1");
+                            EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.2");
+                            EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.3");
+                            EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.4");
+                            EVOids.insert("A-Trust", "1.2.40.0.17.1.22");
+                            EVOids.insert("Buypass Class 3 Root CA", "2.16.578.1.26.1.3.3");
+                            EVOids.insert("AC Camerfirma S.A. Chambers of Commerce Root - 2008", "1.3.6.1.4.1.17326.10.14.2.1.2");
+                            EVOids.insert("AC Camerfirma S.A. Global Chambersign Root - 2008", "1.3.6.1.4.1.17326.10.8.12.1.2");
+                            EVOids.insert("COMODO SECURE™", "1.3.6.1.4.1.6449.1.2.1.5.1");
+                            EVOids.insert("DigiCert", "2.16.840.1.114412.2.1");
+                            EVOids.insert("Entrust.net", "2.16.840.1.114028.10.1.2");
+                            EVOids.insert("GeoTrust Primary Certificate Authority - G3", "1.3.6.1.4.1.14370.1.6");
+                            EVOids.insert("GlobalSign", "1.3.6.1.4.1.4146.1.1");
+                            EVOids.insert("Go Daddy Root Certificate Authority – G2", "2.16.840.1.114413.1.7.23.3");
+                            EVOids.insert("Izenpe", "1.3.6.1.4.1.14777.6.1.1");
+                            EVOids.insert("Izenpe", "1.3.6.1.4.1.14777.6.1.2");
+                            EVOids.insert("Keynectis", "1.3.6.1.4.1.22234.2.5.2.3.1");
+                            EVOids.insert("Network Solutions", "1.3.6.1.4.1.782.1.2.1.8.1");
+                            EVOids.insert("QuoVadis Root CA 2", "1.3.6.1.4.1.8024.0.2.100.1.2");
+                            EVOids.insert("SECOM Trust Systems", "1.2.392.200091.100.721.1");
+                            EVOids.insert("Starfield Root Certificate Authority – G2", "2.16.840.1.114414.1.7.23.3");
+                            EVOids.insert("StartCom Certification Authority", "1.3.6.1.4.1.23223.2");
+                            EVOids.insert("StartCom Certification Authority", "1.3.6.1.4.1.23223.1.1.1");
+                            EVOids.insert("SwissSign", "2.16.756.1.89.1.2.1.1");
+                            EVOids.insert("thawte Primary Root CA - G3", "2.16.840.1.113733.1.7.48.1");
+                            EVOids.insert("Trustwave", "2.16.840.1.114404.1.1.2.4.1");
+                            EVOids.insert("VeriSign Class 3 Public Primary Certification Authority - G5", "2.16.840.1.113733.1.7.23.6");
+                            EVOids.insert("Verizon Business", "1.3.6.1.4.1.6334.1.100.1");
+
+                            qDebug() << "Number of Certificate Extensions: " << certificate.extensions().count();
+                            for (QSslCertificateExtension ext : certificate.extensions()) {
+                                if (!isEv) {
+                                    if (ext.oid() == "2.5.29.32") {
+                                        qDebug() << ext.value().toByteArray();
+                                        for (QString auths : EVOids.keys()) {
+                                            QString oid = EVOids.value(auths);
+                                            if (ext.value().toString().contains(oid)) {
+                                                //if (auths == certificateChain.at(1).issuerInfo(QSslCertificate::CommonName).first()) {
+                                                    isEv = true;
+                                                //}
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                    }
+                        //}
 
-                    if (isEv) {
-                        QString commonName = "";
-                        QString countryName = "";
-                        if (certificate.subjectInfo(QSslCertificate::CommonName).count() != 0) {
-                            commonName = certificate.subjectInfo(QSslCertificate::Organization).first();
-                        }
+                        if (isEv) {
+                            QString commonName = "";
+                            QString countryName = "";
+                            if (certificate.subjectInfo(QSslCertificate::CommonName).count() != 0) {
+                                commonName = certificate.subjectInfo(QSslCertificate::Organization).first();
+                            }
 
-                        if (certificate.subjectInfo(QSslCertificate::CountryName).count() != 0) {
-                            countryName = certificate.subjectInfo(QSslCertificate::CountryName).first();
-                        }
+                            if (certificate.subjectInfo(QSslCertificate::CountryName).count() != 0) {
+                                countryName = certificate.subjectInfo(QSslCertificate::CountryName).first();
+                            }
 
-                        ui->securityEVName->setText(commonName + " [" + countryName + "]");
-                        ui->securityEVName->setVisible(true);
-                        ui->securityFrame->setStyleSheet("background-color: #006400; color: white;");
-                        ui->securityPadlock->setPixmap(QIcon(":/icons/lock-d").pixmap(16, 16));
-                    } else {
-                        ui->securityEVName->setVisible(false);
-                        ui->securityFrame->setStyleSheet("");
-
-                        QColor panelColor = ui->securityFrame->palette().color(QPalette::Window);
-                        if (((qreal) panelColor.red() + (qreal) panelColor.green() + (qreal) panelColor.red()) / (qreal) 3 < 127) {
+                            ui->securityEVName->setText(commonName + " [" + countryName + "]");
+                            ui->securityEVName->setVisible(true);
+                            ui->securityFrame->setStyleSheet("background-color: #006400; color: white;");
                             ui->securityPadlock->setPixmap(QIcon(":/icons/lock-d").pixmap(16, 16));
+
+                            ui->securityText->setText("This connection is secure, and the company has been verified by <b>" +
+                                                      certificate.issuerInfo(QSslCertificate::CommonName).first() + "</b> to be <b>" +
+                                                      commonName + "</b>");
                         } else {
-                            ui->securityPadlock->setPixmap(QIcon(":/icons/lock-l").pixmap(16, 16));
+                            ui->securityEVName->setVisible(false);
+                            ui->securityFrame->setStyleSheet("");
+
+                            QColor panelColor = ui->securityFrame->palette().color(QPalette::Window);
+                            if (((qreal) panelColor.red() + (qreal) panelColor.green() + (qreal) panelColor.red()) / (qreal) 3 < 127) {
+                                ui->securityPadlock->setPixmap(QIcon(":/icons/lock-d").pixmap(16, 16));
+                            } else {
+                                ui->securityPadlock->setPixmap(QIcon(":/icons/lock-l").pixmap(16, 16));
+                            }
+
+                            ui->securityText->setText("This connection is secure, and has been verified by <b>" + certificate.issuerInfo(QSslCertificate::CommonName).first() + "</b>");
                         }
-                    }
-                });
-                connect(sslSock, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
-                    [=](QAbstractSocket::SocketError socketError){
-                    qDebug() << socketError;
-                });
-                sslSock->connectToHostEncrypted(currentUrl.host(), currentUrl.port(443));
+                    });
+                    connect(sslSock, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
+                        [=](QAbstractSocket::SocketError socketError){
+                        qDebug() << socketError;
+                    });
+                    sslSock->connectToHostEncrypted(currentUrl.host(), currentUrl.port(443));
+                }
             } else {
                 ui->securityPadlock->setPixmap(QIcon::fromTheme("text-html").pixmap(16, 16));
                 ui->securityEVName->setVisible(false);
                 ui->securityFrame->setStyleSheet("");
+                ui->securityText->setText("This connection has not been encrypted.");
             }
 
             QNetworkAccessManager* manager = new QNetworkAccessManager;
@@ -693,5 +717,85 @@ void MainWindow::on_fraudBack_clicked()
 {
     ui->actionGo_Back->trigger();
     ui->fraudFrame->setVisible(false);
+    browserWidget->setVisible(true);
+}
+
+void MainWindow::on_securityFrame_clicked()
+{
+    if (ui->securityInfoFrame->isVisible()) {
+        ui->securityInfoFrame->setVisible(false);
+    } else {
+        ui->securityInfoFrame->setVisible(true);
+    }
+}
+
+void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) {
+    if (IsCorrectBrowser(browser)) {
+        certCallback = callback;
+
+        switch (cert_error) {
+        case ERR_CERT_COMMON_NAME_INVALID:
+            ui->certMoreText->setText("You're trying to connect to <b>" + QUrl(QString::fromStdString(request_url.ToString())).host() + "</b> but the server presented itself as <b>" +
+                                      QString::fromStdString(ssl_info.get()->GetSubject().get()->GetDisplayName().ToString()) + "</b>.");
+            break;
+        case ERR_CERT_DATE_INVALID:
+            ui->certMoreText->setText("The server presented a certificate that either seems to not be valid yet, or has expired. <b>Check your system clock "
+                                      "and if it is incorrect, set it to the correct time.</b>");
+            break;
+        case ERR_CERT_AUTHORITY_INVALID:
+            ui->certMoreText->setText("The server presented a certificate which was signed by an authority that theWeb doesn't know about. This could mean that "
+                                      "an attacker could be intercepting your connection and providing his own certificate, or it could mean that theWeb "
+                                      "doesn't have this certificate authority in the database.");
+            break;
+        case ERR_CERT_CONTAINS_ERRORS:
+        case ERR_CERT_INVALID:
+            ui->certMoreText->setText("The server tried to tell theWeb who it was, but theWeb received something that didn't make sense.");
+            break;
+        case ERR_CERT_UNABLE_TO_CHECK_REVOCATION:
+            ui->certMoreText->setText("The server sent us a certificate, but theWeb couldn't tell whether it has been revoked or not.");
+            break;
+        case ERR_CERT_REVOKED:
+            ui->certMoreText->setText("The server sent us a certificate that has been revoked.");
+            break;
+        case ERR_CERT_NON_UNIQUE_NAME:
+            ui->certMoreText->setText("The server sent us a certificate for a non-unique hostname.");
+            break;
+        default:
+            ui->certMoreText->setText("The server sent us a certificate that theWeb doesn't trust.");
+            break;
+        }
+
+        certErrorUrls.append(QString::fromStdString(request_url.ToString()));
+
+        ui->securityEVName->setText("Insecure Connection!");
+        ui->securityEVName->setVisible(true);
+        ui->securityFrame->setStyleSheet("background-color: #640000; color: white;");
+        ui->securityPadlock->setPixmap(QIcon(":/icons/badsecure").pixmap(16, 16));
+
+        ui->securityText->setText("This connection may have been intercepted.");
+
+        browserWidget->setVisible(false);
+        ui->badCertificateFrame->setVisible(true);
+    }
+}
+
+void MainWindow::on_certIgnore_clicked()
+{
+    if (ui->certMoreInfo->isVisible()) {
+        ui->certMoreInfo->setVisible(false);
+        ui->badCertificateFrame->setVisible(false);
+        ui->certIgnore->setText("More Info");
+        browserWidget->setVisible(true);
+        certCallback.get()->Continue(true);
+    } else {
+        ui->certMoreInfo->setVisible(true);
+        ui->certIgnore->setText("Continue Anyway");
+    }
+}
+
+void MainWindow::on_certificateBack_clicked()
+{
+    ui->actionGo_Back->trigger();
+    ui->badCertificateFrame->setVisible(false);
     browserWidget->setVisible(true);
 }
