@@ -11,6 +11,7 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->resize(700, 700);
     ui->errorFrame->setVisible(false);
     ui->warningFrame->setVisible(false);
     ui->menubar->setVisible(false);
@@ -19,6 +20,7 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     ui->fraudFrame->setVisible(false);
     ui->fraudExtraFrame->setVisible(false);
     ui->securityEVName->setVisible(false);
+    ui->securityInfoFrame->setVisible(false);
 
     QPalette oldFraudContentPalette = ui->fraudContent->palette();
     oldFraudContentPalette.setColor(QPalette::Window, oldFraudContentPalette.color(QPalette::Window));
@@ -204,8 +206,8 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                         EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.4");
                         EVOids.insert("A-Trust", "1.2.40.0.17.1.22");
                         EVOids.insert("Buypass Class 3 Root CA", "2.16.578.1.26.1.3.3");
-                        EVOids.insert("Camerfirma", "1.3.6.1.4.1.17326.10.14.2.1.2");
-                        EVOids.insert("Camerfirma", "1.3.6.1.4.1.17326.10.8.12.1.2");
+                        EVOids.insert("AC Camerfirma S.A. Chambers of Commerce Root - 2008", "1.3.6.1.4.1.17326.10.14.2.1.2");
+                        EVOids.insert("AC Camerfirma S.A. Global Chambersign Root - 2008", "1.3.6.1.4.1.17326.10.8.12.1.2");
                         EVOids.insert("COMODO SECURE™", "1.3.6.1.4.1.6449.1.2.1.5.1");
                         EVOids.insert("DigiCert", "2.16.840.1.114412.2.1");
                         EVOids.insert("Entrust.net", "2.16.840.1.114028.10.1.2");
@@ -224,7 +226,7 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                         EVOids.insert("SwissSign", "2.16.756.1.89.1.2.1.1");
                         EVOids.insert("thawte Primary Root CA - G3", "2.16.840.1.113733.1.7.48.1");
                         EVOids.insert("Trustwave", "2.16.840.1.114404.1.1.2.4.1");
-                        EVOids.insert("VeriSign", "2.16.840.1.113733.1.7.23.6");
+                        EVOids.insert("VeriSign Class 3 Public Primary Certification Authority - G5", "2.16.840.1.113733.1.7.23.6");
                         EVOids.insert("Verizon Business", "1.3.6.1.4.1.6334.1.100.1");
 
                         for (QSslCertificateExtension ext : certificate.extensions()) {
@@ -270,6 +272,10 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                             ui->securityPadlock->setPixmap(QIcon(":/icons/lock-l").pixmap(16, 16));
                         }
                     }
+                });
+                connect(sslSock, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
+                    [=](QAbstractSocket::SocketError socketError){
+                    qDebug() << socketError;
                 });
                 sslSock->connectToHostEncrypted(currentUrl.host(), currentUrl.port(443));
             } else {
