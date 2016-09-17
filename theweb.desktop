@@ -4,5 +4,5 @@ Type=Application
 Version=1.0
 Name=theWeb
 GenericName=Web Browser
-Exec=/opt/theWeb/theweb
+Exec=/usr/bin/theweb
 Icon=theweb
