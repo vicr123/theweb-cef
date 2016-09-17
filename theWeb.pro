@@ -46,4 +46,4 @@ RESOURCES += \
     resources.qrc
 
 DISTFILES += \
-    theweb
+    theweb-execscript
