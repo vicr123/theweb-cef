@@ -44,3 +44,6 @@ FORMS    += \
 
 RESOURCES += \
     resources.qrc
+
+DISTFILES += \
+    theweb

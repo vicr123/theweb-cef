@@ -12,6 +12,7 @@ CefHandler* handler;
 SignalBroker* signalBroker;
 QTimer cefEventLoopTimer;
 QVariantMap settingsData;
+QStringList certErrorUrls;
 
 int main(int argc, char *argv[])
 {

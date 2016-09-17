@@ -1,0 +1,2 @@
+export LD_LIBRARY_PATH=/opt/theWeb/
+exec /opt/theWeb/theweb

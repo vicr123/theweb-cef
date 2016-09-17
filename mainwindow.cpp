@@ -5,6 +5,7 @@ extern CefHandler* handler;
 extern SignalBroker* signalBroker;
 extern void QuitApp(int exitCode = 0);
 extern QTimer cefEventLoopTimer;
+extern QStringList certErrorUrls;
 
 MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     QMainWindow(parent),

@@ -126,8 +126,6 @@ private:
     CefRefPtr<CefAuthCallback> AuthCallback;
     CefRefPtr<CefRequestCallback> certCallback;
 
-    QStringList certErrorUrls;
-
     void closeEvent(QCloseEvent *event);
 };
 
