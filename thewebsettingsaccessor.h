@@ -26,6 +26,8 @@ public:
 private:
     QSettings settings;
     Browser associatedBrowser;
+
+    void SendReloadSettings();
 };
 
 class V8Function : public CefV8Handler, public CefEngine

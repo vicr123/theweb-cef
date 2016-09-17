@@ -110,6 +110,8 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
 
         args.get()->SetDictionary(0, settingsDictionary);
         browser.get()->SendProcessMessage(PID_RENDERER, message);
+    } else if (message.get()->GetName() == "ReloadSettings") {
+        emit signalBroker->ReloadSettings();
     }
     return true;
 }

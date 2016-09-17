@@ -12,6 +12,7 @@
       function initPage() {
     		document.getElementById("doNotTrack").checked = theWebSettingsObject.dnt;
     		document.getElementById("homepage").value = theWebSettingsObject.home;
+    		document.getElementById("toolbar").checked = theWebSettingsObject.toolbar;
         
       }
       
@@ -27,8 +28,9 @@
   <body onload="initPage();">
     <div class="navbar">
       <div class="navbarContent">
-        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg" width="40"
-            height="40">&nbsp; <span class="navbarHeader">theWeb</span> </div>
+        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg"
+            width="40" height="40">&nbsp; <span class="navbarHeader">theWeb</span>
+        </div>
         <ul class="navbarItems">
           <li> <a href="theweb://settings" class="selectedItem"> Settings </a>
           </li>
@@ -40,9 +42,13 @@
       <div class="navbarPadding">&nbsp;</div>
       <h1>Settings</h1>
       Change how theWeb works </div>
-    <div class="sectionHeader">Home Page</div>
-    <div class="pageContent"> Home Page: <input type="text" id="homepage", onchange="theWebSettingsObject.home = document.getElementById('homepage').value">
-      <p style="text-align: right;"><button onclick="document.getElementById('homepage').value = 'theweb://newtab'">Use New Tab Page</button></p>
+    <div class="sectionHeader">Behaviour</div>
+    <div class="pageContent"> Home Page: <input id="homepage" onchange="theWebSettingsObject.home = document.getElementById('homepage').value"
+        type="text">
+      <p style="text-align: right;"><button onclick="document.getElementById('homepage').value = 'theweb://newtab'">Use
+          New Tab Page</button></p>
+      <input id="toolbar" onchange="theWebSettingsObject.toolbar = document.getElementById('toolbar').checked" type="checkbox"><label for="toolbar">Put the toolbar on the bottom</label> <br>
+      
     </div>
     <div class="sectionHeader">Data</div>
     <div class="pageContent"> <button>Clear Data...</button><br>
