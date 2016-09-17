@@ -163,6 +163,7 @@ void MainWindow::RenderProcessTerminated(Browser browser, CefRequestHandler::Ter
         }
 
         ui->errorFrame->setVisible(true);
+        browserWidget->setVisible(false);
     }
 }
 
@@ -191,6 +192,7 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
 
         if (QUrl(QString::fromStdString(url.ToString())).scheme() == "theweb") {
             ui->securityEVName->setText("theWeb Generated Content");
+            ui->securityFrame->setStyleSheet("");
             ui->securityEVName->setVisible(true);
             ui->securityPadlock->setPixmap(QIcon(":/icons/icon").pixmap(16, 16));
 
@@ -477,7 +479,7 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
                 ui->errorTitle->setText("Well, that didn't work.");
                 break;
             case 4:
-                ui->errorTitle->setText("Let's try that again, shall we?");
+                ui->errorTitle->setText("Something's not right.");
                 break;
             case 5:
                 ui->errorTitle->setText("Whoa!");
@@ -535,8 +537,11 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
             case ERR_INVALID_URL:
                 ui->errorText->setText("Invalid URL");
                 break;
+            case -21: //Network change detected
+                ui->errorText->setText("The internet connection changed while we were trying to connect to the page.");
+                break;
             default:
-                ui->errorText->setText(QString::fromStdString(errorText.ToString()));
+                ui->errorText->setText(QString::fromStdString(failedUrl.ToString()) + " may be down or it may have moved somewhere else. " );
             }
             ui->errorFrame->setVisible(true);
             browserWidget->setVisible(false);

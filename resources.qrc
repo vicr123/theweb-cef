@@ -11,5 +11,6 @@
         <file alias="icon.svg">thewebschemes/icon.svg</file>
         <file alias="images/triangles.png">thewebschemes/images/triangles.png</file>
         <file alias="settings">thewebschemes/settings.html</file>
+        <file alias="notofont">thewebschemes/notofont</file>
     </qresource>
 </RCC>
