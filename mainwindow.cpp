@@ -359,6 +359,9 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
             manager->post(request, requestBody.toUtf8());
 
         }
+
+        //Flush cookies (just to make sure)
+        CefCookieManager::GetGlobalManager(NULL).get()->FlushStore(NULL);
     }
 }
 
@@ -556,6 +559,10 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
 
 void MainWindow::BeforeClose(Browser browser) {
     if (IsCorrectBrowser(browser)) {
+        //Flush cookies (to make sure)
+        CefCookieManager::GetGlobalManager(NULL).get()->FlushStore(NULL);
+
+        //Actually close the window
         this->close();
     }
 }

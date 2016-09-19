@@ -44,14 +44,15 @@ int main(int argc, char *argv[])
     settings.user_agent = *userAgentString;*/
 
     CefString(&settings.user_agent) = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) theWeb/15.00 Chrome/51.0.2704.103 Safari/537.36";
-    CefString(&settings.cache_path) = QDir::homePath().toStdString().append("/.theweb/cache").data();
-    settings.remote_debugging_port = 26154;
+    CefString(&settings.cache_path) = QDir::homePath().append("/.theweb/cache").toStdString();
+    //settings.remote_debugging_port = 26154;
     //settings.single_process = true;
 
     CefRefPtr<CefEngine> app(new CefEngine);
     CefMainArgs cefArgs(argc, argv);
 
     CefInitialize(cefArgs, settings, app.get(), NULL);
+    //CefCookieManager::GetGlobalManager(NULL).get()->SetStoragePath(QDir::homePath().append("/.theweb/cookies").toStdString(), false, NULL);
 
     handler = new CefHandler();
 
@@ -67,6 +68,7 @@ int main(int argc, char *argv[])
 
     int ret = a.exec();
 
+    CefCookieManager::GetGlobalManager(NULL).get()->FlushStore(NULL);
     CefShutdown();
     return ret;
 }
