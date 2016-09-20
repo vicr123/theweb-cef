@@ -1019,7 +1019,7 @@ void MainWindow::updateCurrentBrowserDisplay() {
         bool showBrowserStack = true;
 
         ui->spaceSearch->setCurrentUrl(QUrl(QString::fromStdString(browser().get()->GetMainFrame().get()->GetURL())));
-        this->setWindowTitle(tabBar->tabData(tabBar->currentIndex()).toString());
+        this->setWindowTitle(tabBar->tabData(tabBar->currentIndex()).toString().append(" - theWeb"));
         ui->actionGo_Back->setEnabled(browser().get()->CanGoBack());
         ui->actionGo_Forward->setEnabled(browser().get()->CanGoForward());
 
