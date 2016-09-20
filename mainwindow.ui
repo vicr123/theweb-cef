@@ -989,16 +989,6 @@
     <item>
      <widget class="QStackedWidget" name="browserStack"/>
     </item>
-    <item>
-     <widget class="QProgressBar" name="loadingProgressBar">
-      <property name="maximum">
-       <number>0</number>
-      </property>
-      <property name="value">
-       <number>-1</number>
-      </property>
-     </widget>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -1014,6 +1004,7 @@
     <property name="title">
      <string>Fi&amp;le</string>
     </property>
+    <addaction name="actionNew_Tab"/>
     <addaction name="actionNew_Window"/>
     <addaction name="actionExit"/>
    </widget>
@@ -1170,7 +1161,8 @@
   </action>
   <action name="actionNew_Tab">
    <property name="icon">
-    <iconset theme="tab-new"/>
+    <iconset theme="tab-new">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>New Tab</string>

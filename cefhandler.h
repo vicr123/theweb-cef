@@ -8,6 +8,10 @@
 #include <QDebug>
 #include <QApplication>
 #include "cefengine.h"
+#include <X11/Xlib.h>
+
+#undef Bool
+#undef None
 
 class SignalBroker;
 
@@ -19,6 +23,7 @@ class CefHandler : public QObject,
         public CefRequestHandler,
         public CefJSDialogHandler,
         public CefFocusHandler,
+        public CefKeyboardHandler,
         public CefEngine
 {
     Q_OBJECT
@@ -43,6 +48,9 @@ public:
     virtual CefRefPtr<CefRequestHandler> GetRequestHandler() override {
         return this;
     }
+    virtual CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() override {
+        return this;
+    }
 
     void OnAfterCreated(Browser browser) override;
     void OnRenderProcessTerminated(Browser browser, CefRequestHandler::TerminationStatus status) override;
@@ -54,6 +62,7 @@ public:
     void OnBeforeClose(Browser browser) override;
     void OnGotFocus(Browser browser) override;
     void OnFaviconURLChange(Browser browser, const std::vector<CefString> &urls) override;
+    bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) override;
 
     ReturnValue OnBeforeResourceLoad(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefRequestCallback> callback) override;
 

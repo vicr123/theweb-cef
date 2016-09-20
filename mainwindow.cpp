@@ -16,7 +16,30 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     tabBar = new QTabBar();
     tabBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     tabBar->setTabsClosable(true);
+    tabBar->setShape(QTabBar::TriangularNorth);
+    tabBar->setExpanding(false);
     ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->errorFrame), tabBar);
+
+    QString resourceName;
+    QColor panelColor = ui->securityFrame->palette().color(QPalette::Window);
+    if (((qreal) panelColor.red() + (qreal) panelColor.green() + (qreal) panelColor.red()) / (qreal) 3 < 127) {
+        resourceName = ":/icons/load-d";
+    } else {
+        resourceName = ":/icons/load-l";
+    }
+
+    tabLoading = new QMovie(resourceName);
+    connect(tabLoading, &QMovie::frameChanged, [=]() {
+        QIcon icon(tabLoading->currentPixmap());
+        int i = 0;
+        for (Browser browser : browserList) {
+            if (browser.get()->IsLoading()) {
+                tabBar->setTabIcon(i, icon);
+            }
+            i++;
+        }
+    });
+    tabLoading->start();
 
     this->resize(700, 700);
     ui->errorFrame->setVisible(false);
@@ -48,6 +71,7 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     ui->securityFrame->setAutoFillBackground(true);
 
     QMenu* menu = new QMenu();
+    menu->addAction(ui->actionNew_Tab);
     menu->addAction(ui->actionNew_Window);
     menu->addSeparator();
     menu->addAction(ui->actionSettings);
@@ -118,7 +142,8 @@ void MainWindow::on_actionNew_Tab_triggered()
 
 void MainWindow::createNewTab(Browser newBrowser, bool openInBackground) {
     browserMetadata.append(QVariantMap());
-    tabBar->addTab("text");
+    browserIcons.append(QIcon());
+    tabBar->addTab("New Tab");
 
     CefWindowInfo windowInfo;
     //windowInfo.SetAsChild(0, CefRect(0, 0, 100, 100));
@@ -127,7 +152,7 @@ void MainWindow::createNewTab(Browser newBrowser, bool openInBackground) {
 
     Browser browser;
     if (newBrowser.get() == 0) {
-        browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), "http://www.google.com/", settings, CefRefPtr<CefRequestContext>());
+        browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), this->settings.value("browser/home", "http://www.google.com/").toString().toStdString(), settings, CefRefPtr<CefRequestContext>());
     } else {
         browser = newBrowser;
     }
@@ -217,7 +242,7 @@ void MainWindow::RenderProcessTerminated(Browser browser, CefRequestHandler::Ter
 
 void MainWindow::TitleChanged(Browser browser, const CefString& title) {
     if (indexOfBrowser(browser) != -1) {
-        tabBar->setTabText(indexOfBrowser(browser), QString::fromStdString(title.ToString()));
+        tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText(QString::fromStdString(title.ToString()), Qt::ElideRight, 200));
         if (IsCorrectBrowser(browser)) {
             this->setWindowTitle(QString::fromStdString(title.ToString()).append(" - theWeb"));
         }
@@ -240,6 +265,7 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
         ui->badCertificateFrame->setVisible(false);
         ui->certMoreInfo->setVisible(false);
         ui->certIgnore->setText("More Info");
+        removeFromMetadata(browser, "certificate");
 
         ui->spaceSearch->setCurrentUrl(currentUrl);
 
@@ -440,11 +466,12 @@ void MainWindow::FullscreenModeChange(Browser browser, bool fullscreen) {
         if (fullscreen) {
             wasMaximized = this->isMaximized();
             ui->toolBar->setVisible(false);
+            tabBar->setVisible(false);
             this->showFullScreen();
 
             currentWarning = MainWindow::fullscreen;
             QUrl currentUrl(QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString()));
-            ui->warningLabel->setText(currentUrl.host() + " is now full screen.");
+            ui->warningLabel->setText(currentUrl.host() + " is now full screen. Hit [ESC] to exit full screen.");
 
             ui->warningOk->setVisible(true);
             ui->warningCancel->setVisible(true);
@@ -453,6 +480,7 @@ void MainWindow::FullscreenModeChange(Browser browser, bool fullscreen) {
             ui->warningFrame->setVisible(true);
         } else {
             ui->toolBar->setVisible(true);
+            tabBar->setVisible(true);
             if (wasMaximized) {
                 this->showMaximized();
             } else {
@@ -527,9 +555,8 @@ void MainWindow::LoadingStateChange(Browser browser, bool isLoading, bool canGoB
             ui->errorFrame->setVisible(false);
             removeFromMetadata(browser, "error");
             removeFromMetadata(browser, "crash");
-            insertIntoMetadata(browser, "loading", "");
         } else {
-            removeFromMetadata(browser, "loading");
+            tabBar->setTabIcon(indexOfBrowser(browser), browserIcons.at(indexOfBrowser(browser)));
         }
 
         updateCurrentBrowserDisplay();
@@ -636,6 +663,7 @@ void MainWindow::BeforeClose(Browser browser) {
         int index = indexOfBrowser(browser);
         ui->browserStack->removeWidget(ui->browserStack->widget(index));
         browserMetadata.removeAt(index);
+        browserIcons.removeAt(index);
         browserList.removeAt(index);
         tabBar->removeTab(index);
         if (tabBar->count() == 0) {
@@ -731,14 +759,28 @@ void MainWindow::on_AuthPassword_returnPressed()
 }
 
 void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, const CefString &target_frame_name, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures &popupFeatures, CefWindowInfo *windowInfo, CefBrowserSettings settings, bool *no_javascript_access) {
-    /*if (IsCorrectBrowser(browser)) {
-        Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url.ToString(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
-        MainWindow* newWin = new MainWindow(newBrowser);
-        newWin->show();
-    }*/
     if (indexOfBrowser(browser) != -1) {
-        Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url.ToString(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
-        createNewTab(newBrowser);
+        if (!user_gesture) {
+            if (QMessageBox::information(this, "Open pop-up?", "This webpage is requesting that " + QString::fromStdString(target_url.ToString()) + " be opened in a new window. Is that OK?", QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No) {
+                return;
+            }
+        }
+        Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+        switch (target_disposition) {
+        case WOD_NEW_FOREGROUND_TAB:
+            createNewTab(newBrowser);
+            break;
+        case WOD_NEW_BACKGROUND_TAB:
+            createNewTab(newBrowser, true);
+            break;
+        case WOD_NEW_WINDOW:
+        {
+            MainWindow* w = new MainWindow(browser);
+            w->show();
+        }
+            break;
+        }
+
     }
 }
 
@@ -833,51 +875,53 @@ void MainWindow::on_securityFrame_clicked()
 
 void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) {
     if (IsCorrectBrowser(browser)) {
-        certCallback = callback;
+        QVariantList certErrorMetadata;
+
 
         switch (cert_error) {
         case ERR_CERT_COMMON_NAME_INVALID:
-            ui->certMoreText->setText("You're trying to connect to <b>" + QUrl(QString::fromStdString(request_url.ToString())).host() + "</b> but the server presented itself as <b>" +
+            certErrorMetadata.append("You're trying to connect to <b>" + QUrl(QString::fromStdString(request_url.ToString())).host() + "</b> but the server presented itself as <b>" +
                                       QString::fromStdString(ssl_info.get()->GetSubject().get()->GetDisplayName().ToString()) + "</b>.");
             break;
         case ERR_CERT_DATE_INVALID:
-            ui->certMoreText->setText("The server presented a certificate that either seems to not be valid yet, or has expired. <b>Check your system clock "
+            certErrorMetadata.append("The server presented a certificate that either seems to not be valid yet, or has expired. <b>Check your system clock "
                                       "and if it is incorrect, set it to the correct time.</b>");
             break;
         case ERR_CERT_AUTHORITY_INVALID:
-            ui->certMoreText->setText("The server presented a certificate which was signed by an authority that theWeb doesn't know about. This could mean that "
+            certErrorMetadata.append("The server presented a certificate which was signed by an authority that theWeb doesn't know about. This could mean that "
                                       "an attacker could be intercepting your connection and providing his own certificate, or it could mean that theWeb "
                                       "doesn't have this certificate authority in the database.");
             break;
         case ERR_CERT_CONTAINS_ERRORS:
         case ERR_CERT_INVALID:
-            ui->certMoreText->setText("The server tried to tell theWeb who it was, but theWeb received something that didn't make sense.");
+            certErrorMetadata.append("The server tried to tell theWeb who it was, but theWeb received something that didn't make sense.");
             break;
         case ERR_CERT_UNABLE_TO_CHECK_REVOCATION:
-            ui->certMoreText->setText("The server sent us a certificate, but theWeb couldn't tell whether it has been revoked or not.");
+            certErrorMetadata.append("The server sent us a certificate, but theWeb couldn't tell whether it has been revoked or not.");
             break;
         case ERR_CERT_REVOKED:
-            ui->certMoreText->setText("The server sent us a certificate that has been revoked.");
+            certErrorMetadata.append("The server sent us a certificate that has been revoked.");
             break;
         case ERR_CERT_NON_UNIQUE_NAME:
-            ui->certMoreText->setText("The server sent us a certificate for a non-unique hostname.");
+            certErrorMetadata.append("The server sent us a certificate for a non-unique hostname.");
             break;
         default:
-            ui->certMoreText->setText("The server sent us a certificate that theWeb doesn't trust.");
+            certErrorMetadata.append("The server sent us a certificate that theWeb doesn't trust.");
             break;
         }
 
+        //certCallback = callback;
+        certErrorMetadata.append(QVariant::fromValue(callback));
+
         certErrorUrls.append(QString::fromStdString(request_url.ToString()));
 
-        ui->securityEVName->setText("Insecure Connection!");
-        ui->securityEVName->setVisible(true);
-        ui->securityFrame->setStyleSheet("background-color: #640000; color: white;");
-        ui->securityPadlock->setPixmap(QIcon(":/icons/badsecure").pixmap(16, 16));
+        QStringList securityMetadata;
+        securityMetadata.append("certerr");
+        securityMetadata.append("Insecure Connection");
+        securityMetadata.append("This connection may have been intercepted.");
+        insertIntoMetadata(browser, "security", securityMetadata);
 
-        ui->securityText->setText("This connection may have been intercepted.");
-
-        ui->browserStack->setVisible(false);
-        ui->badCertificateFrame->setVisible(true);
+        insertIntoMetadata(browser, "certificate", certErrorMetadata);
     }
 }
 
@@ -888,7 +932,9 @@ void MainWindow::on_certIgnore_clicked()
         ui->badCertificateFrame->setVisible(false);
         ui->certIgnore->setText("More Info");
         ui->browserStack->setVisible(true);
-        certCallback.get()->Continue(true);
+
+        browserMetadata.at(indexOfBrowser(browser())).value("certificate").toList().at(1).value<CefRefPtr<CefRequestCallback>>().get()->Continue(true);
+        removeFromMetadata(browser(), "certificate");
     } else {
         ui->certMoreInfo->setVisible(true);
         ui->certIgnore->setText("Continue Anyway");
@@ -903,7 +949,6 @@ void MainWindow::on_certificateBack_clicked()
 }
 
 void MainWindow::ReloadSettings() {
-    QSettings settings;
     if (settings.value("browser/toolbarOnBottom").toBool()) {
         this->addToolBar(Qt::BottomToolBarArea, ui->toolBar);
     } else {
@@ -913,28 +958,32 @@ void MainWindow::ReloadSettings() {
 
 void MainWindow::FaviconURLChange(Browser browser, std::vector<CefString> urls) {
     if (indexOfBrowser(browser) != -1) {
-        if (urls.size() == 0) {
-            tabBar->setTabIcon(indexOfBrowser(browser), QIcon::fromTheme("text-html"));
-        } else {
-            for (CefString url : urls) {
-                browser.get()->GetHost().get()->DownloadImage(url, true, 16, false, new DownloadImageCallback([=](CefRefPtr<CefImage> image) {
-                    if (indexOfBrowser(browser) != -1) {
-                        int width = 16, height = 16;
-                        CefRefPtr<CefBinaryValue> binary = image.get()->GetAsPNG(1, true, width, height);
+        int count = 0;
+        for (CefString url : urls) {
+            browser.get()->GetHost().get()->DownloadImage(url, true, 16, false, new DownloadImageCallback([=](CefRefPtr<CefImage> image) {
+                if (indexOfBrowser(browser) != -1) {
+                    int width = 16, height = 16;
+                    CefRefPtr<CefBinaryValue> binary = image.get()->GetAsPNG(1, true, width, height);
 
-                        unsigned char* data = (unsigned char *) malloc(32767);
-                        uint read = binary.get()->GetData(data, 32767, 0);
-                        QPixmap pixmap;
-                        pixmap.loadFromData(data, read);
+                    unsigned char* data = (unsigned char *) malloc(32767);
+                    uint read = binary.get()->GetData(data, 32767, 0);
+                    QPixmap pixmap;
+                    pixmap.loadFromData(data, read);
 
-                        if (!pixmap.isNull()) {
-                            tabBar->setTabIcon(indexOfBrowser(browser), QIcon(pixmap));
-                        }
-
-                        free(data);
+                    if (!pixmap.isNull()) {
+                        QIcon icon(pixmap);
+                        tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));
+                        browserIcons.replace(indexOfBrowser(browser), icon);
                     }
-                }));
-            }
+
+                    free(data);
+                }
+            }));
+            count++;
+        }
+
+        if (count == 0) {
+            browserIcons.replace(indexOfBrowser(browser), QIcon::fromTheme("text-html"));
         }
     }
 }
@@ -1009,28 +1058,25 @@ void MainWindow::updateCurrentBrowserDisplay() {
             ui->securityText->setText(securityMetadata.at(2));
         }
 
-        if (metadata.keys().contains("error")) {
-            QStringList errorMetadata = metadata.value("error").toStringList();
-            ui->errorTitle->setText(errorMetadata.at(0));
-            ui->errorText->setText(errorMetadata.at(1));
-
+        if (metadata.keys().contains("error") || metadata.keys().contains("crash")) {
             ui->errorFrame->setVisible(true);
-            ui->browserStack->setVisible(false);
+            if (metadata.keys().contains("crash")) {
+                QStringList crashMetadata = metadata.value("crash").toStringList();
+                ui->errorTitle->setText(crashMetadata.at(0));
+                ui->errorText->setText(crashMetadata.at(1));
+            } else {
+                QStringList errorMetadata = metadata.value("error").toStringList();
+                ui->errorTitle->setText(errorMetadata.at(0));
+                ui->errorText->setText(errorMetadata.at(1));
+            }
             showBrowserStack = false;
         } else {
             ui->errorFrame->setVisible(false);
         }
 
-        if (metadata.keys().contains("loading")) {
-            ui->loadingProgressBar->setVisible(true);
-        } else {
-            ui->loadingProgressBar->setVisible(false);
-        }
-
         if (metadata.keys().contains("js")) {
             QVariantList JsMetadata = metadata.value("js").toList();
 
-            ui->browserStack->setVisible(false);
             ui->JsDialogFrame->setVisible(true);
             ui->JsDialogOk->setText("OK");
             ui->JsDialogCancel->setText("Cancel");
@@ -1056,20 +1102,22 @@ void MainWindow::updateCurrentBrowserDisplay() {
             ui->JsDialogPrompt->setText("");
         }
 
-        if (metadata.keys().contains("crash")) {
-            QStringList crashMetadata = metadata.value("crash").toStringList();
-            ui->errorTitle->setText(crashMetadata.at(0));
-            ui->errorText->setText(crashMetadata.at(1));
+        if (metadata.keys().contains("certificate")) {
+            QVariantList certErrorMetadata = metadata.value("certificate").toList();
+            ui->certMoreText->setText(certErrorMetadata.at(0).toString());
 
-            ui->errorFrame->setVisible(true);
-            ui->browserStack->setVisible(false);
+            ui->badCertificateFrame->setVisible(true);
             showBrowserStack = false;
         } else {
-            ui->errorFrame->setVisible(false);
+            ui->badCertificateFrame->setVisible(false);
+            ui->certMoreInfo->setVisible(false);
+            ui->certIgnore->setText("More Info");
         }
 
         if (showBrowserStack) {
             ui->browserStack->setVisible(true);
+        } else {
+            ui->browserStack->setVisible(false);
         }
     }
 }

@@ -92,7 +92,7 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         QString key = QString::fromStdString(args.get()->GetString(0).ToString());
         if (args.get()->GetString(1) == "bool") {
             settings.setValue(key, args.get()->GetBool(2));
-        } else if (args.get()->GetString(2) == "string") {
+        } else if (args.get()->GetString(1) == "string") {
             settings.setValue(key, QString::fromStdString(args.get()->GetString(2).ToString()));
         }
     } else if (message.get()->GetName() == "theWebSettings_get") {
@@ -101,10 +101,13 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         CefRefPtr<CefDictionaryValue> settingsDictionary = CefDictionaryValue::Create();
 
         for (QString key : settings.allKeys()) {
-            if (settings.value(key).canConvert<bool>()) {
-                settingsDictionary.get()->SetBool(key.toStdString(), settings.value(key).toBool());
-            } else if (settings.value(key).canConvert<QString>()) {
-                settingsDictionary.get()->SetString(key.toStdString(), settings.value(key).toString().toStdString());
+            if (settings.value(key).canConvert<QString>()) {
+                QString string = settings.value(key).toString();
+                if (string == "true" || string == "false") {
+                    settingsDictionary.get()->SetBool(key.toStdString(), settings.value(key).toBool());
+                } else {
+                    settingsDictionary.get()->SetString(key.toStdString(), settings.value(key).toString().toStdString());
+                }
             }
         }
 
@@ -133,4 +136,16 @@ bool CefHandler::OnCertificateError(Browser browser, cef_errorcode_t cert_error,
 
 void CefHandler::OnFaviconURLChange(Browser browser, const std::vector<CefString> &urls) {
     emit signalBroker->FaviconURLChange(browser, urls);
+}
+
+bool CefHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) {
+    //qDebug() << os_event->xkey.keycode;
+    if (os_event) {
+        if (os_event->xkey.keycode == 9) { //ESC key
+            //Leave Full Screen (if the browser is in full screen)
+            browser.get()->GetMainFrame().get()->ExecuteJavaScript("document.webkitExitFullscreen()", "", 0);
+            return true;
+        }
+    }
+    return false;
 }

@@ -50,8 +50,11 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
         std::vector<CefString> keys;
         settingsDictionary.get()->GetKeys(keys);
         for (CefString key : keys) {
+            //Convert CEF types into Qt types
             if (settingsDictionary.get()->GetType(key) == VTYPE_BOOL) {
                 settingsData.insert(QString::fromStdString(key.ToString()), settingsDictionary.get()->GetBool(key));
+            } else if (settingsDictionary.get()->GetType(key) == VTYPE_STRING) {
+                settingsData.insert(QString::fromStdString(key.ToString()), QString::fromStdString(settingsDictionary.get()->GetString(key).ToString()));
             }
         }
     }

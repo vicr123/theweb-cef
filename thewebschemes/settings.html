@@ -8,6 +8,7 @@
     <meta content="Victor Tran" name="author">
     <meta name="viewport" content="width=device-width">
     <meta content="BlueGriffon wysiwyg editor" name="generator">
+    <link rel="icon" href="theweb://icon.png">
     <script>
       function initPage() {
     		document.getElementById("doNotTrack").checked = theWebSettingsObject.dnt;
@@ -47,8 +48,9 @@
         type="text">
       <p style="text-align: right;"><button onclick="document.getElementById('homepage').value = 'theweb://newtab'">Use
           New Tab Page</button></p>
-      <input id="toolbar" onchange="theWebSettingsObject.toolbar = document.getElementById('toolbar').checked" type="checkbox"><label for="toolbar">Put the toolbar on the bottom</label> <br>
-      
+      <input id="toolbar" onchange="theWebSettingsObject.toolbar = document.getElementById('toolbar').checked"
+        type="checkbox"><label for="toolbar">Put the toolbar on the bottom</label>
+      <br>
     </div>
     <div class="sectionHeader">Data</div>
     <div class="pageContent"> <button>Clear Data...</button><br>

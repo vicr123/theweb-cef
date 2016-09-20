@@ -23,6 +23,7 @@
 #include <QSslCertificateExtension>
 #include <QMap>
 #include <QTabBar>
+#include <QMovie>
 
 class CefHandler;
 
@@ -128,6 +129,7 @@ private:
     //Browser browser;
     QList<Browser> browserList;
     QList<QVariantMap> browserMetadata;
+    QList<QIcon> browserIcons;
     void insertIntoMetadata(Browser browser, QString key, QVariant value);
     void removeFromMetadata(Browser browser, QString key);
 
@@ -139,11 +141,15 @@ private:
     Browser getBrowserFor(Browser browser);
     int indexOfBrowser(Browser browser);
 
+    QMovie* tabLoading;
+
     warningType currentWarning = none;
 
     CefRefPtr<CefJSDialogCallback> JsDialogCallback;
     CefRefPtr<CefAuthCallback> AuthCallback;
     CefRefPtr<CefRequestCallback> certCallback;
+
+    QSettings settings;
 
     void closeEvent(QCloseEvent *event);
 };
