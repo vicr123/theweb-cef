@@ -717,21 +717,13 @@ void MainWindow::on_JsDialogPrompt_returnPressed()
 
 void MainWindow::AuthCredentials(Browser browser, CefRefPtr<CefFrame> frame, bool isProxy, const CefString &host, int port, const CefString &realm, const CefString &scheme, CefRefPtr<CefAuthCallback> callback) {
     if (IsCorrectBrowser(browser)) {
-        AuthCallback = callback;
-        ui->browserStack->setVisible(false);
-
-        ui->AuthHost->setText("Log in to " + QString::fromStdString(host.ToString()));
-        ui->AuthRealm->setText("Server Realm: " + QString::fromStdString(realm.ToString()));
-        ui->AuthUsername->setText("");
-        ui->AuthPassword->setText("");
-        if (QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).scheme() == "http" && scheme == "basic") {
-            ui->AuthBASIC->setVisible(true);
-        } else {
-            ui->AuthBASIC->setVisible(false);
-        }
-        ui->AuthFrame->setVisible(true);
-
-        ui->AuthUsername->setFocus();
+        QVariantList AuthMetadata;
+        AuthMetadata.append("Log in to " + QString::fromStdString(host.ToString()));
+        AuthMetadata.append("Server Realm: " + QString::fromStdString(realm.ToString()));
+        AuthMetadata.append(QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).scheme() == "http" && scheme == "basic");
+        AuthMetadata.append(QVariant::fromValue(callback));
+        insertIntoMetadata(browser, "auth", AuthMetadata);
+        updateCurrentBrowserDisplay();
     }
 }
 
@@ -739,14 +731,16 @@ void MainWindow::on_AuthOk_clicked()
 {
     ui->AuthFrame->setVisible(false);
     ui->browserStack->setVisible(true);
-    AuthCallback.get()->Continue(ui->AuthUsername->text().toStdString(), ui->AuthPassword->text().toStdString());
+    browserMetadata.at(indexOfBrowser(browser())).value("auth").toList().at(3).value<CefRefPtr<CefAuthCallback>>().get()->Continue(ui->AuthUsername->text().toStdString(), ui->AuthPassword->text().toStdString());
+    removeFromMetadata(browser(), "auth");
 }
 
 void MainWindow::on_AuthCancel_clicked()
 {
     ui->AuthFrame->setVisible(false);
     ui->browserStack->setVisible(true);
-    AuthCallback.get()->Cancel();
+    browserMetadata.at(indexOfBrowser(browser())).value("auth").toList().at(3).value<CefRefPtr<CefAuthCallback>>().get()->Cancel();
+    removeFromMetadata(browser(), "auth");
 }
 
 void MainWindow::on_AuthUsername_returnPressed()
@@ -766,7 +760,9 @@ void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const C
                 return;
             }
         }
+
         Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+
         switch (target_disposition) {
         case WOD_NEW_FOREGROUND_TAB:
             createNewTab(newBrowser);
@@ -1114,6 +1110,25 @@ void MainWindow::updateCurrentBrowserDisplay() {
             ui->badCertificateFrame->setVisible(false);
             ui->certMoreInfo->setVisible(false);
             ui->certIgnore->setText("More Info");
+        }
+
+        if (metadata.keys().contains("auth")) {
+            QVariantList AuthMetadata = metadata.value("auth").toList();
+            ui->AuthHost->setText(AuthMetadata.at(0).toString());
+            ui->AuthRealm->setText(AuthMetadata.at(1).toString());
+            ui->AuthUsername->setText("");
+            ui->AuthPassword->setText("");
+
+            if (AuthMetadata.at(2).toBool()) {
+                ui->AuthBASIC->setVisible(true);
+            } else {
+                ui->AuthBASIC->setVisible(false);
+            }
+
+            ui->AuthFrame->setVisible(true);
+            showBrowserStack = false;
+        } else {
+            ui->AuthFrame->setVisible(false);
         }
 
         if (showBrowserStack) {
