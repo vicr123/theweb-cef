@@ -18,6 +18,7 @@ Q_DECLARE_METATYPE(CefLifeSpanHandler::WindowOpenDisposition)
 Q_DECLARE_METATYPE(CefPopupFeatures)
 Q_DECLARE_METATYPE(CefWindowInfo)
 Q_DECLARE_METATYPE(CefBrowserSettings)
+Q_DECLARE_METATYPE(CefRefPtr<CefJSDialogCallback>)
 
 #endif // CEFHEADERS_H
 

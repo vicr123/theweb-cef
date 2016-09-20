@@ -323,6 +323,18 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
+           <widget class="QLabel" name="JsBeforeLeaveTitle">
+            <property name="font">
+             <font>
+              <pointsize>20</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Hold up!</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="JsDialogText">
             <property name="text">
              <string>Alert Dialog Text Goes Here</string>
@@ -975,6 +987,9 @@
      </widget>
     </item>
     <item>
+     <widget class="QStackedWidget" name="browserStack"/>
+    </item>
+    <item>
      <widget class="QProgressBar" name="loadingProgressBar">
       <property name="maximum">
        <number>0</number>
@@ -1033,6 +1048,7 @@
    <addaction name="actionGo_Back"/>
    <addaction name="actionGo_Forward"/>
    <addaction name="actionReload"/>
+   <addaction name="actionNew_Tab"/>
   </widget>
   <action name="actionExit">
    <property name="icon">
@@ -1150,6 +1166,14 @@
    </property>
    <property name="text">
     <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionNew_Tab">
+   <property name="icon">
+    <iconset theme="tab-new"/>
+   </property>
+   <property name="text">
+    <string>New Tab</string>
    </property>
   </action>
  </widget>

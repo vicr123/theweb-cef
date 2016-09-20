@@ -2,6 +2,8 @@
 #define CEFHANDLER_H
 
 #include <QObject>
+#include <QList>
+#include <QVector>
 #include "cefheaders.h"
 #include <QDebug>
 #include <QApplication>
@@ -51,6 +53,7 @@ public:
     void OnLoadError(Browser browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl) override;
     void OnBeforeClose(Browser browser) override;
     void OnGotFocus(Browser browser) override;
+    void OnFaviconURLChange(Browser browser, const std::vector<CefString> &urls) override;
 
     ReturnValue OnBeforeResourceLoad(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefRequestCallback> callback) override;
 

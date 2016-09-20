@@ -21,6 +21,7 @@
 #include <QSslCertificate>
 #include <QSslCertificateExtension>
 #include <QMap>
+#include <QTabBar>
 
 class CefHandler;
 
@@ -54,6 +55,7 @@ public slots:
     void BeforeUnloadDialog(Browser browser, const CefString &message_text, bool is_reload, CefRefPtr<CefJSDialogCallback> callback);
     void BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, const CefString &target_frame_name, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures &popupFeatures, CefWindowInfo* windowInfo, CefBrowserSettings settings, bool *no_javascript_access);
     void CertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback);
+    void FaviconURLChange(Browser browser, std::vector<CefString> urls);
     void ReloadSettings();
 
 private slots:
@@ -113,12 +115,28 @@ private slots:
 
     void on_certificateBack_clicked();
 
+    void on_actionNew_Tab_triggered();
+
+    void updateCurrentBrowserDisplay();
+
 private:
     Ui::MainWindow *ui;
 
-    Browser browser;
+    Browser browser();
+
+    //Browser browser;
+    QList<Browser> browserList;
+    QList<QVariantMap> browserMetadata;
+    void insertIntoMetadata(Browser browser, QString key, QVariant value);
+    void removeFromMetadata(Browser browser, QString key);
+
+    void createNewTab(Browser newBrowser = NULL, bool openInBackground = false);
+
     QWidget* browserWidget;
+    QTabBar* tabBar;
     bool IsCorrectBrowser(Browser browser);
+    Browser getBrowserFor(Browser browser);
+    int indexOfBrowser(Browser browser);
 
     warningType currentWarning = none;
 

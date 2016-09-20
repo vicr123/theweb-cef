@@ -130,3 +130,7 @@ bool CefHandler::OnCertificateError(Browser browser, cef_errorcode_t cert_error,
     emit signalBroker->CertificateError(browser, cert_error, request_url, ssl_info, callback);
     return true;
 }
+
+void CefHandler::OnFaviconURLChange(Browser browser, const std::vector<CefString> &urls) {
+    emit signalBroker->FaviconURLChange(browser, urls);
+}
