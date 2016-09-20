@@ -243,6 +243,7 @@ void MainWindow::RenderProcessTerminated(Browser browser, CefRequestHandler::Ter
 void MainWindow::TitleChanged(Browser browser, const CefString& title) {
     if (indexOfBrowser(browser) != -1) {
         tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText(QString::fromStdString(title.ToString()), Qt::ElideRight, 200));
+        tabBar->setTabData(indexOfBrowser(browser), QString::fromStdString(title.ToString()));
         if (IsCorrectBrowser(browser)) {
             this->setWindowTitle(QString::fromStdString(title.ToString()).append(" - theWeb"));
         }
@@ -1018,6 +1019,7 @@ void MainWindow::updateCurrentBrowserDisplay() {
         bool showBrowserStack = true;
 
         ui->spaceSearch->setCurrentUrl(QUrl(QString::fromStdString(browser().get()->GetMainFrame().get()->GetURL())));
+        this->setWindowTitle(tabBar->tabData(tabBar->currentIndex()).toString());
         ui->actionGo_Back->setEnabled(browser().get()->CanGoBack());
         ui->actionGo_Forward->setEnabled(browser().get()->CanGoForward());
 
