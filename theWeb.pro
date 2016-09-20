@@ -25,7 +25,8 @@ SOURCES += main.cpp\
     completioncallback.cpp \
     thewebschemes.cpp \
     thewebsettingsaccessor.cpp \
-    clickableframe.cpp
+    clickableframe.cpp \
+    downloadimagecallback.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -37,7 +38,8 @@ HEADERS  += \
     completioncallback.h \
     thewebschemes.h \
     thewebsettingsaccessor.h \
-    clickableframe.h
+    clickableframe.h \
+    downloadimagecallback.h
 
 FORMS    += \
     mainwindow.ui

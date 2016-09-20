@@ -913,13 +913,28 @@ void MainWindow::ReloadSettings() {
 
 void MainWindow::FaviconURLChange(Browser browser, std::vector<CefString> urls) {
     if (indexOfBrowser(browser) != -1) {
-        for (CefString url : urls) {
-            QNetworkAccessManager manager;
-            QNetworkRequest request;
-            request.setUrl(QUrl(QString::fromStdString(url)));
+        if (urls.size() == 0) {
+            tabBar->setTabIcon(indexOfBrowser(browser), QIcon::fromTheme("text-html"));
+        } else {
+            for (CefString url : urls) {
+                browser.get()->GetHost().get()->DownloadImage(url, true, 16, false, new DownloadImageCallback([=](CefRefPtr<CefImage> image) {
+                    if (indexOfBrowser(browser) != -1) {
+                        int width = 16, height = 16;
+                        CefRefPtr<CefBinaryValue> binary = image.get()->GetAsPNG(1, true, width, height);
 
-            QNetworkReply* reply = manager.get(request);
-            tabBar->setTabIcon(indexOfBrowser(browser), QIcon(QPixmap::fromImage(QImage::fromData(reply->readAll()))));
+                        unsigned char* data = (unsigned char *) malloc(32767);
+                        uint read = binary.get()->GetData(data, 32767, 0);
+                        QPixmap pixmap;
+                        pixmap.loadFromData(data, read);
+
+                        if (!pixmap.isNull()) {
+                            tabBar->setTabIcon(indexOfBrowser(browser), QIcon(pixmap));
+                        }
+
+                        free(data);
+                    }
+                }));
+            }
         }
     }
 }

@@ -8,6 +8,7 @@
 #include "signalbroker.h"
 #include "cefhandler.h"
 #include "thewebsettingsaccessor.h"
+#include "downloadimagecallback.h"
 #include <QToolButton>
 #include <QMessageBox>
 #include <QTimer>
