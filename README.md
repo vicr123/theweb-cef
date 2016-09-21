@@ -5,6 +5,16 @@ Web Browser based on CEF and Qt
 ![Screenshot 1](https://raw.githubusercontent.com/vicr123/theWeb/master/images/screen1.png)
 ![Screenshot 2](https://raw.githubusercontent.com/vicr123/theWeb/master/images/screen2.png)
 
+## Important Stuff
+- theWeb still has many features missing. This includes
+    - File downloads
+    - File pickers don't work correctly
+    - Browsing History
+    - Bookmarks
+    - Clearing Browsing Data
+theWeb should support them soon, though. :)
+- theWeb is still in BETA. Some things might not work.
+
 ## Build
 If you're on Arch Linux, you can find theWeb as a package on the AUR. Otherwise, to build theWeb,
 
