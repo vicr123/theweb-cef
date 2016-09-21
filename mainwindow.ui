@@ -875,7 +875,7 @@
           <item>
            <widget class="QLabel" name="label_6">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This connection couldn't be secured properly. An attacker may be trying to access all the information (for example, passwords or credit cards) that you send to this server. Just to make sure that doesn't happen, theWeb stopped this connection before it could go any further.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;theWeb couldn't verify the identity of the server. An attacker may be trying to access all the information (for example, passwords or credit cards) that you send to this server. Just to make sure that doesn't happen, theWeb stopped this connection before it could go any further.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
@@ -960,7 +960,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>If you want to continue despite this warning, click the &quot;Continue Anyway&quot; button above.</string>
+                <string>If you want to continue despite this warning, click the &quot;Continue Anyway&quot; button above. Legitamate banks and businesses won't tell you to do this.</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
@@ -1182,10 +1182,11 @@
   </action>
   <action name="actionClose_Tab">
    <property name="icon">
-    <iconset theme="tab-close"/>
+    <iconset theme="tab-close">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>Close Tab</string>
+    <string>&amp;Close Tab</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>
@@ -1193,10 +1194,11 @@
   </action>
   <action name="actionNew_Oblivion_Window">
    <property name="icon">
-    <iconset theme="window-new"/>
+    <iconset theme="window-new">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>New Oblivion Window</string>
+    <string>New &amp;Oblivion Window</string>
    </property>
   </action>
  </widget>

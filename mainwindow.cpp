@@ -68,8 +68,6 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     ui->toolBar->addWidget(ui->securityFrame);
     ui->toolBar->addWidget(ui->spaceSearch);
 
-    ReloadSettings();
-
     ui->securityFrame->setAutoFillBackground(true);
 
     QMenu* menu = new QMenu();
@@ -137,6 +135,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(tabBar, &QTabBar::tabCloseRequested, [=](int closeIndex) {
         browserList.at(closeIndex).get()->GetHost().get()->CloseBrowser(false);
     });
+    ReloadSettings();
 }
 
 MainWindow::~MainWindow()
@@ -963,6 +962,8 @@ void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, c
         insertIntoMetadata(browser, "security", securityMetadata);
 
         insertIntoMetadata(browser, "certificate", certErrorMetadata);
+
+        updateCurrentBrowserDisplay();
     }
 }
 
@@ -998,8 +999,8 @@ void MainWindow::ReloadSettings() {
     } else {
         this->addToolBar(Qt::TopToolBarArea, ui->toolBar);
         tabBar->setShape(QTabBar::RoundedNorth);
-        ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->errorFrame), tabBar);
         ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->warningFrame), ui->securityInfoFrame);
+        ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->warningFrame), tabBar);
     }
 }
 
