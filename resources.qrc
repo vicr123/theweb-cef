@@ -4,9 +4,9 @@
         <file alias="lock-d">icons/lock-dark.svg</file>
         <file alias="lock-l">icons/lock-light.svg</file>
         <file alias="badsecure">icons/badsecure.svg</file>
-        <file alias="loading">icons/loading.svg</file>
         <file alias="load-d">icons/load-d.gif</file>
         <file alias="load-l">icons/load-l.gif</file>
+        <file alias="oblivionIcon">icons/oblivionIcon.svg</file>
     </qresource>
     <qresource prefix="/thewebscheme">
         <file alias="theweb">thewebschemes/theweb.html</file>
@@ -16,5 +16,7 @@
         <file alias="settings">thewebschemes/settings.html</file>
         <file alias="notofont">thewebschemes/notofont</file>
         <file alias="icon.png">thewebschemes/icon.png</file>
+        <file alias="newtab">thewebschemes/newtab.html</file>
+        <file alias="oblivion">thewebschemes/oblivion.html</file>
     </qresource>
 </RCC>

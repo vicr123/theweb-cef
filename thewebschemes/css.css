@@ -329,6 +329,14 @@ div.blockLanding#theshell {
     color: white;
 }
 
+div.blockLanding#oblivion {
+    background-color: green;
+    background: linear-gradient(#6464FF, #6400FF),
+                url("theweb://images/triangles.png") no-repeat center center;
+    background-size: cover;
+    color: white;
+}
+
 div.blockLanding#break {
     background: linear-gradient(to top right, rgb(0, 100, 255), rgb(0, 200, 255));
     background-size: cover;
@@ -384,6 +392,19 @@ div.blockTitle#opensource {
 
 div.blockLanding {
     height: 200px;
+}
+
+
+div.blockPage#tabBack {
+    background-color: green;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+                url("theweb://images/triangles.png") no-repeat center center;
+    background-size: cover;
+    color: white;
+}
+
+div.blockPage {
+    height: 100vh;
 }
 
 @media (max-width: 600px) {

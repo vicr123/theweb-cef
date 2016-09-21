@@ -9,6 +9,7 @@
 #include "cefhandler.h"
 #include "thewebsettingsaccessor.h"
 #include "downloadimagecallback.h"
+#include "oblivionrequestcontext.h"
 #include <QToolButton>
 #include <QMessageBox>
 #include <QTimer>
@@ -24,6 +25,7 @@
 #include <QMap>
 #include <QTabBar>
 #include <QMovie>
+#include <QX11Info>
 
 class CefHandler;
 
@@ -36,7 +38,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(Browser browser = 0, QWidget *parent = 0);
+    explicit MainWindow(Browser browser = NULL, bool isOblivion = false, QWidget *parent = 0);
     ~MainWindow();
 
     enum warningType {
@@ -58,6 +60,7 @@ public slots:
     void BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, const CefString &target_frame_name, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures &popupFeatures, CefWindowInfo* windowInfo, CefBrowserSettings settings, bool *no_javascript_access);
     void CertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback);
     void FaviconURLChange(Browser browser, std::vector<CefString> urls);
+    void KeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event);
     void ReloadSettings();
 
 private slots:
@@ -121,6 +124,12 @@ private slots:
 
     void updateCurrentBrowserDisplay();
 
+    void on_spaceSearch_GotFocus();
+
+    void on_actionClose_Tab_triggered();
+
+    void on_actionNew_Oblivion_Window_triggered();
+
 private:
     Ui::MainWindow *ui;
 
@@ -140,6 +149,7 @@ private:
     bool IsCorrectBrowser(Browser browser);
     Browser getBrowserFor(Browser browser);
     int indexOfBrowser(Browser browser);
+    bool isOblivion = false;
 
     QMovie* tabLoading;
 

@@ -9,6 +9,9 @@
 #include <QApplication>
 #include "cefengine.h"
 #include <X11/Xlib.h>
+#include <QX11Info>
+#include <X11/keysym.h>
+#include <QFileDialog>
 
 #undef Bool
 #undef None
@@ -25,6 +28,7 @@ class CefHandler : public QObject,
         public CefFocusHandler,
         public CefKeyboardHandler,
         public CefDownloadHandler,
+        public CefDialogHandler,
         public CefEngine
 {
     Q_OBJECT
@@ -55,6 +59,9 @@ public:
     virtual CefRefPtr<CefDownloadHandler> GetDownloadHandler() override {
         return this;
     }
+    virtual CefRefPtr<CefDialogHandler> GetDialogHandler() override {
+        return this;
+    }
 
     void OnAfterCreated(Browser browser) override;
     void OnRenderProcessTerminated(Browser browser, CefRequestHandler::TerminationStatus status) override;
@@ -78,7 +85,9 @@ public:
     bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source, int line) override;
     bool DoClose(Browser browser) override;
     bool OnCertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) override;
-    bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) override;
+    bool OnPreKeyEvent(Browser browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) override;
+    bool OnKeyEvent(Browser browser, const CefKeyEvent &event, XEvent *os_event) override;
+    bool OnFileDialog(Browser browser, FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback);
 
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 

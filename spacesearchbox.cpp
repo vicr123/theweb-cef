@@ -9,6 +9,7 @@ void SpaceSearchBox::focusInEvent(QFocusEvent *event) {
     event->accept();
     this->setText(url.toString());
     this->selectAll();
+    emit GotFocus();
 }
 
 void SpaceSearchBox::focusOutEvent(QFocusEvent *event) {

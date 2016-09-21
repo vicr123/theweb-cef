@@ -7,11 +7,13 @@ extern void QuitApp(int exitCode = 0);
 extern QTimer cefEventLoopTimer;
 extern QStringList certErrorUrls;
 
-MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
+MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    this->isOblivion = isOblivion;
 
     tabBar = new QTabBar();
     tabBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
@@ -73,15 +75,21 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     QMenu* menu = new QMenu();
     menu->addAction(ui->actionNew_Tab);
     menu->addAction(ui->actionNew_Window);
+    menu->addAction(ui->actionNew_Oblivion_Window);
     menu->addSeparator();
     menu->addAction(ui->actionSettings);
     menu->addAction(ui->actionAbout_theWeb);
     menu->addSeparator();
+    menu->addAction(ui->actionClose_Tab);
     menu->addAction(ui->actionExit);
 
     QToolButton* menuButton = new QToolButton();
     menuButton->setPopupMode(QToolButton::InstantPopup);
-    menuButton->setIcon(QIcon(":/icons/icon"));
+    if (isOblivion) {
+        menuButton->setIcon(QIcon(":/icons/oblivionIcon"));
+    } else {
+        menuButton->setIcon(QIcon(":/icons/icon"));
+    }
     menuButton->setMenu(menu);
     ui->toolBar->insertWidget(ui->actionGo_Back, menuButton);
 
@@ -112,6 +120,7 @@ MainWindow::MainWindow(Browser newBrowser, QWidget *parent) :
     connect(signalBroker, SIGNAL(BeforePopup(Browser,CefRefPtr<CefFrame>,CefString,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool,CefPopupFeatures,CefWindowInfo*,CefBrowserSettings,bool*)), this, SLOT(BeforePopup(Browser,CefRefPtr<CefFrame>,CefString,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool,CefPopupFeatures,CefWindowInfo*,CefBrowserSettings,bool*)));
     connect(signalBroker, SIGNAL(CertificateError(Browser,cef_errorcode_t,CefString,CefRefPtr<CefSSLInfo>,CefRefPtr<CefRequestCallback>)), this, SLOT(CertificateError(Browser,cef_errorcode_t,CefString,CefRefPtr<CefSSLInfo>,CefRefPtr<CefRequestCallback>)));
     connect(signalBroker, SIGNAL(FaviconURLChange(Browser,std::vector<CefString>)), this, SLOT(FaviconURLChange(Browser,std::vector<CefString>)));
+    connect(signalBroker, SIGNAL(KeyEvent(CefRefPtr<CefBrowser>,CefKeyEvent,XEvent*)), this, SLOT(KeyEvent(CefRefPtr<CefBrowser>,CefKeyEvent,XEvent*)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -146,13 +155,22 @@ void MainWindow::createNewTab(Browser newBrowser, bool openInBackground) {
     tabBar->addTab("New Tab");
 
     CefWindowInfo windowInfo;
-    //windowInfo.SetAsChild(0, CefRect(0, 0, 100, 100));
-
     CefBrowserSettings settings;
+
+    if (isOblivion) {
+        settings.application_cache = STATE_DISABLED;
+    }
 
     Browser browser;
     if (newBrowser.get() == 0) {
-        browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), this->settings.value("browser/home", "http://www.google.com/").toString().toStdString(), settings, CefRefPtr<CefRequestContext>());
+        if (isOblivion) {
+            CefRequestContextSettings contextSettings;
+            CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+            context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+            browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), "theweb://oblivion", settings, context);
+        } else {
+            browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), this->settings.value("browser/home", "theweb://newtab").toString().toStdString(), settings, CefRefPtr<CefRequestContext>());
+        }
     } else {
         browser = newBrowser;
     }
@@ -166,6 +184,7 @@ void MainWindow::createNewTab(Browser newBrowser, bool openInBackground) {
 
     if (!openInBackground) {
         tabBar->setCurrentIndex(tabBar->count() - 1);
+        browserWidget->setFocus();
     }
 }
 
@@ -757,7 +776,18 @@ void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const C
             }
         }
 
-        Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+        Browser newBrowser;
+        if (isOblivion) {
+            CefBrowserSettings settings;
+            settings.application_cache = STATE_DISABLED;
+
+            CefRequestContextSettings contextSettings;
+            CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+            context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+            newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url, settings, context);
+        } else {
+            newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+        }
 
         switch (target_disposition) {
         case WOD_NEW_FOREGROUND_TAB:
@@ -829,12 +859,30 @@ void MainWindow::on_actionDon_t_Limit_triggered()
 
 void MainWindow::on_actionAbout_theWeb_triggered()
 {
-    browser().get()->GetMainFrame().get()->LoadURL("theweb://theweb");
+    if (QString::fromStdString(browser().get()->GetMainFrame().get()->GetURL().ToString()) == settings.value("browser/home", "theweb://newtab").toString()) {
+        browser().get()->GetMainFrame().get()->LoadURL("theweb://theweb");
+    } else {
+        CefWindowInfo windowInfo;
+        CefBrowserSettings settings;
+
+        Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), "theweb://theweb", settings, CefRefPtr<CefRequestContext>());
+
+        createNewTab(browser);
+    }
 }
 
 void MainWindow::on_actionSettings_triggered()
 {
-    browser().get()->GetMainFrame().get()->LoadURL("theweb://settings");
+    if (QString::fromStdString(browser().get()->GetMainFrame().get()->GetURL().ToString()) == settings.value("browser/home", "theweb://newtab").toString()) {
+        browser().get()->GetMainFrame().get()->LoadURL("theweb://settings");
+    } else {
+        CefWindowInfo windowInfo;
+        CefBrowserSettings settings;
+
+        Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), "theweb://settings", settings, CefRefPtr<CefRequestContext>());
+
+        createNewTab(browser);
+    }
 }
 
 void MainWindow::on_fraudIgnore_clicked()
@@ -944,8 +992,14 @@ void MainWindow::on_certificateBack_clicked()
 void MainWindow::ReloadSettings() {
     if (settings.value("browser/toolbarOnBottom").toBool()) {
         this->addToolBar(Qt::BottomToolBarArea, ui->toolBar);
+        tabBar->setShape(QTabBar::RoundedSouth);
+        ((QBoxLayout*) ui->centralwidget->layout())->addWidget(tabBar);
+        ((QBoxLayout*) ui->centralwidget->layout())->addWidget(ui->securityInfoFrame);
     } else {
         this->addToolBar(Qt::TopToolBarArea, ui->toolBar);
+        tabBar->setShape(QTabBar::RoundedNorth);
+        ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->errorFrame), tabBar);
+        ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->warningFrame), ui->securityInfoFrame);
     }
 }
 
@@ -955,21 +1009,26 @@ void MainWindow::FaviconURLChange(Browser browser, std::vector<CefString> urls) 
         for (CefString url : urls) {
             browser.get()->GetHost().get()->DownloadImage(url, true, 16, false, new DownloadImageCallback([=](CefRefPtr<CefImage> image) {
                 if (indexOfBrowser(browser) != -1) {
-                    int width = 16, height = 16;
-                    CefRefPtr<CefBinaryValue> binary = image.get()->GetAsPNG(1, true, width, height);
+                    if (image.get() == NULL) {
+                        browserIcons.replace(indexOfBrowser(browser), QIcon::fromTheme("text-html"));
+                    } else {
+                        int width = 16, height = 16;
 
-                    unsigned char* data = (unsigned char *) malloc(32767);
-                    uint read = binary.get()->GetData(data, 32767, 0);
-                    QPixmap pixmap;
-                    pixmap.loadFromData(data, read);
+                        CefRefPtr<CefBinaryValue> binary = image.get()->GetAsPNG(1, true, width, height);
 
-                    if (!pixmap.isNull()) {
-                        QIcon icon(pixmap);
-                        tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));
-                        browserIcons.replace(indexOfBrowser(browser), icon);
+                        unsigned char* data = (unsigned char *) malloc(32767);
+                        uint read = binary.get()->GetData(data, 32767, 0);
+                        QPixmap pixmap;
+                        pixmap.loadFromData(data, read);
+
+                        if (!pixmap.isNull()) {
+                            QIcon icon(pixmap);
+                            tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));
+                            browserIcons.replace(indexOfBrowser(browser), icon);
+                        }
+
+                        free(data);
                     }
-
-                    free(data);
                 }
             }));
             count++;
@@ -1146,4 +1205,41 @@ void MainWindow::updateCurrentBrowserDisplay() {
             ui->browserStack->setVisible(false);
         }
     }
+}
+
+void MainWindow::on_spaceSearch_GotFocus()
+{
+    if (ui->browserStack->isVisible()) {
+        ui->browserStack->setVisible(false);
+        ui->browserStack->setVisible(true);
+    }
+}
+
+void MainWindow::KeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event) {
+    if (indexOfBrowser(browser) != -1 && os_event) {
+        if (os_event->xkey.type == KeyPress) {
+            if (os_event->xkey.state == ControlMask) {
+                if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_T)) { //New Tab
+                    ui->actionNew_Tab->trigger();
+                } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_N)) { //New Window
+                    ui->actionNew_Window->trigger();
+                } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_W)) { //Close Tab
+                    ui->actionClose_Tab->trigger();
+                } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_comma)) { //Settings
+                    ui->actionSettings->trigger();
+                }
+            }
+        }
+    }
+}
+
+void MainWindow::on_actionClose_Tab_triggered()
+{
+    browserList.at(tabBar->currentIndex()).get()->GetHost().get()->CloseBrowser(false);
+}
+
+void MainWindow::on_actionNew_Oblivion_Window_triggered()
+{
+    MainWindow* window = new MainWindow(NULL, true);
+    window->show();
 }

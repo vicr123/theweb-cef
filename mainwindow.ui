@@ -75,6 +75,9 @@
          <property name="text">
           <string>This website was </string>
          </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
       </layout>
@@ -1006,6 +1009,9 @@
     </property>
     <addaction name="actionNew_Tab"/>
     <addaction name="actionNew_Window"/>
+    <addaction name="actionNew_Oblivion_Window"/>
+    <addaction name="separator"/>
+    <addaction name="actionClose_Tab"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -1158,6 +1164,9 @@
    <property name="text">
     <string>Settings</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+,</string>
+   </property>
   </action>
   <action name="actionNew_Tab">
    <property name="icon">
@@ -1165,7 +1174,29 @@
      <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>New Tab</string>
+    <string>Ne&amp;w Tab</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="actionClose_Tab">
+   <property name="icon">
+    <iconset theme="tab-close"/>
+   </property>
+   <property name="text">
+    <string>Close Tab</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionNew_Oblivion_Window">
+   <property name="icon">
+    <iconset theme="window-new"/>
+   </property>
+   <property name="text">
+    <string>New Oblivion Window</string>
    </property>
   </action>
  </widget>
@@ -1174,6 +1205,9 @@
    <class>SpaceSearchBox</class>
    <extends>QLineEdit</extends>
    <header>spacesearchbox.h</header>
+   <slots>
+    <signal>GotFocus()</signal>
+   </slots>
   </customwidget>
   <customwidget>
    <class>ClickableFrame</class>

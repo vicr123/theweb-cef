@@ -141,7 +141,7 @@ void CefHandler::OnFaviconURLChange(Browser browser, const std::vector<CefString
 bool CefHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) {
     //qDebug() << os_event->xkey.keycode;
     if (os_event) {
-        if (os_event->xkey.keycode == 9) { //ESC key
+        if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_Escape)) { //ESC key
             //Leave Full Screen (if the browser is in full screen)
             browser.get()->GetMainFrame().get()->ExecuteJavaScript("document.webkitExitFullscreen()", "", 0);
             return true;
@@ -152,4 +152,50 @@ bool CefHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent 
 
 void CefHandler::OnBeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString &suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) {
 
+}
+
+bool CefHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event) {
+    emit signalBroker->KeyEvent(browser, event, os_event);
+    return false;
+}
+
+bool CefHandler::OnFileDialog(Browser browser, FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback) {
+    switch (mode >> 25) {
+    case FILE_DIALOG_OPEN:
+    case FILE_DIALOG_OPEN_MULTIPLE:
+    {
+        QFileDialog* dialog = new QFileDialog();
+        dialog->setAcceptMode(QFileDialog::AcceptOpen);
+        if (title.ToString() == "") {
+            dialog->setWindowTitle("Open File");
+        } else {
+            dialog->setWindowTitle(QString::fromStdString(title.ToString()));
+        }
+
+        QStringList filters;
+        /*for (CefString filter : accept_filters) {
+            filters.append(QString::fromStdString(filter.ToString()));
+        }
+        dialog->setNameFilters(filters);*/
+
+        connect(dialog, &QFileDialog::accepted, [=]() {
+            QList<CefString> selectedFiles;
+            for (QString file : dialog->selectedFiles()) {
+                selectedFiles.append(file.toStdString());
+            }
+            std::vector<CefString> selectedFilesVector = selectedFiles.toVector().toStdVector();
+            callback.get()->Continue(0, selectedFilesVector);
+            dialog->deleteLater();
+        });
+        connect(dialog, &QFileDialog::rejected, [=]() {
+            callback.get()->Cancel();
+            dialog->deleteLater();
+        });
+        dialog->show();
+        return true;
+    }
+        break;
+
+    }
+    return false;
 }

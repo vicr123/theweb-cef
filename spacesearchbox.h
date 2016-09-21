@@ -28,6 +28,7 @@ public:
     void setCurrentSecurity(SecurityType securityType);
     SecurityType CurrentSecurity();
 signals:
+    void GotFocus();
 
 public slots:
 

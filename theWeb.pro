@@ -4,9 +4,9 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT       += core gui network x11extras
 CONFIG   += c++11
-LIBS     += libcef.so libcef_dll_wrapper.a
+LIBS     += libcef.so libcef_dll_wrapper.a -lX11
 INCLUDEPATH += "$$PWD/cef"
 QMAKE_LFLAGS += -Wl,-R -Wl,$$OUT_PWD
 QMAKE_CXXFLAGS += -Wno-unused-parameter
@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     thewebschemes.cpp \
     thewebsettingsaccessor.cpp \
     clickableframe.cpp \
-    downloadimagecallback.cpp
+    downloadimagecallback.cpp \
+    oblivionrequestcontext.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -39,7 +40,8 @@ HEADERS  += \
     thewebschemes.h \
     thewebsettingsaccessor.h \
     clickableframe.h \
-    downloadimagecallback.h
+    downloadimagecallback.h \
+    oblivionrequestcontext.h
 
 FORMS    += \
     mainwindow.ui

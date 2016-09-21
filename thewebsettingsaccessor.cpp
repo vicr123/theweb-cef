@@ -73,7 +73,7 @@ bool theWebSettingsAccessor::Get(const CefString &name, const CefRefPtr<CefV8Val
         retval = CefV8Value::CreateBool(settingsData.value("data/dnt", false).toBool());
         return true;
     } else if (name == "home") {
-        retval = CefV8Value::CreateString(settingsData.value("browser/home", "http://www.google.com/").toString().toStdString());
+        retval = CefV8Value::CreateString(settingsData.value("browser/home", "theweb://newtab").toString().toStdString());
         return true;
     } else if (name == "toolbar") {
         retval = CefV8Value::CreateBool(settingsData.value("browser/toolbarOnBottom", false).toBool());
