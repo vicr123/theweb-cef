@@ -24,6 +24,7 @@ class CefHandler : public QObject,
         public CefJSDialogHandler,
         public CefFocusHandler,
         public CefKeyboardHandler,
+        public CefDownloadHandler,
         public CefEngine
 {
     Q_OBJECT
@@ -51,6 +52,9 @@ public:
     virtual CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() override {
         return this;
     }
+    virtual CefRefPtr<CefDownloadHandler> GetDownloadHandler() override {
+        return this;
+    }
 
     void OnAfterCreated(Browser browser) override;
     void OnRenderProcessTerminated(Browser browser, CefRequestHandler::TerminationStatus status) override;
@@ -62,7 +66,7 @@ public:
     void OnBeforeClose(Browser browser) override;
     void OnGotFocus(Browser browser) override;
     void OnFaviconURLChange(Browser browser, const std::vector<CefString> &urls) override;
-    bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) override;
+    void OnBeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString& suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) override;
 
     ReturnValue OnBeforeResourceLoad(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefRequestCallback> callback) override;
 
@@ -74,6 +78,7 @@ public:
     bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source, int line) override;
     bool DoClose(Browser browser) override;
     bool OnCertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) override;
+    bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) override;
 
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 

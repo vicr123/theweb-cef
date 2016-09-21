@@ -680,6 +680,7 @@ void MainWindow::on_JsDialogOk_clicked()
     ui->browserStack->setVisible(true);
     browserMetadata.at(indexOfBrowser(browser())).value("js").toList().at(2).value<CefRefPtr<CefJSDialogCallback>>().get()->Continue(true, ui->JsDialogPrompt->text().toStdString());
     removeFromMetadata(browser(), "js");
+    updateCurrentBrowserDisplay();
 }
 
 void MainWindow::on_JsDialogCancel_clicked()
@@ -688,25 +689,20 @@ void MainWindow::on_JsDialogCancel_clicked()
     ui->browserStack->setVisible(true);
     browserMetadata.at(indexOfBrowser(browser())).value("js").toList().at(2).value<CefRefPtr<CefJSDialogCallback>>().get()->Continue(false, "");
     removeFromMetadata(browser(), "js");
+    updateCurrentBrowserDisplay();
 }
 
 void MainWindow::BeforeUnloadDialog(Browser browser, const CefString &message_text, bool is_reload, CefRefPtr<CefJSDialogCallback> callback) {
-    if (IsCorrectBrowser(browser)) {
-        JsDialogCallback = callback;
-        ui->JsBeforeLeaveTitle->setVisible(true);
-        ui->JsDialogText->setText("If you've made some changes in this website, they might not be saved.");
-        if (is_reload) {
-            ui->JsDialogOk->setText("Reload anyway");
-            ui->JsDialogCancel->setText("Don't Reload");
-        } else {
-            ui->JsDialogOk->setText("Leave anyway");
-            ui->JsDialogCancel->setText("Don't leave");
-        }
-        ui->JsDialogOk->setVisible(true);
-        ui->JsDialogCancel->setVisible(true);
-        ui->JsDialogPrompt->setVisible(false);
-        ui->browserStack->setVisible(false);
-        ui->JsDialogFrame->setVisible(true);
+    if (indexOfBrowser(browser) != -1) {
+        QVariantList JsMetadata;
+
+        JsMetadata.append("unload");
+        JsMetadata.append("If you've made some changes in this website, they might not be saved.");
+        JsMetadata.append(QVariant::fromValue(callback));
+        JsMetadata.append(is_reload);
+
+        insertIntoMetadata(browser, "js", JsMetadata);
+        updateCurrentBrowserDisplay();
     }
 }
 
@@ -1075,24 +1071,37 @@ void MainWindow::updateCurrentBrowserDisplay() {
         if (metadata.keys().contains("js")) {
             QVariantList JsMetadata = metadata.value("js").toList();
 
-            ui->JsDialogFrame->setVisible(true);
-            ui->JsDialogOk->setText("OK");
-            ui->JsDialogCancel->setText("Cancel");
-            ui->JsBeforeLeaveTitle->setVisible(false);
             ui->JsDialogText->setText(JsMetadata.at(1).toString());
-
-            if (JsMetadata.at(0) == "alert") {
-                ui->JsDialogCancel->setVisible(false);
-                ui->JsDialogPrompt->setVisible(false);
-            } else if (JsMetadata.at(0) == "confirm") {
-                ui->JsDialogCancel->setVisible(true);
+            if (JsMetadata.at(0).toString() == "unload") {
+                ui->JsDialogFrame->setVisible(true);
+                if (JsMetadata.at(3).toBool()) {
+                    ui->JsDialogOk->setText("Reload anyway");
+                    ui->JsDialogCancel->setText("Don't Reload");
+                } else {
+                    ui->JsDialogOk->setText("Leave anyway");
+                    ui->JsDialogCancel->setText("Don't leave");
+                }
+                ui->JsBeforeLeaveTitle->setVisible(true);
                 ui->JsDialogPrompt->setVisible(false);
             } else {
-                ui->JsDialogCancel->setVisible(true);
-                ui->JsDialogPrompt->setText(JsMetadata.at(3).toString());
-                ui->JsDialogPrompt->setVisible(true);
+                ui->JsDialogFrame->setVisible(true);
+                ui->JsDialogOk->setText("OK");
+                ui->JsDialogCancel->setText("Cancel");
+                ui->JsBeforeLeaveTitle->setVisible(false);
 
-                ui->JsDialogPrompt->setFocus();
+                if (JsMetadata.at(0) == "alert") {
+                    ui->JsDialogCancel->setVisible(false);
+                    ui->JsDialogPrompt->setVisible(false);
+                } else if (JsMetadata.at(0) == "confirm") {
+                    ui->JsDialogCancel->setVisible(true);
+                    ui->JsDialogPrompt->setVisible(false);
+                } else {
+                    ui->JsDialogCancel->setVisible(true);
+                    ui->JsDialogPrompt->setText(JsMetadata.at(3).toString());
+                    ui->JsDialogPrompt->setVisible(true);
+
+                    ui->JsDialogPrompt->setFocus();
+                }
             }
             showBrowserStack = false;
         } else {

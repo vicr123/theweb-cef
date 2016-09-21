@@ -146,8 +146,6 @@ private:
     warningType currentWarning = none;
 
     CefRefPtr<CefJSDialogCallback> JsDialogCallback;
-    CefRefPtr<CefAuthCallback> AuthCallback;
-    CefRefPtr<CefRequestCallback> certCallback;
 
     QSettings settings;
 
