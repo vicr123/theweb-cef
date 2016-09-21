@@ -4,7 +4,7 @@ Web Browser
 ## Build
 If you're on Arch Linux, you can find theWeb as a package on the AUR. Otherwise, to build theWeb,
 
-1. First, grab a copy of the [Chromium Embedded Framework.](http://opensource.spotify.com/cefbuilds/) Right now, theWeb is using the 2704 branch.
+1. First, grab a copy of the [Chromium Embedded Framework.](http://opensource.spotify.com/cefbuilds/index.html) Right now, theWeb is using the 2704 branch.
 2. Extract the resulting tarball somewhere
 3. Copy libcef.so found in the Release folder of the tarball to the location where you put theWeb's sources
 4. Run the following commands to build theWeb
