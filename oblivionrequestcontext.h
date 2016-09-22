@@ -8,9 +8,9 @@ class OblivionRequestContextHandler : public CefRequestContextHandler, public Ce
 public:
     OblivionRequestContextHandler();
 
-    void AddRef() const;
-    bool Release() const;
-    bool HasOneRef() const;
+    void AddRef() const override;
+    bool Release() const override;
+    bool HasOneRef() const override;
 
     CefRefPtr<CefCookieManager> GetCookieManager() override {
         return cookieManager;

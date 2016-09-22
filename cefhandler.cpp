@@ -199,3 +199,71 @@ bool CefHandler::OnFileDialog(Browser browser, FileDialogMode mode, const CefStr
     }
     return false;
 }
+
+bool CefHandler::RunContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback) {
+    emit signalBroker->ContextMenu(browser, frame, params, model, callback);
+    return true;
+}
+
+void CefHandler::OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) {
+    if (!params.get()->IsPepperMenu()) {
+        model.get()->Clear();
+
+        if (params.get()->GetMisspelledWord() != "") {
+            model.get()->AddSubMenu(MisspelledWordSubmenu, "For misspelled word \"" + params.get()->GetMisspelledWord().ToString() + "\"");
+            std::vector<CefString> suggestions;
+            params.get()->GetDictionarySuggestions(suggestions);
+            model.get()->AddItem(MENU_ID_SPELLCHECK_SUGGESTION_0, suggestions.at(0));
+        }
+
+        if (params.get()->GetLinkUrl() != "") {
+            model.get()->AddSubMenu(LinkSubmenu, "For link \"" + params.get()->GetLinkUrl().ToString() + "\"");
+            model.get()->AddItem(CopyLink, "Copy Link");
+            model.get()->AddItem(OpenLinkInNewTab, "Open Link in new tab");
+            model.get()->AddItem(OpenLinkInNewWindow, "Open Link in new Window");
+            model.get()->AddItem(OpenLinkInNewOblivion, "Open Link in new Oblivion Window");
+        }
+
+        model.get()->AddSubMenu(Generic, "For Webpage");
+        model.get()->AddItem(MENU_ID_BACK, "Go Back");
+        model.get()->AddItem(MENU_ID_FORWARD, "Go Forward");
+        model.get()->AddItem(MENU_ID_RELOAD_NOCACHE, "Reload");
+        model.get()->AddItem(MENU_ID_VIEW_SOURCE, "View Page Source");
+    }
+}
+
+bool CefHandler::OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) {
+    switch (command_id) {
+    case OpenLinkInNewTab:
+        emit signalBroker->ContextMenuCommand(command_id, params);
+        break;
+    case CopyLink:
+        QApplication::clipboard()->setText(QString::fromStdString(params.get()->GetLinkUrl().ToString()));
+        break;
+    case OpenLinkInNewWindow:
+    {
+        Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(CefWindowInfo(), this, params.get()->GetLinkUrl(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+
+        MainWindow* window = new MainWindow(newBrowser);
+        window->show();
+    }
+        break;
+    case OpenLinkInNewOblivion:
+    {
+        CefBrowserSettings settings;
+        settings.application_cache = STATE_DISABLED;
+
+        CefRequestContextSettings contextSettings;
+        CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+        context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+        Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(CefWindowInfo(), this, params.get()->GetLinkUrl(), settings, context);
+
+        MainWindow* window = new MainWindow(newBrowser, true);
+        window->show();
+    }
+        break;
+    default:
+        return false;
+    }
+    return true;
+}

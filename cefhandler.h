@@ -12,6 +12,7 @@
 #include <QX11Info>
 #include <X11/keysym.h>
 #include <QFileDialog>
+#include <QClipboard>
 
 #undef Bool
 #undef None
@@ -29,11 +30,18 @@ class CefHandler : public QObject,
         public CefKeyboardHandler,
         public CefDownloadHandler,
         public CefDialogHandler,
+        public CefContextMenuHandler,
         public CefEngine
 {
     Q_OBJECT
 public:
     explicit CefHandler(QObject* parent = 0);
+
+    enum MenuItemIds {
+        LinkSubmenu = MENU_ID_USER_FIRST, CopyLink, OpenLinkInNewTab, OpenLinkInNewWindow, OpenLinkInNewOblivion,
+        MisspelledWordSubmenu,
+        Generic
+    };
 
     virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override {
         return this;
@@ -62,6 +70,9 @@ public:
     virtual CefRefPtr<CefDialogHandler> GetDialogHandler() override {
         return this;
     }
+    virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override {
+        return this;
+    }
 
     void OnAfterCreated(Browser browser) override;
     void OnRenderProcessTerminated(Browser browser, CefRequestHandler::TerminationStatus status) override;
@@ -74,6 +85,7 @@ public:
     void OnGotFocus(Browser browser) override;
     void OnFaviconURLChange(Browser browser, const std::vector<CefString> &urls) override;
     void OnBeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString& suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) override;
+    void OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) override;
 
     ReturnValue OnBeforeResourceLoad(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefRequestCallback> callback) override;
 
@@ -87,7 +99,9 @@ public:
     bool OnCertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) override;
     bool OnPreKeyEvent(Browser browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) override;
     bool OnKeyEvent(Browser browser, const CefKeyEvent &event, XEvent *os_event) override;
-    bool OnFileDialog(Browser browser, FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback);
+    bool OnFileDialog(Browser browser, FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback) override;
+    bool RunContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback) override;
+    bool OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) override;
 
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 

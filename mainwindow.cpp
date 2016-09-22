@@ -125,6 +125,8 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(CertificateError(Browser,cef_errorcode_t,CefString,CefRefPtr<CefSSLInfo>,CefRefPtr<CefRequestCallback>)), this, SLOT(CertificateError(Browser,cef_errorcode_t,CefString,CefRefPtr<CefSSLInfo>,CefRefPtr<CefRequestCallback>)));
     connect(signalBroker, SIGNAL(FaviconURLChange(Browser,std::vector<CefString>)), this, SLOT(FaviconURLChange(Browser,std::vector<CefString>)));
     connect(signalBroker, SIGNAL(KeyEvent(CefRefPtr<CefBrowser>,CefKeyEvent,XEvent*)), this, SLOT(KeyEvent(CefRefPtr<CefBrowser>,CefKeyEvent,XEvent*)));
+    connect(signalBroker, SIGNAL(ContextMenu(Browser,CefRefPtr<CefFrame>,CefRefPtr<CefContextMenuParams>,CefRefPtr<CefMenuModel>,CefRefPtr<CefRunContextMenuCallback>)), this, SLOT(ContextMenu(Browser,CefRefPtr<CefFrame>,CefRefPtr<CefContextMenuParams>,CefRefPtr<CefMenuModel>,CefRefPtr<CefRunContextMenuCallback>)));
+    connect(signalBroker, SIGNAL(ContextMenuCommand(int,CefRefPtr<CefContextMenuParams>)), this, SLOT(ContextMenuCommand(int,CefRefPtr<CefContextMenuParams>)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -470,7 +472,7 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                         threatMetadata.append("Google Safe Browsing found malware on this site. Malware can cause your "
                                                     "PC to slow down or act erratically.");
                     } else if (threatType == "SOCIAL_ENGINEERING") {
-                        threatMetadata.append("This website may trick you into doing something into revealing your "
+                        threatMetadata.append("This website may trick you into doing something like revealing your "
                                                       "personal information (such as passwords or credit card information) or "
                                                       "installing software that you may not want. <b>We suggest that you don't visit "
                                                       "this website and enter any personal information.</b>");
@@ -1300,4 +1302,87 @@ void MainWindow::on_actionNew_Oblivion_Window_triggered()
 {
     MainWindow* window = new MainWindow(NULL, true);
     window->show();
+}
+
+void MainWindow::ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback) {
+    if (IsCorrectBrowser(browser)) {
+        QMenu* menu = new QMenu();
+        bool selectedItem = false;
+        for (int i = 0; i < model.get()->GetCount(); i++) {
+            int commandId = model.get()->GetCommandIdAt(i);
+            switch (model.get()->GetType(commandId)) {
+            case MENUITEMTYPE_COMMAND:
+            {
+                QString icon;
+                switch (commandId) {
+                case MENU_ID_BACK:
+                    icon = "go-previous";
+                    break;
+                case MENU_ID_FORWARD:
+                    icon = "go-next";
+                    break;
+                case MENU_ID_RELOAD_NOCACHE:
+                    icon = "view-refresh";
+                    break;
+                case MENU_ID_COPY:
+                case CefHandler::CopyLink:
+                    icon = "edit-copy";
+                    break;
+                case CefHandler::OpenLinkInNewTab:
+                    icon = "tab-new";
+                    break;
+                case CefHandler::OpenLinkInNewWindow:
+                case CefHandler::OpenLinkInNewOblivion:
+                    icon = "window-new";
+                }
+
+                QAction* action = new QAction();
+                action->setText(QString::fromStdString(model.get()->GetLabel(commandId).ToString()));
+                action->setIcon(QIcon::fromTheme(icon));
+                action->setEnabled(model.get()->IsEnabled(commandId));
+                connect(action, &QAction::triggered, [callback, commandId, &selectedItem] {
+                    selectedItem = true;
+                    callback.get()->Continue(commandId, EVENTFLAG_NONE);
+                });
+                menu->addAction(action);
+            }
+                break;
+            case MENUITEMTYPE_SEPARATOR:
+                menu->addSeparator();
+                break;
+            case MENUITEMTYPE_SUBMENU:
+                menu->addSection(QString::fromStdString(model.get()->GetLabel(commandId).ToString()));
+                break;
+            }
+        }
+        connect(menu, &QMenu::destroyed, [callback, &selectedItem] {
+            if (selectedItem == false) {
+                callback.get()->Cancel();
+            }
+        });
+        menu->exec(ui->browserStack->mapToGlobal(QPoint(params.get()->GetXCoord(), params.get()->GetYCoord())));
+        delete menu;
+    }
+}
+
+void MainWindow::ContextMenuCommand(int command_id, CefRefPtr<CefContextMenuParams> params) {
+    switch (command_id) {
+    case CefHandler::OpenLinkInNewTab:
+    {
+        Browser newBrowser;
+        if (isOblivion) {
+            CefBrowserSettings settings;
+            settings.application_cache = STATE_DISABLED;
+
+            CefRequestContextSettings contextSettings;
+            CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+            context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+            newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), settings, context);
+        } else {
+            newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+        }
+        createNewTab(newBrowser);
+    }
+        break;
+    }
 }

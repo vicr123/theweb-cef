@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network x11extras
+QT       += core gui network x11extras dbus
 CONFIG   += c++11
 LIBS     += libcef.so libcef_dll_wrapper.a -lX11
 INCLUDEPATH += "$$PWD/cef"
@@ -12,6 +12,9 @@ QMAKE_LFLAGS += -Wl,-R -Wl,$$OUT_PWD
 QMAKE_CXXFLAGS += -Wno-unused-parameter
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+DBUS_ADAPTORS += mainDBus
+mainDBus.files = org.thesuite.theweb.xml
 
 TARGET = theweb
 TEMPLATE = app
@@ -27,7 +30,8 @@ SOURCES += main.cpp\
     thewebsettingsaccessor.cpp \
     clickableframe.cpp \
     downloadimagecallback.cpp \
-    oblivionrequestcontext.cpp
+    oblivionrequestcontext.cpp \
+    maindbus.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -41,7 +45,8 @@ HEADERS  += \
     thewebsettingsaccessor.h \
     clickableframe.h \
     downloadimagecallback.h \
-    oblivionrequestcontext.h
+    oblivionrequestcontext.h \
+    maindbus.h
 
 FORMS    += \
     mainwindow.ui

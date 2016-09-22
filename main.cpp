@@ -4,9 +4,13 @@
 #include "cefhandler.h"
 #include "signalbroker.h"
 #include "completioncallback.h"
+#include "maindbus.h"
 #include <QApplication>
 #include <QTimer>
 #include <QDir>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QDBusInterface>
 
 CefHandler* handler;
 SignalBroker* signalBroker;
@@ -55,6 +59,29 @@ int main(int argc, char *argv[])
     //CefCookieManager::GetGlobalManager(NULL).get()->SetStoragePath(QDir::homePath().append("/.theweb/cookies").toStdString(), false, NULL);
 
     handler = new CefHandler();
+
+    //Check if theWeb is already running. We do this after CEF initializes because CEF can block things.
+    bool isRunning;
+    isRunning = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().contains("org.thesuite.theweb");
+    if (isRunning) {
+        //theWeb is already running. Check the PID
+        QDBusInterface interface("org.thesuite.theweb", "/org/thesuite/theweb", "org.thesuite.theweb");
+        if (interface.property("processID") != a.applicationPid()) {
+            //PID is different. Open a new window in parent process and exit this one.
+            qDebug() << "theWeb is already running. Opening new window in existing browser process (via DBus).";
+
+            //Send message via DBus to other theWeb process
+            QDBusMessage message = QDBusMessage::createMethodCall("org.thesuite.theweb", "/org/thesuite/theweb", "org.thesuite.theweb", "newWindow");
+            QDBusConnection::sessionBus().call(message, QDBus::NoBlock);
+
+            //Exit theWeb
+            CefShutdown();
+            return 0;
+        }
+    } else {
+        //We'll get here only if theWeb is not running.
+        new MainDBus(); //Initialize DBus service
+    }
 
     //Initialize Qt
     MainWindow w;
