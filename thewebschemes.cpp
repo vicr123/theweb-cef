@@ -6,18 +6,24 @@ theWebSchemeResourceHandler::theWebSchemeResourceHandler()
 }
 
 bool theWebSchemeResourceHandler::ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) {
-    QUrl url(QString::fromStdString(request.get()->GetURL().ToString()));
-
-    if (url.path() == "/css.css") {
-        resourcePath = ":/thewebscheme/css.css";
+    if (request.get()->GetURL() == "theweb://crash") {
+        servingPage = Crash;
+    } else if (request.get()->GetURL() == "theweb://kill") {
+        servingPage = Kill;
     } else {
-        resourcePath = ":/thewebscheme/" + url.host() + url.path();
-    }
+        QUrl url(QString::fromStdString(request.get()->GetURL().ToString()));
 
-    if (!QFile(resourcePath).exists()) {
-        servingPage = Invalid;
-    }
+        if (url.path() == "/css.css") {
+            resourcePath = ":/thewebscheme/css.css";
+        } else {
+            resourcePath = ":/thewebscheme/" + url.host() + url.path();
+        }
 
+        if (!QFile(resourcePath).exists()) {
+            servingPage = Invalid;
+        }
+
+    }
     callback.get()->Continue();
     return true;
 }
@@ -25,6 +31,12 @@ bool theWebSchemeResourceHandler::ProcessRequest(CefRefPtr<CefRequest> request, 
 void theWebSchemeResourceHandler::GetResponseHeaders(CefRefPtr<CefResponse> response, int64& response_length, CefString& redirectUrl) {
     if (servingPage == Invalid) {
         response.get()->SetError(ERR_INVALID_URL);
+    } else if (servingPage == Crash) {
+        redirectUrl = "chrome://crash";
+        response.get()->SetStatus(301);
+    } else if (servingPage == Kill) {
+        redirectUrl = "chrome://kill";
+        response.get()->SetStatus(301);
     } else {
         resourceFile.setFileName(resourcePath);
         resourceFile.open(QFile::ReadOnly);

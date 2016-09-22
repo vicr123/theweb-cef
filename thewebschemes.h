@@ -12,8 +12,8 @@ class theWebSchemeResourceHandler : public CefResourceHandler, public CefEngine
     enum pageServed {
         None,
         Invalid,
-        About,
-        Settings
+        Crash,
+        Kill
     };
 
 public:

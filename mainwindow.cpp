@@ -85,6 +85,12 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     menuButton->setPopupMode(QToolButton::InstantPopup);
     if (isOblivion) {
         menuButton->setIcon(QIcon(":/icons/oblivionIcon"));
+        QPalette searchPalette = ui->spaceSearch->palette();
+        QColor temp;
+        temp = searchPalette.color(QPalette::Base);
+        searchPalette.setColor(QPalette::Base, searchPalette.color(QPalette::Text));
+        searchPalette.setColor(QPalette::Text, temp);
+        ui->spaceSearch->setPalette(searchPalette);
     } else {
         menuButton->setIcon(QIcon(":/icons/icon"));
     }
@@ -254,6 +260,14 @@ void MainWindow::RenderProcessTerminated(Browser browser, CefRequestHandler::Ter
         }
 
         insertIntoMetadata(browser, "crash", crashMetadata);
+
+        tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText("Well, this is strange...", Qt::ElideRight, 200));
+        tabBar->setTabData(indexOfBrowser(browser), "Well, this is strange...");
+
+        QIcon icon = QIcon::fromTheme("dialog-error");
+        tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));
+        browserIcons.replace(indexOfBrowser(browser), icon);
+
         updateCurrentBrowserDisplay();
     }
 }
@@ -271,11 +285,15 @@ void MainWindow::TitleChanged(Browser browser, const CefString& title) {
 void MainWindow::on_spaceSearch_returnPressed()
 {
     QString urlToLoad;
-    QUrl urlParser = QUrl::fromUserInput(ui->spaceSearch->text());
-    if (urlParser.isEmpty() || !urlParser.isValid()) {
-        urlToLoad = "http://www.google.com/search#q=" + ui->spaceSearch->text().replace(" ", "+");
+    if (ui->spaceSearch->text().contains(".") || ui->spaceSearch->text().contains("/") || ui->spaceSearch->text().contains("\\")) {
+        QUrl urlParser = QUrl::fromUserInput(ui->spaceSearch->text());
+        if (!urlParser.isEmpty() || urlParser.scheme() == "theweb" || urlParser.scheme() == "chrome") {
+            urlToLoad = ui->spaceSearch->text();
+        } else {
+            urlToLoad = "http://www.google.com/search#q=" + ui->spaceSearch->text().replace(" ", "+");
+        }
     } else {
-        urlToLoad = ui->spaceSearch->text();
+        urlToLoad = "http://www.google.com/search#q=" + ui->spaceSearch->text().replace(" ", "+");
     }
     browser().get()->GetMainFrame().get()->LoadURL(urlToLoad.toStdString());
 }
@@ -322,6 +340,8 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
 
                         bool isEv = false;
                         //if (certificateChain.count() > 2) {
+
+                            //List of EV Certificates that theWeb recognizes.
                             QMap<QString, QString> EVOids;
                             EVOids.insert("Actalis", "1.3.159.1.17.1");
                             EVOids.insert("AffirmTrust", "1.3.6.1.4.1.34697.2.1");
@@ -463,7 +483,6 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                 }
             });
             manager->post(request, requestBody.toUtf8());
-
         }
 
         insertIntoMetadata(browser, "security", securityMetadata);
@@ -678,6 +697,15 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
             }
 
             insertIntoMetadata(browser, "error", errorDisplayMetadata);
+
+            tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText(errorDisplayMetadata.at(0), Qt::ElideRight, 200));
+            tabBar->setTabData(indexOfBrowser(browser), errorDisplayMetadata.at(0));
+
+            QIcon icon = QIcon::fromTheme("dialog-error");
+            tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));
+            browserIcons.replace(indexOfBrowser(browser), icon);
+
+            updateCurrentBrowserDisplay();
         }
     }
 }
