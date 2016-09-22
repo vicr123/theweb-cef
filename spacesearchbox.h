@@ -5,6 +5,7 @@
 #include <QFocusEvent>
 #include <QUrl>
 #include <QPaintEvent>
+#include <QDebug>
 
 class SpaceSearchBox : public QLineEdit
 {
@@ -35,6 +36,8 @@ public slots:
 private:
     void focusInEvent(QFocusEvent* event);
     void focusOutEvent(QFocusEvent* event);
+
+    void updateText();
 
     QUrl url;
     SecurityType sec = None;

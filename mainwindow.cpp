@@ -270,7 +270,14 @@ void MainWindow::TitleChanged(Browser browser, const CefString& title) {
 
 void MainWindow::on_spaceSearch_returnPressed()
 {
-    browser().get()->GetMainFrame().get()->LoadURL(ui->spaceSearch->text().toStdString());
+    QString urlToLoad;
+    QUrl urlParser = QUrl::fromUserInput(ui->spaceSearch->text());
+    if (urlParser.isEmpty() || !urlParser.isValid()) {
+        urlToLoad = "http://www.google.com/search#q=" + ui->spaceSearch->text().replace(" ", "+");
+    } else {
+        urlToLoad = ui->spaceSearch->text();
+    }
+    browser().get()->GetMainFrame().get()->LoadURL(urlToLoad.toStdString());
 }
 
 void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const CefString &url) {
@@ -285,6 +292,7 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
         ui->certMoreInfo->setVisible(false);
         ui->certIgnore->setText("More Info");
         removeFromMetadata(browser, "certificate");
+        removeFromMetadata(browser, "threat");
 
         ui->spaceSearch->setCurrentUrl(currentUrl);
 
@@ -433,22 +441,25 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                 QJsonDocument JsonDoc = QJsonDocument::fromJson(replyString.toUtf8());
                 QJsonObject object = JsonDoc.object();
                 if (object.contains("matches")) { //Something was found!
+                    QStringList threatMetadata;
+
                     QString threatType = object.value("matches").toArray().first().toObject().value("threatType").toString();
                     if (threatType == "MALWARE") {
-                        ui->fraudExplanation->setText("This website may contain malware. <b>We suggest that you don't visit "
+                        threatMetadata.append("This website may contain malware. <b>We suggest that you don't visit "
                                                       "this website.</b>");
-                        ui->fraudExtraText->setText("Google Safe Browsing found malware on this site. Malware can cause your "
+                        threatMetadata.append("Google Safe Browsing found malware on this site. Malware can cause your "
                                                     "PC to slow down or act erratically.");
                     } else if (threatType == "SOCIAL_ENGINEERING") {
-                        ui->fraudExplanation->setText("This website may trick you into doing something into revealing your "
+                        threatMetadata.append("This website may trick you into doing something into revealing your "
                                                       "personal information (such as passwords or credit card information) or "
                                                       "installing software that you may not want. <b>We suggest that you don't visit "
                                                       "this website and enter any personal information.</b>");
-                        ui->fraudExtraText->setText("Google Safe Browsing found this site to be deceptive. These websites trick "
+                        threatMetadata.append("Google Safe Browsing found this site to be deceptive. These websites trick "
                                                     "users into doing something dangerous.");
                     }
-                    ui->fraudFrame->setVisible(true);
-                    ui->browserStack->setVisible(false);
+
+                    insertIntoMetadata(browser, "threat", threatMetadata);
+                    updateCurrentBrowserDisplay();
                 }
             });
             manager->post(request, requestBody.toUtf8());
@@ -894,14 +905,20 @@ void MainWindow::on_fraudIgnore_clicked()
         ui->fraudIgnore->setText("More Info");
         ui->fraudExtraFrame->setVisible(false);
         ui->browserStack->setVisible(true);
+        removeFromMetadata(browser(), "threat");
     }
 }
 
 void MainWindow::on_fraudBack_clicked()
 {
-    ui->actionGo_Back->trigger();
+    if (browser().get()->CanGoBack()) {
+        ui->actionGo_Back->trigger();
+    } else {
+        this->close();
+    }
     ui->fraudFrame->setVisible(false);
     ui->browserStack->setVisible(true);
+    removeFromMetadata(browser(), "threat");
 }
 
 void MainWindow::on_securityFrame_clicked()
@@ -1198,6 +1215,18 @@ void MainWindow::updateCurrentBrowserDisplay() {
             showBrowserStack = false;
         } else {
             ui->AuthFrame->setVisible(false);
+        }
+
+        if (metadata.keys().contains("threat")) {
+            QStringList threatMetadata = metadata.value("threat").toStringList();
+
+            ui->fraudExplanation->setText(threatMetadata.at(0));
+            ui->fraudExtraText->setText(threatMetadata.at(1));
+
+            ui->fraudFrame->setVisible(true);
+            showBrowserStack = false;
+        } else {
+            ui->fraudFrame->setVisible(false);
         }
 
         if (showBrowserStack) {
