@@ -5,6 +5,8 @@
 #include <QPropertyAnimation>
 #include <QSequentialAnimationGroup>
 #include <QParallelAnimationGroup>
+#include <QSettings>
+#include <QWindow>
 
 class AnimatedStackedWidget : public QStackedWidget
 {
@@ -12,6 +14,7 @@ class AnimatedStackedWidget : public QStackedWidget
 public:
     explicit AnimatedStackedWidget(QWidget *parent = 0);
 
+    void removeWidget(QWidget *w);
 signals:
 
 public slots:
@@ -19,6 +22,8 @@ public slots:
 
 private:
     bool doingNewAnimation = false;
+    QSettings settings;
+    QWidget* widgetToRemove = NULL;
 };
 
 #endif // ANIMATEDSTACKEDWIDGET_H

@@ -405,10 +405,10 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                         //}
 
                         if (isEv) {
-                            QString commonName = "";
+                            QString organization = "";
                             QString countryName = "";
                             if (certificate.subjectInfo(QSslCertificate::CommonName).count() != 0) {
-                                commonName = certificate.subjectInfo(QSslCertificate::Organization).first();
+                                organization = certificate.subjectInfo(QSslCertificate::Organization).first();
                             }
 
                             if (certificate.subjectInfo(QSslCertificate::CountryName).count() != 0) {
@@ -416,10 +416,10 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                             }
 
                             securityMetadata.append("ev");
-                            securityMetadata.append(commonName + " [" + countryName + "]");
+                            securityMetadata.append(organization + " [" + countryName + "]");
                             securityMetadata.append("This connection is secure, and the company has been verified by <b>" +
                                                     certificate.issuerInfo(QSslCertificate::CommonName).first() + "</b> to be <b>" +
-                                                    commonName + "</b>");
+                                                    organization + "</b>");
                         } else {
                             ui->securityFrame->setStyleSheet("");
 
@@ -1215,8 +1215,8 @@ void MainWindow::updateCurrentBrowserDisplay() {
         if (metadata.keys().contains("js")) {
             QVariantList JsMetadata = metadata.value("js").toList();
 
-            ui->JsDialogText->setText(JsMetadata.at(1).toString());
             if (JsMetadata.at(0).toString() == "unload") {
+                ui->JsDialogText->setText(JsMetadata.at(1).toString());
                 ui->JsDialogFrame->setVisible(true);
                 if (JsMetadata.at(3).toBool()) {
                     ui->JsDialogOk->setText("Reload anyway");
@@ -1225,13 +1225,24 @@ void MainWindow::updateCurrentBrowserDisplay() {
                     ui->JsDialogOk->setText("Leave anyway");
                     ui->JsDialogCancel->setText("Don't leave");
                 }
+                ui->JsBeforeLeaveTitle->setText("Hold up!");
                 ui->JsBeforeLeaveTitle->setVisible(true);
                 ui->JsDialogPrompt->setVisible(false);
             } else {
                 ui->JsDialogFrame->setVisible(true);
-                ui->JsDialogOk->setText("OK");
-                ui->JsDialogCancel->setText("Cancel");
-                ui->JsBeforeLeaveTitle->setVisible(false);
+                if (QUrl(QString::fromStdString(browser().get()->GetMainFrame().get()->GetURL().ToString())).scheme() == "theweb") {
+                    QStringList splitText = JsMetadata.at(1).toString().split(":");
+                    ui->JsDialogOk->setText(splitText.at(2));
+                    ui->JsDialogCancel->setText(splitText.at(3));
+                    ui->JsBeforeLeaveTitle->setText(splitText.at(0));
+                    ui->JsBeforeLeaveTitle->setVisible(true);
+                    ui->JsDialogText->setText(splitText.at(1));
+                } else {
+                    ui->JsDialogOk->setText("OK");
+                    ui->JsDialogCancel->setText("Cancel");
+                    ui->JsBeforeLeaveTitle->setVisible(false);
+                    ui->JsDialogText->setText(JsMetadata.at(1).toString());
+                }
 
                 if (JsMetadata.at(0) == "alert") {
                     ui->JsDialogCancel->setVisible(false);
@@ -1292,6 +1303,9 @@ void MainWindow::updateCurrentBrowserDisplay() {
 
             ui->fraudFrame->setVisible(true);
             showBrowserStack = false;
+
+            //Hide the JS dialog frame in case website is doing something bad
+            ui->JsDialogFrame->setVisible(false);
         } else {
             ui->fraudFrame->setVisible(false);
         }

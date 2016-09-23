@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QThread>
+#include <functional>
 
 class theWebSettingsAccessor : public CefV8Accessor, public CefRefCount
 {
@@ -33,12 +34,12 @@ private:
 class V8Function : public CefV8Handler, public CefEngine
 {
 public:
-    V8Function(void (*function)());
+    V8Function(std::function<void()> function);
 
     bool Execute(const CefString &name, CefRefPtr<CefV8Value> object, const CefV8ValueList &arguments, CefRefPtr<CefV8Value> &retval, CefString &exception) override;
 
 private:
-    void (*functionToCall)();
+    std::function<void()> function;
 };
 
 #endif // THEWEBSETTINGSACCESSOR_H

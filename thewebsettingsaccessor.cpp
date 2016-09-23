@@ -6,6 +6,7 @@ theWebSettingsAccessor::theWebSettingsAccessor(Browser browser)
 {
     this->associatedBrowser = browser;
 
+    //Update browser settings
     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("theWebSettings_get");
     browser.get()->SendProcessMessage(PID_BROWSER, message);
 }
@@ -118,11 +119,11 @@ bool theWebSettingsAccessor::HasOneRef() const {
     return CefRefCount::HasOneRef();
 }
 
-V8Function::V8Function(void (*function)()) {
-    this->functionToCall = function;
+V8Function::V8Function(std::function<void()> function) {
+    this->function = function;
 }
 
 bool V8Function::Execute(const CefString &name, CefRefPtr<CefV8Value> object, const CefV8ValueList &arguments, CefRefPtr<CefV8Value> &retval, CefString &exception) {
-    functionToCall();
+    function();
     return true;
 }
