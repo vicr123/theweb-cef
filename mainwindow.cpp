@@ -190,6 +190,7 @@ void MainWindow::createNewTab(Browser newBrowser, bool openInBackground) {
     browserList.append(browser);
 
     if (!openInBackground) {
+        ui->browserStack->setCurrentIndex(tabBar->count() - 1, true);
         tabBar->setCurrentIndex(tabBar->count() - 1);
         browserWidget->setFocus();
     }
@@ -263,8 +264,13 @@ void MainWindow::RenderProcessTerminated(Browser browser, CefRequestHandler::Ter
 
         insertIntoMetadata(browser, "crash", crashMetadata);
 
-        tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText("Well, this is strange...", Qt::ElideRight, 200));
+        if (settings.value("browser/tabText", false).toBool()) {
+            tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText("Well, this is strange...", Qt::ElideRight, 200));
+        } else {
+            tabBar->setTabText(indexOfBrowser(browser), "");
+        }
         tabBar->setTabData(indexOfBrowser(browser), "Well, this is strange...");
+        tabBar->setTabToolTip(indexOfBrowser(browser), "Well, this is strange...");
 
         QIcon icon = QIcon::fromTheme("dialog-error");
         tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));
@@ -276,8 +282,13 @@ void MainWindow::RenderProcessTerminated(Browser browser, CefRequestHandler::Ter
 
 void MainWindow::TitleChanged(Browser browser, const CefString& title) {
     if (indexOfBrowser(browser) != -1) {
-        tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText(QString::fromStdString(title.ToString()), Qt::ElideRight, 200));
+        if (settings.value("browser/tabText", false).toBool()) {
+            tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText(QString::fromStdString(title.ToString()), Qt::ElideRight, 200));
+        } else {
+            tabBar->setTabText(indexOfBrowser(browser), "");
+        }
         tabBar->setTabData(indexOfBrowser(browser), QString::fromStdString(title.ToString()));
+        tabBar->setTabToolTip(indexOfBrowser(browser), QString::fromStdString(title.ToString()));
         if (IsCorrectBrowser(browser)) {
             this->setWindowTitle(QString::fromStdString(title.ToString()).append(" - theWeb"));
         }
@@ -700,8 +711,14 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
 
             insertIntoMetadata(browser, "error", errorDisplayMetadata);
 
-            tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText(errorDisplayMetadata.at(0), Qt::ElideRight, 200));
+
+            if (settings.value("browser/tabText", false).toBool()) {
+                tabBar->setTabText(indexOfBrowser(browser), tabBar->fontMetrics().elidedText(errorDisplayMetadata.at(0), Qt::ElideRight, 200));
+            } else {
+                tabBar->setTabText(indexOfBrowser(browser), "");
+            }
             tabBar->setTabData(indexOfBrowser(browser), errorDisplayMetadata.at(0));
+            tabBar->setTabToolTip(indexOfBrowser(browser), errorDisplayMetadata.at(0));
 
             QIcon icon = QIcon::fromTheme("dialog-error");
             tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));
@@ -719,7 +736,7 @@ void MainWindow::BeforeClose(Browser browser) {
             CefCookieManager::GetGlobalManager(NULL).get()->FlushStore(NULL);
         }
 
-        //Actually close the window
+        //Actually close the tab
         int index = indexOfBrowser(browser);
         ui->browserStack->removeWidget(ui->browserStack->widget(index));
         browserMetadata.removeAt(index);
@@ -1049,6 +1066,14 @@ void MainWindow::ReloadSettings() {
         ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->warningFrame), ui->securityInfoFrame);
         ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->warningFrame), tabBar);
     }
+
+    for (int i = 0; i < tabBar->count(); i++) {
+        if (settings.value("browser/tabText", false).toBool()) {
+            tabBar->setTabText(i, tabBar->fontMetrics().elidedText(tabBar->tabData(i).toString(), Qt::ElideRight, 200));
+        } else {
+            tabBar->setTabText(i, "");
+        }
+    }
 }
 
 void MainWindow::FaviconURLChange(Browser browser, std::vector<CefString> urls) {
@@ -1324,6 +1349,14 @@ void MainWindow::ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefP
                 case MENU_ID_RELOAD_NOCACHE:
                     icon = "view-refresh";
                     break;
+                case MENU_ID_SPELLCHECK_SUGGESTION_0:
+                case MENU_ID_SPELLCHECK_SUGGESTION_1:
+                case MENU_ID_SPELLCHECK_SUGGESTION_2:
+                case MENU_ID_SPELLCHECK_SUGGESTION_3:
+                case MENU_ID_SPELLCHECK_SUGGESTION_4:
+                case MENU_ID_NO_SPELLING_SUGGESTIONS:
+                    icon = "tools-check-spelling";
+                    break;
                 case MENU_ID_COPY:
                 case CefHandler::CopyLink:
                     icon = "edit-copy";
@@ -1334,6 +1367,7 @@ void MainWindow::ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefP
                 case CefHandler::OpenLinkInNewWindow:
                 case CefHandler::OpenLinkInNewOblivion:
                     icon = "window-new";
+                    break;
                 }
 
                 QAction* action = new QAction();
@@ -1360,8 +1394,10 @@ void MainWindow::ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefP
                 callback.get()->Cancel();
             }
         });
-        menu->exec(ui->browserStack->mapToGlobal(QPoint(params.get()->GetXCoord(), params.get()->GetYCoord())));
-        delete menu;
+        connect(menu, SIGNAL(aboutToHide()), menu, SLOT(deleteLater()));
+        //menu->exec(ui->browserStack->mapToGlobal(QPoint(params.get()->GetXCoord(), params.get()->GetYCoord())));
+        menu->popup(ui->browserStack->mapToGlobal(QPoint(params.get()->GetXCoord(), params.get()->GetYCoord())));
+        //delete menu;
     }
 }
 

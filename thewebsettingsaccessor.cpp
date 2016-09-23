@@ -43,7 +43,7 @@ bool theWebSettingsAccessor::Set(const CefString &name, const CefRefPtr<CefV8Val
             args.get()->SetString(2, value.get()->GetStringValue());
             this->associatedBrowser.get()->SendProcessMessage(PID_BROWSER, message);
 
-            settingsData.insert("data/dnt", value.get()->GetBoolValue());
+            settingsData.insert("browser/home", QString::fromStdString(value.get()->GetStringValue().ToString()));
         } else {
             exception = "Invalid Value Type";
         }
@@ -57,7 +57,23 @@ bool theWebSettingsAccessor::Set(const CefString &name, const CefRefPtr<CefV8Val
             args.get()->SetBool(2, value.get()->GetBoolValue());
             this->associatedBrowser.get()->SendProcessMessage(PID_BROWSER, message);
 
-            settingsData.insert("data/toolbarOnBottom", value.get()->GetBoolValue());
+            settingsData.insert("browser/toolbarOnBottom", value.get()->GetBoolValue());
+
+            SendReloadSettings();
+        } else {
+            exception = "Invalid Value Type";
+        }
+        return true;
+    } else if (name == "tabText") {
+        if (value.get()->IsBool()) {
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("theWebSettings");
+            CefRefPtr<CefListValue> args = message.get()->GetArgumentList();
+            args.get()->SetString(0, "browser/tabText");
+            args.get()->SetString(1, "bool");
+            args.get()->SetBool(2, value.get()->GetBoolValue());
+            this->associatedBrowser.get()->SendProcessMessage(PID_BROWSER, message);
+
+            settingsData.insert("browser/tabText", value.get()->GetBoolValue());
 
             SendReloadSettings();
         } else {
@@ -77,6 +93,9 @@ bool theWebSettingsAccessor::Get(const CefString &name, const CefRefPtr<CefV8Val
         return true;
     } else if (name == "toolbar") {
         retval = CefV8Value::CreateBool(settingsData.value("browser/toolbarOnBottom", false).toBool());
+        return true;
+    } else if (name == "tabText") {
+        retval = CefV8Value::CreateBool(settingsData.value("browser/tabText", false).toBool());
         return true;
     }
     return false;

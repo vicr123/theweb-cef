@@ -210,10 +210,29 @@ void CefHandler::OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame,
         model.get()->Clear();
 
         if (params.get()->GetMisspelledWord() != "") {
-            model.get()->AddSubMenu(MisspelledWordSubmenu, "For misspelled word \"" + params.get()->GetMisspelledWord().ToString() + "\"");
-            std::vector<CefString> suggestions;
-            params.get()->GetDictionarySuggestions(suggestions);
-            model.get()->AddItem(MENU_ID_SPELLCHECK_SUGGESTION_0, suggestions.at(0));
+            model.get()->AddSubMenu(MisspelledWordSubmenu, "Correct misspelled word \"" + params.get()->GetMisspelledWord().ToString() + "\" to");
+            std::vector<CefString> suggestionsVector;
+            params.get()->GetDictionarySuggestions(suggestionsVector);
+
+            QVector<CefString> suggestionsList = QVector<CefString>::fromStdVector(suggestionsVector);
+
+            if (suggestionsList.count() == 0) {
+                model.get()->AddItem(MENU_ID_NO_SPELLING_SUGGESTIONS, "Not sure what you're trying to type");
+                model.get()->SetEnabled(MENU_ID_NO_SPELLING_SUGGESTIONS, false);
+            } else {
+                switch (suggestionsList.count()) {
+                case 5:
+                    model.get()->AddItem(MENU_ID_SPELLCHECK_SUGGESTION_4, suggestionsList.at(4));
+                case 4:
+                    model.get()->AddItem(MENU_ID_SPELLCHECK_SUGGESTION_3, suggestionsList.at(3));
+                case 3:
+                    model.get()->AddItem(MENU_ID_SPELLCHECK_SUGGESTION_2, suggestionsList.at(2));
+                case 2:
+                    model.get()->AddItem(MENU_ID_SPELLCHECK_SUGGESTION_1, suggestionsList.at(1));
+                case 1:
+                    model.get()->AddItem(MENU_ID_SPELLCHECK_SUGGESTION_0, suggestionsList.at(0));
+                }
+            }
         }
 
         if (params.get()->GetLinkUrl() != "") {

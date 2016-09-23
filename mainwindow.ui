@@ -990,7 +990,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QStackedWidget" name="browserStack"/>
+     <widget class="AnimatedStackedWidget" name="browserStack"/>
     </item>
    </layout>
   </widget>
@@ -1222,6 +1222,12 @@
    <slots>
     <signal>clicked()</signal>
    </slots>
+  </customwidget>
+  <customwidget>
+   <class>AnimatedStackedWidget</class>
+   <extends>QStackedWidget</extends>
+   <header>animatedstackedwidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

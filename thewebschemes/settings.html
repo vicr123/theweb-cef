@@ -29,9 +29,8 @@
   <body onload="initPage();">
     <div class="navbar">
       <div class="navbarContent">
-        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg"
-            width="40" height="40">&nbsp; <span class="navbarHeader">theWeb</span>
-        </div>
+        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg" width="40"
+            height="40">&nbsp; <span class="navbarHeader">theWeb</span> </div>
         <ul class="navbarItems">
           <li> <a href="theweb://settings" class="selectedItem"> Settings </a>
           </li>
@@ -48,6 +47,10 @@
         type="text">
       <p style="text-align: right;"><button onclick="document.getElementById('homepage').value = 'theweb://newtab'">Use
           New Tab Page</button></p>
+    </div>
+    <div class="sectionHeader">Display</div>
+    <div class="pageContent"> <input id="tabText" onchange="theWebSettingsObject.tabText = document.getElementById('tabText').checked"
+        type="checkbox"><label for="tabText">Show text in tabs</label><br>
       <input id="toolbar" onchange="theWebSettingsObject.toolbar = document.getElementById('toolbar').checked"
         type="checkbox"><label for="toolbar">Put the toolbar on the bottom</label>
       <br>

@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     clickableframe.cpp \
     downloadimagecallback.cpp \
     oblivionrequestcontext.cpp \
-    maindbus.cpp
+    maindbus.cpp \
+    animatedstackedwidget.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -46,7 +47,8 @@ HEADERS  += \
     clickableframe.h \
     downloadimagecallback.h \
     oblivionrequestcontext.h \
-    maindbus.h
+    maindbus.h \
+    animatedstackedwidget.h
 
 FORMS    += \
     mainwindow.ui

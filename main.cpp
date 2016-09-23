@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
 
     CefString(&settings.user_agent) = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) theWeb/15.00 Chrome/51.0.2704.103 Safari/537.36";
     CefString(&settings.cache_path) = QDir::homePath().append("/.theweb/cache").toStdString();
+    CefString(&settings.locale) = "en-US";
     settings.remote_debugging_port = 26154;
     //settings.single_process = true;
 
