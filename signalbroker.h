@@ -27,7 +27,7 @@ signals:
     void FaviconURLChange(Browser browser, std::vector<CefString> urls);
     void KeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event);
     void ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback);
-    void ContextMenuCommand(int command_id, CefRefPtr<CefContextMenuParams> params);
+    void ContextMenuCommand(Browser browser, int command_id, CefRefPtr<CefContextMenuParams> params);
     void ReloadSettings();
 
 public slots:

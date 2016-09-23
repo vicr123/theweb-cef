@@ -236,11 +236,15 @@ void CefHandler::OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame,
         }
 
         if (params.get()->GetLinkUrl() != "") {
-            model.get()->AddSubMenu(LinkSubmenu, "For link \"" + params.get()->GetLinkUrl().ToString() + "\"");
+            QMenu* menu = new QMenu;
+
+            model.get()->AddSubMenu(LinkSubmenu, "For link \"" + menu->fontMetrics().elidedText(QString::fromStdString(params.get()->GetLinkUrl().ToString()), Qt::ElideMiddle, 400).toStdString() + "\"");
             model.get()->AddItem(CopyLink, "Copy Link");
             model.get()->AddItem(OpenLinkInNewTab, "Open Link in new tab");
             model.get()->AddItem(OpenLinkInNewWindow, "Open Link in new Window");
             model.get()->AddItem(OpenLinkInNewOblivion, "Open Link in new Oblivion Window");
+
+            menu->deleteLater();
         }
 
         model.get()->AddSubMenu(Generic, "For Webpage");
@@ -254,7 +258,7 @@ void CefHandler::OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame,
 bool CefHandler::OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) {
     switch (command_id) {
     case OpenLinkInNewTab:
-        emit signalBroker->ContextMenuCommand(command_id, params);
+        emit signalBroker->ContextMenuCommand(browser, command_id, params);
         break;
     case CopyLink:
         QApplication::clipboard()->setText(QString::fromStdString(params.get()->GetLinkUrl().ToString()));

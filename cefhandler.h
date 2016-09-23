@@ -13,6 +13,7 @@
 #include <X11/keysym.h>
 #include <QFileDialog>
 #include <QClipboard>
+#include <QMenu>
 
 #undef Bool
 #undef None

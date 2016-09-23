@@ -6,7 +6,7 @@ AnimatedStackedWidget::AnimatedStackedWidget(QWidget *parent) : QStackedWidget(p
 }
 
 void AnimatedStackedWidget::setCurrentIndex(int index, bool isNew) {
-    //QWidget* currentWidget = widget(currentIndex());
+    QWidget* currentWidget = widget(currentIndex());
     if (currentIndex() != index && !doingNewAnimation) {
         QWidget* nextWidget = widget(index);
 
@@ -23,15 +23,28 @@ void AnimatedStackedWidget::setCurrentIndex(int index, bool isNew) {
         nextWidget->show();
         nextWidget->raise();
 
+        QSequentialAnimationGroup* group = new QSequentialAnimationGroup;
+
         QPropertyAnimation* animation = new QPropertyAnimation(nextWidget, "geometry");
         animation->setStartValue(nextWidget->geometry());
         animation->setEndValue(QRect(0, 0, this->width(), this->height()));
         animation->setEasingCurve(QEasingCurve::OutCubic);
         animation->setDuration(250);
-        connect(animation, &QPropertyAnimation::finished, [=]() {
+        group->addAnimation(animation);
+
+        if (isNew) {
+            QPropertyAnimation* oldAnimation = new QPropertyAnimation(currentWidget, "geometry");
+            oldAnimation->setStartValue(currentWidget->geometry());
+            oldAnimation->setEndValue(QRect(-this->width(), 0, this->width(), this->height()));
+            oldAnimation->setEasingCurve(QEasingCurve::OutCubic);
+            oldAnimation->setDuration(250);
+            group->insertAnimation(0, oldAnimation);
+        }
+
+        connect(group, &QSequentialAnimationGroup::finished, [=]() {
             QStackedWidget::setCurrentIndex(index);
             doingNewAnimation = false;
         });
-        animation->start();
+        group->start();
     }
 }

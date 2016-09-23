@@ -126,7 +126,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(FaviconURLChange(Browser,std::vector<CefString>)), this, SLOT(FaviconURLChange(Browser,std::vector<CefString>)));
     connect(signalBroker, SIGNAL(KeyEvent(CefRefPtr<CefBrowser>,CefKeyEvent,XEvent*)), this, SLOT(KeyEvent(CefRefPtr<CefBrowser>,CefKeyEvent,XEvent*)));
     connect(signalBroker, SIGNAL(ContextMenu(Browser,CefRefPtr<CefFrame>,CefRefPtr<CefContextMenuParams>,CefRefPtr<CefMenuModel>,CefRefPtr<CefRunContextMenuCallback>)), this, SLOT(ContextMenu(Browser,CefRefPtr<CefFrame>,CefRefPtr<CefContextMenuParams>,CefRefPtr<CefMenuModel>,CefRefPtr<CefRunContextMenuCallback>)));
-    connect(signalBroker, SIGNAL(ContextMenuCommand(int,CefRefPtr<CefContextMenuParams>)), this, SLOT(ContextMenuCommand(int,CefRefPtr<CefContextMenuParams>)));
+    connect(signalBroker, SIGNAL(ContextMenuCommand(Browser,int,CefRefPtr<CefContextMenuParams>)), this, SLOT(ContextMenuCommand(Browser,int,CefRefPtr<CefContextMenuParams>)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -961,7 +961,7 @@ void MainWindow::on_fraudBack_clicked()
     if (browser().get()->CanGoBack()) {
         ui->actionGo_Back->trigger();
     } else {
-        this->close();
+        browser().get()->GetHost().get()->CloseBrowser(true);
     }
     ui->fraudFrame->setVisible(false);
     ui->browserStack->setVisible(true);
@@ -1401,24 +1401,26 @@ void MainWindow::ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefP
     }
 }
 
-void MainWindow::ContextMenuCommand(int command_id, CefRefPtr<CefContextMenuParams> params) {
-    switch (command_id) {
-    case CefHandler::OpenLinkInNewTab:
-    {
-        Browser newBrowser;
-        if (isOblivion) {
-            CefBrowserSettings settings;
-            settings.application_cache = STATE_DISABLED;
+void MainWindow::ContextMenuCommand(Browser browser, int command_id, CefRefPtr<CefContextMenuParams> params) {
+    if (indexOfBrowser(browser) != -1) {
+        switch (command_id) {
+        case CefHandler::OpenLinkInNewTab:
+        {
+            Browser newBrowser;
+            if (isOblivion) {
+                CefBrowserSettings settings;
+                settings.application_cache = STATE_DISABLED;
 
-            CefRequestContextSettings contextSettings;
-            CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
-            context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
-            newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), settings, context);
-        } else {
-            newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+                CefRequestContextSettings contextSettings;
+                CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+                context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), settings, context);
+            } else {
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+            }
+            createNewTab(newBrowser);
         }
-        createNewTab(newBrowser);
-    }
-        break;
+            break;
+        }
     }
 }

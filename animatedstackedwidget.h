@@ -3,6 +3,7 @@
 
 #include <QStackedWidget>
 #include <QPropertyAnimation>
+#include <QSequentialAnimationGroup>
 
 class AnimatedStackedWidget : public QStackedWidget
 {
