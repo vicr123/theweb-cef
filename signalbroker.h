@@ -5,6 +5,7 @@
 #include "cefheaders.h"
 #include "cefhandler.h"
 
+
 class SignalBroker : public QObject
 {
     Q_OBJECT

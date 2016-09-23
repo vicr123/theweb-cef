@@ -11,6 +11,10 @@ CefHandler::CefHandler(QObject* parent) : QObject(parent)
 
 void CefHandler::OnAfterCreated(Browser browser) {
     numberOfBrowsers++;
+    if (newBrowserTabWindow != NULL) {
+        newBrowserTabWindow->createNewTab(browser);
+    }
+    this->newBrowserTabWindow = NULL;
 }
 
 void CefHandler::OnRenderProcessTerminated(Browser browser, CefRequestHandler::TerminationStatus status) {
@@ -83,7 +87,8 @@ bool CefHandler::OnBeforeUnloadDialog(Browser browser, const CefString &message_
 bool CefHandler::OnBeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, const CefString &target_frame_name, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures &popupFeatures, CefWindowInfo &windowInfo, CefRefPtr<CefClient> &client, CefBrowserSettings &settings, bool *no_javascript_access) {
 
     emit signalBroker->BeforePopup(browser, frame, target_url, target_frame_name, target_disposition, user_gesture, popupFeatures, &windowInfo, settings, no_javascript_access);
-    return true;
+    return false;
+    //return true;
 }
 
 bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) {

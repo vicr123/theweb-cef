@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
     CefRefPtr<CefEngine> app(new CefEngine);
     CefMainArgs cefArgs(argc, argv);
 
+
     CefInitialize(cefArgs, settings, app.get(), NULL);
     //CefCookieManager::GetGlobalManager(NULL).get()->SetStoragePath(QDir::homePath().append("/.theweb/cookies").toStdString(), false, NULL);
 

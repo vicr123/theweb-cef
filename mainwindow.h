@@ -5,8 +5,8 @@
 #include <QWindow>
 #include <QCloseEvent>
 #include "cefheaders.h"
-#include "signalbroker.h"
 #include "cefhandler.h"
+#include "signalbroker.h"
 #include "thewebsettingsaccessor.h"
 #include "downloadimagecallback.h"
 #include "oblivionrequestcontext.h"
@@ -26,8 +26,6 @@
 #include <QTabBar>
 #include <QMovie>
 #include <QX11Info>
-
-class CefHandler;
 
 namespace Ui {
 class MainWindow;
@@ -64,6 +62,8 @@ public slots:
     void ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback);
     void ContextMenuCommand(Browser browser, int command_id, CefRefPtr<CefContextMenuParams> params);
     void ReloadSettings();
+
+    void createNewTab(Browser newBrowser = NULL, bool openInBackground = false);
 
 private slots:
     void on_actionExit_triggered();
@@ -143,8 +143,6 @@ private:
     QList<QIcon> browserIcons;
     void insertIntoMetadata(Browser browser, QString key, QVariant value);
     void removeFromMetadata(Browser browser, QString key);
-
-    void createNewTab(Browser newBrowser = NULL, bool openInBackground = false);
 
     QWidget* browserWidget;
     QTabBar* tabBar;

@@ -4,6 +4,7 @@
 #include <QStackedWidget>
 #include <QPropertyAnimation>
 #include <QSequentialAnimationGroup>
+#include <QParallelAnimationGroup>
 
 class AnimatedStackedWidget : public QStackedWidget
 {

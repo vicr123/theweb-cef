@@ -19,6 +19,7 @@
 #undef None
 
 class SignalBroker;
+class MainWindow;
 
 class CefHandler : public QObject,
         public CefClient,
@@ -106,6 +107,10 @@ public:
 
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 
+    void setNewBrowserTabWindow(MainWindow* newBrowserTabWindow) {
+        this->newBrowserTabWindow = newBrowserTabWindow;
+    }
+
     QList<int> closingBrowsers;
     bool canClose(Browser browser) {
         if (closingBrowsers.contains(browser.get()->GetIdentifier())) {
@@ -118,6 +123,8 @@ public:
     int numberOfBrowsers = 0;
 
     QSettings settings;
+
+    MainWindow* newBrowserTabWindow = NULL;
 };
 
 #include "signalbroker.h"

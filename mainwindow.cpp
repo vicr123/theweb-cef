@@ -158,7 +158,7 @@ void MainWindow::on_actionNew_Tab_triggered()
 
 void MainWindow::createNewTab(Browser newBrowser, bool openInBackground) {
     browserMetadata.append(QVariantMap());
-    browserIcons.append(QIcon());
+    browserIcons.append(QIcon::fromTheme("text-html"));
     tabBar->addTab("New Tab");
 
     CefWindowInfo windowInfo;
@@ -441,6 +441,12 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                     connect(sslSock, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
                         [=](QAbstractSocket::SocketError socketError){
                         qDebug() << socketError;
+                        QStringList securityMetadata;
+                        securityMetadata.append("secure");
+                        securityMetadata.append("");
+                        securityMetadata.append("This connection is secure, but details couldn't be found.");
+                        insertIntoMetadata(browser, "security", securityMetadata);
+                        updateCurrentBrowserDisplay();
                     });
                     sslSock->connectToHostEncrypted(currentUrl.host(), currentUrl.port(443));
                 }
@@ -790,7 +796,7 @@ void MainWindow::on_JsDialogPrompt_returnPressed()
 void MainWindow::AuthCredentials(Browser browser, CefRefPtr<CefFrame> frame, bool isProxy, const CefString &host, int port, const CefString &realm, const CefString &scheme, CefRefPtr<CefAuthCallback> callback) {
     if (IsCorrectBrowser(browser)) {
         QVariantList AuthMetadata;
-        AuthMetadata.append("Log in to " + QString::fromStdString(host.ToString()));
+        AuthMetadata.append("Log in to " + QString::fromStdString(host.ToString()) + ":" + QString::number(port));
         AuthMetadata.append("Server Realm: " + QString::fromStdString(realm.ToString()));
         AuthMetadata.append(QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).scheme() == "http" && scheme == "basic");
         AuthMetadata.append(QVariant::fromValue(callback));
@@ -827,7 +833,7 @@ void MainWindow::on_AuthPassword_returnPressed()
 
 void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, const CefString &target_frame_name, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures &popupFeatures, CefWindowInfo *windowInfo, CefBrowserSettings settings, bool *no_javascript_access) {
     if (indexOfBrowser(browser) != -1) {
-        if (!user_gesture) {
+        /*if (!user_gesture) {
             if (QMessageBox::information(this, "Open pop-up?", "This webpage is requesting that " + QString::fromStdString(target_url.ToString()) + " be opened in a new window. Is that OK?", QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No) {
                 return;
             }
@@ -860,7 +866,11 @@ void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const C
         }
             break;
         }
+*/
 
+        if (target_disposition == WOD_NEW_BACKGROUND_TAB || target_disposition == WOD_NEW_FOREGROUND_TAB || target_disposition == WOD_NEW_POPUP) {
+            handler->setNewBrowserTabWindow(this);
+        }
     }
 }
 
@@ -1050,6 +1060,8 @@ void MainWindow::on_certIgnore_clicked()
 void MainWindow::on_certificateBack_clicked()
 {
     ui->actionGo_Back->trigger();
+    browserMetadata.at(indexOfBrowser(browser())).value("certificate").toList().at(1).value<CefRefPtr<CefRequestCallback>>().get()->Continue(false);
+    removeFromMetadata(browser(), "certificate");
     ui->badCertificateFrame->setVisible(false);
     ui->browserStack->setVisible(true);
 }
