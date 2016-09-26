@@ -81,6 +81,22 @@ bool theWebSettingsAccessor::Set(const CefString &name, const CefRefPtr<CefV8Val
             exception = "Invalid Value Type";
         }
         return true;
+    } else if (name == "malwareProtect") {
+        if (value.get()->IsBool()) {
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("theWebSettings");
+            CefRefPtr<CefListValue> args = message.get()->GetArgumentList();
+            args.get()->SetString(0, "data/malwareProtect");
+            args.get()->SetString(1, "bool");
+            args.get()->SetBool(2, value.get()->GetBoolValue());
+            this->associatedBrowser.get()->SendProcessMessage(PID_BROWSER, message);
+
+            settingsData.insert("data/malwareProtect", value.get()->GetBoolValue());
+
+            SendReloadSettings();
+        } else {
+            exception = "Invalid Value Type";
+        }
+        return true;
     }
     return false;
 }
@@ -97,6 +113,9 @@ bool theWebSettingsAccessor::Get(const CefString &name, const CefRefPtr<CefV8Val
         return true;
     } else if (name == "tabText") {
         retval = CefV8Value::CreateBool(settingsData.value("browser/tabText", false).toBool());
+        return true;
+    } else if (name == "malwareProtect") {
+        retval = CefV8Value::CreateBool(settingsData.value("data/malwareProtect", true).toBool());
         return true;
     }
     return false;

@@ -10,6 +10,7 @@
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
 #include "cefheaders.h"
+#include <QProcess>
 
 #undef Unsorted
 #undef None

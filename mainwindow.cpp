@@ -127,6 +127,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(KeyEvent(CefRefPtr<CefBrowser>,CefKeyEvent,XEvent*)), this, SLOT(KeyEvent(CefRefPtr<CefBrowser>,CefKeyEvent,XEvent*)));
     connect(signalBroker, SIGNAL(ContextMenu(Browser,CefRefPtr<CefFrame>,CefRefPtr<CefContextMenuParams>,CefRefPtr<CefMenuModel>,CefRefPtr<CefRunContextMenuCallback>)), this, SLOT(ContextMenu(Browser,CefRefPtr<CefFrame>,CefRefPtr<CefContextMenuParams>,CefRefPtr<CefMenuModel>,CefRefPtr<CefRunContextMenuCallback>)));
     connect(signalBroker, SIGNAL(ContextMenuCommand(Browser,int,CefRefPtr<CefContextMenuParams>)), this, SLOT(ContextMenuCommand(Browser,int,CefRefPtr<CefContextMenuParams>)));
+    connect(signalBroker, SIGNAL(ProtocolExecution(Browser,CefString,bool&)), this, SLOT(ProtocolExecution(Browser,CefString,bool&)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -298,10 +299,10 @@ void MainWindow::TitleChanged(Browser browser, const CefString& title) {
 void MainWindow::on_spaceSearch_returnPressed()
 {
     QString urlToLoad;
-    if (ui->spaceSearch->text().contains(".") || ui->spaceSearch->text().contains("/") || ui->spaceSearch->text().contains("\\")) {
+    if (ui->spaceSearch->text().contains(".") || ui->spaceSearch->text().contains("/") || ui->spaceSearch->text().contains("\\") || ui->spaceSearch->text().contains(":")) {
         QUrl urlParser = QUrl::fromUserInput(ui->spaceSearch->text());
         if (!urlParser.isEmpty() || urlParser.scheme() == "theweb" || urlParser.scheme() == "chrome") {
-            urlToLoad = ui->spaceSearch->text();
+            urlToLoad = urlParser.toEncoded();
         } else {
             urlToLoad = "http://www.google.com/search#q=" + ui->spaceSearch->text().replace(" ", "+");
         }
@@ -455,51 +456,53 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
 
             }
 
-            QNetworkAccessManager* manager = new QNetworkAccessManager;
+            if (settings.value("data/malwareProtect", true).toBool()) {
+                QNetworkAccessManager* manager = new QNetworkAccessManager;
 
-            QNetworkRequest request(QUrl("https://safebrowsing.googleapis.com/v4/threatMatches:find?key=AIzaSyAbf9-1icT5zrHDsM0z5YSk-23lj-shvIM"));
-            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-            QString requestBody = "{\n"
-                                  "    \"client\": {\n"
-                                  "        \"clientId\":        \"theWeb\","
-                                  "        \"clientVersion\":   \"15.0\""
-                                  "    },"
-                                  "    \"threatInfo\": {"
-                                  "        \"threatTypes\":     [\"MALWARE\", \"SOCIAL_ENGINEERING\"],"
-                                  "        \"platformTypes\":   [\"ANY_PLATFORM\"],"
-                                  "        \"threatEntryTypes\":[\"URL\"],"
-                                  "        \"threatEntries\": ["
-                                  "            {\"url\": \"" + QString::fromStdString(url.ToString()) + "\"}"
-                                  "        ]"
-                                  "    }"
-                                  "}";
-            connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply* reply) {
-                QString replyString = reply->readAll();
-                QJsonDocument JsonDoc = QJsonDocument::fromJson(replyString.toUtf8());
-                QJsonObject object = JsonDoc.object();
-                if (object.contains("matches")) { //Something was found!
-                    QStringList threatMetadata;
+                QNetworkRequest request(QUrl("https://safebrowsing.googleapis.com/v4/threatMatches:find?key=AIzaSyAbf9-1icT5zrHDsM0z5YSk-23lj-shvIM"));
+                request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+                QString requestBody = "{\n"
+                                      "    \"client\": {\n"
+                                      "        \"clientId\":        \"theWeb\","
+                                      "        \"clientVersion\":   \"15.0\""
+                                      "    },"
+                                      "    \"threatInfo\": {"
+                                      "        \"threatTypes\":     [\"MALWARE\", \"SOCIAL_ENGINEERING\"],"
+                                      "        \"platformTypes\":   [\"ANY_PLATFORM\"],"
+                                      "        \"threatEntryTypes\":[\"URL\"],"
+                                      "        \"threatEntries\": ["
+                                      "            {\"url\": \"" + QString::fromStdString(url.ToString()) + "\"}"
+                                      "        ]"
+                                      "    }"
+                                      "}";
+                connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply* reply) {
+                    QString replyString = reply->readAll();
+                    QJsonDocument JsonDoc = QJsonDocument::fromJson(replyString.toUtf8());
+                    QJsonObject object = JsonDoc.object();
+                    if (object.contains("matches")) { //Something was found!
+                        QStringList threatMetadata;
 
-                    QString threatType = object.value("matches").toArray().first().toObject().value("threatType").toString();
-                    if (threatType == "MALWARE") {
-                        threatMetadata.append("This website may contain malware. <b>We suggest that you don't visit "
-                                                      "this website.</b>");
-                        threatMetadata.append("Google Safe Browsing found malware on this site. Malware can cause your "
-                                                    "PC to slow down or act erratically.");
-                    } else if (threatType == "SOCIAL_ENGINEERING") {
-                        threatMetadata.append("This website may trick you into doing something like revealing your "
-                                                      "personal information (such as passwords or credit card information) or "
-                                                      "installing software that you may not want. <b>We suggest that you don't visit "
-                                                      "this website and enter any personal information.</b>");
-                        threatMetadata.append("Google Safe Browsing found this site to be deceptive. These websites trick "
-                                                    "users into doing something dangerous.");
+                        QString threatType = object.value("matches").toArray().first().toObject().value("threatType").toString();
+                        if (threatType == "MALWARE") {
+                            threatMetadata.append("This website may contain malware. <b>We suggest that you don't visit "
+                                                          "this website.</b>");
+                            threatMetadata.append("Google Safe Browsing found malware on this site. Malware can cause your "
+                                                        "PC to slow down or act erratically.");
+                        } else if (threatType == "SOCIAL_ENGINEERING") {
+                            threatMetadata.append("This website may trick you into doing something like revealing your "
+                                                          "personal information (such as passwords or credit card information) or "
+                                                          "installing software that you may not want. <b>We suggest that you don't visit "
+                                                          "this website and enter any personal information.</b>");
+                            threatMetadata.append("Google Safe Browsing found this site to be deceptive. These websites trick "
+                                                        "users into doing something dangerous.");
+                        }
+
+                        insertIntoMetadata(browser, "threat", threatMetadata);
+                        updateCurrentBrowserDisplay();
                     }
-
-                    insertIntoMetadata(browser, "threat", threatMetadata);
-                    updateCurrentBrowserDisplay();
-                }
-            });
-            manager->post(request, requestBody.toUtf8());
+                });
+                manager->post(request, requestBody.toUtf8());
+            }
         }
 
         insertIntoMetadata(browser, "security", securityMetadata);
@@ -637,7 +640,7 @@ void MainWindow::LoadingStateChange(Browser browser, bool isLoading, bool canGoB
 
 void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandler::ErrorCode errorCode, const CefString &errorText, const CefString &failedUrl) {
     if (indexOfBrowser(browser) != -1) {
-        if (errorCode != ERR_ABORTED && frame.get()->IsMain()) {
+        if (errorCode != ERR_ABORTED && errorCode != ERR_UNKNOWN_URL_SCHEME && frame.get()->IsMain()) {
             QStringList errorDisplayMetadata;
 
             switch (qrand() % 7) {
@@ -706,9 +709,6 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
             case ERR_INVALID_RESPONSE:
                 errorDisplayMetadata.append("Invalid Response");
                 break;
-            case ERR_UNKNOWN_URL_SCHEME:
-                errorDisplayMetadata.append("Unknown URL Scheme");
-                break;
             case ERR_INVALID_URL:
                 errorDisplayMetadata.append("Invalid URL");
                 break;
@@ -764,18 +764,31 @@ void MainWindow::on_JsDialogOk_clicked()
 {
     ui->JsDialogFrame->setVisible(false);
     ui->browserStack->setVisible(true);
-    browserMetadata.at(indexOfBrowser(browser())).value("js").toList().at(2).value<CefRefPtr<CefJSDialogCallback>>().get()->Continue(true, ui->JsDialogPrompt->text().toStdString());
-    removeFromMetadata(browser(), "js");
-    updateCurrentBrowserDisplay();
+    QVariantMap metadata = browserMetadata.at(indexOfBrowser(browser()));
+    if (metadata.keys().contains("protocol")) {
+        QProcess::startDetached("xdg-open \"" + metadata.value("protocol").toString() + "\"");
+        removeFromMetadata(browser(), "protocol");
+        updateCurrentBrowserDisplay();
+    } else {
+        browserMetadata.at(indexOfBrowser(browser())).value("js").toList().at(2).value<CefRefPtr<CefJSDialogCallback>>().get()->Continue(true, ui->JsDialogPrompt->text().toStdString());
+        removeFromMetadata(browser(), "js");
+        updateCurrentBrowserDisplay();
+    }
 }
 
 void MainWindow::on_JsDialogCancel_clicked()
 {
-    ui->JsDialogFrame->setVisible(false);
-    ui->browserStack->setVisible(true);
-    browserMetadata.at(indexOfBrowser(browser())).value("js").toList().at(2).value<CefRefPtr<CefJSDialogCallback>>().get()->Continue(false, "");
-    removeFromMetadata(browser(), "js");
-    updateCurrentBrowserDisplay();
+    QVariantMap metadata = browserMetadata.at(indexOfBrowser(browser()));
+    if (metadata.keys().contains("protocol")) {
+        removeFromMetadata(browser(), "protocol");
+        updateCurrentBrowserDisplay();
+    } else {
+        ui->JsDialogFrame->setVisible(false);
+        ui->browserStack->setVisible(true);
+        browserMetadata.at(indexOfBrowser(browser())).value("js").toList().at(2).value<CefRefPtr<CefJSDialogCallback>>().get()->Continue(false, "");
+        removeFromMetadata(browser(), "js");
+        updateCurrentBrowserDisplay();
+    }
 }
 
 void MainWindow::BeforeUnloadDialog(Browser browser, const CefString &message_text, bool is_reload, CefRefPtr<CefJSDialogCallback> callback) {
@@ -1248,7 +1261,17 @@ void MainWindow::updateCurrentBrowserDisplay() {
             ui->errorFrame->setVisible(false);
         }
 
-        if (metadata.keys().contains("js")) {
+        if (metadata.keys().contains("protocol")) {
+            QString url = metadata.value("protocol").toString();
+
+            ui->JsBeforeLeaveTitle->setText("Open External Program");
+            ui->JsDialogText->setText("Do you want to open an external program to open " + url);
+            ui->JsDialogOk->setText("Open Program");
+            ui->JsDialogCancel->setText("Do Nothing");
+            ui->JsDialogPrompt->setVisible(false);
+            ui->JsDialogFrame->setVisible(true);
+            showBrowserStack = false;
+        } else if (metadata.keys().contains("js")) {
             QVariantList JsMetadata = metadata.value("js").toList();
 
             if (JsMetadata.at(0).toString() == "unload") {
@@ -1485,4 +1508,8 @@ void MainWindow::ContextMenuCommand(Browser browser, int command_id, CefRefPtr<C
             break;
         }
     }
+}
+
+void MainWindow::ProtocolExecution(Browser browser, const CefString &url, bool &allow_os_execution) {
+    insertIntoMetadata(browser, "protocol", QString::fromStdString(url.ToString()));
 }

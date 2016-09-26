@@ -407,6 +407,21 @@ div.blockPage {
     height: 100vh;
 }
 
+div.clearDataSettings {
+    -webkit-transition: top 0.5s;
+    height: calc(100vh - 200px);
+    top: 100vh;
+    width: 100%;
+    position: fixed;
+    background-color: #FFF;
+    overflow: auto;
+}
+
+.noscroll {
+    height: 100%;
+    overflow: hidden;
+}
+
 @media (max-width: 600px) {
     div.blockTitle {
         height: 500px;

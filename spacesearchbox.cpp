@@ -9,12 +9,14 @@ void SpaceSearchBox::focusInEvent(QFocusEvent *event) {
     event->accept();
     updateText();
     this->selectAll();
+    this->setCursor(QCursor(Qt::IBeamCursor));
     emit GotFocus();
 }
 
 void SpaceSearchBox::focusOutEvent(QFocusEvent *event) {
     event->accept();
     updateText();
+    this->setCursor(QCursor(Qt::ArrowCursor));
 }
 
 void SpaceSearchBox::setCurrentUrl(QUrl currentUrl) {

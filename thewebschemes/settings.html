@@ -15,19 +15,54 @@
     		document.getElementById("homepage").value = theWebSettingsObject.home;
     		document.getElementById("toolbar").checked = theWebSettingsObject.toolbar;
     		document.getElementById("tabText").checked = theWebSettingsObject.tabText;
-        
+    		document.getElementById("malwareProtect").checked = theWebSettingsObject.malwareProtect;
       }
       
       function setDoNotTrack() {
-        if (document.getElementById("doNotTrack").checked) {
-          theWebSettingsObject.dnt = true;
+        if (document.getElementById('doNotTrack').checked) {
+          if (!confirm("Do Not Track:" + 
+                       "Do Not Track sends a request to the website to not track you. Any effect depends on how the website wishes to interpret " +
+                       "the request, and if the website will respond to it at all.\n\n"+ 
+                       "As an example, some websites may show ads that are not based on other websites that you've visited.\n\n" +
+                       "Many websites will still collect browsing data to improve security, provide content, services, advertisments and recommendations.:" +
+                      "Turn on Do Not Track:Leave Do Not Track off")) {
+            document.getElementById('doNotTrack').checked = false;
+            return;
+          }
+        }
+        
+        theWebSettingsObject.dnt = document.getElementById('doNotTrack').checked;
+      }
+      
+      function setMalwareProtect() {
+        if (!document.getElementById('malwareProtect').checked) {
+          if (!confirm("Turn off Malicious Website Protection?:" + 
+                       "Malicious Website protection protects you from dangerous sites. We only recommend turning it off if you know what you're doing.:" +
+                      "Turn off Malicious Website Protection:Leave Malicious Website Protection on")) {
+            document.getElementById('malwareProtect').checked = true;
+            return;
+          }
+        }
+        
+        theWebSettingsObject.malwareProtect = document.getElementById('malwareProtect').checked;
+      }
+      
+      var oldYOffset;
+      function toggleClearData() {
+        if (document.getElementById('clearDataSettings').style.top == "200px"){
+          document.getElementById('body').classList.remove("noscroll");
+        	document.getElementById('clearDataSettings').style.top = "100vh";
+          window.scrollTo(window.pageYOffset, 0);
         } else {
-          theWebSettingsObject.dnt = false;
+          oldYOffset = window.pageYOffset;
+          window.scrollTo(0, 0);
+        	document.getElementById('clearDataSettings').style.top = "200px";
+          document.getElementById('body').classList.add("noscroll");
         }
       }
     </script>
   </head>
-  <body onload="initPage();">
+  <body onload="initPage();" id="body">
     <div class="navbar">
       <div class="navbarContent">
         <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg" width="40"
@@ -43,31 +78,53 @@
       <div class="navbarPadding">&nbsp;</div>
       <h1>Settings</h1>
       Change how theWeb works </div>
-    <div class="sectionHeader">Behaviour</div>
-    <div class="pageContent"> Home Page: <input id="homepage" onchange="theWebSettingsObject.home = document.getElementById('homepage').value"
-        type="text">
-      <p style="text-align: right;"><button onclick="document.getElementById('homepage').value = 'theweb://newtab'">Use
-          New Tab Page</button></p>
+    <div class="mainSettings">
+      <div class="pageContent">Some settings don't work yet. :)</div>
+      <div class="sectionHeader">Behaviour</div>
+      <div class="pageContent"> Home Page: <input id="homepage" onchange="theWebSettingsObject.home = document.getElementById('homepage').value"
+          type="text">
+        <p style="text-align: right;"><button onclick="document.getElementById('homepage').value = 'theweb://newtab'; theWebSettingsObject.home = 'theweb://newtab';">Use
+            New Tab Page</button></p>
+      </div>
+      <div class="sectionHeader">Display</div>
+      <div class="pageContent"> <input id="tabText" onchange="theWebSettingsObject.tabText = document.getElementById('tabText').checked"
+          type="checkbox"><label for="tabText">Show text in tabs</label><br>
+        <input id="toolbar" onchange="theWebSettingsObject.toolbar = document.getElementById('toolbar').checked"
+          type="checkbox"><label for="toolbar">Put the toolbar on the bottom</label>
+        <br>
+      </div>
+      <div class="sectionHeader">Data</div>
+      <div class="pageContent"> <button onclick="toggleClearData();">Clear
+          Data...</button><br>
+        theWeb uses a web service to protect you from malicious website. <br>
+        <input id="malwareProtect" onchange="setMalwareProtect()" type="checkbox"><label
+          for="malwareProtect">Show a warning when trying to access a
+          potentially malicious site</label> <br>
+        <input id="doNotTrack" onchange="setDoNotTrack()" type="checkbox"><label
+          for="doNotTrack">Send a "Do Not Track" request with your browsing
+          traffic</label> <br>
+      </div>
+      <div class="sectionHeader">Connection</div>
+      <div class="pageContent"> theWeb uses your system's proxy settings to
+        connect to the internet. <button onclick="theWebSettingsObject.proxySettings()">Change
+          Proxy Settings...</button> </div>
+      <div class="sectionHeader">Reset</div>
+      <div class="pageContent"> If theWeb isn't operating correctly, you may
+        want to reset theWeb. <button onclick="window.theWebSettingsObject.resetBrowser();">Reset
+          theWeb</button> </div>
     </div>
-    <div class="sectionHeader">Display</div>
-    <div class="pageContent"> <input id="tabText" onchange="theWebSettingsObject.tabText = document.getElementById('tabText').checked"
-        type="checkbox"><label for="tabText">Show text in tabs</label><br>
-      <input id="toolbar" onchange="theWebSettingsObject.toolbar = document.getElementById('toolbar').checked"
-        type="checkbox"><label for="toolbar">Put the toolbar on the bottom</label>
+    <div class="clearDataSettings" id="clearDataSettings"> <a>
+        <div class="sectionHeader" onclick="toggleClearData();">&lt; Back</div>
+      </a>
+      <div class="pageContent"> Send the following items from the hard drive of
+        your computer into oblivion: <br>
+        <input id="clearHistory" checked="checked" type="checkbox"><label for="clearHistory">Browsing
+          History</label><br>
+        <input id="clearCache" checked="checked" type="checkbox"><label for="clearCache">Cached
+          webpages (and other cached data)</label><br>
+        <input id="clearCookie" checked="checked" type="checkbox"><label for="clearCookie">Cookies</label><br>
+      </div>
       <br>
     </div>
-    <div class="sectionHeader">Data</div>
-    <div class="pageContent"> <button>Clear Data...</button><br>
-      theWeb uses a web service to protect you from malicious website. <br>
-      <input id="malwareProtect" onchange="theWebSettingsObject.malwareProtect = document.getElementById('malwareProtect').checked"
-        type="checkbox"><label for="malwareProtect">Show a warning when trying
-        to access a potentially malicious site</label> <br>
-      <input id="doNotTrack" onchange="setDoNotTrack()" type="checkbox"><label for="doNotTrack">Send
-        a "Do Not Track" request with your browsing traffic</label> <br>
-    </div>
-    <div class="sectionHeader">Reset</div>
-    <div class="pageContent"> If theWeb isn't operating correctly, you may want
-      to reset theWeb. <button onclick="window.theWebSettingsObject.resetBrowser();">Reset
-        theWeb</button> </div>
   </body>
 </html>

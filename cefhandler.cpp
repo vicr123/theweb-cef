@@ -120,6 +120,26 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         browser.get()->SendProcessMessage(PID_RENDERER, message);
     } else if (message.get()->GetName() == "ReloadSettings") {
         emit signalBroker->ReloadSettings();
+    } else if (message.get()->GetName() == "showProxy") {
+        QString desktop = qgetenv("XDG_CURRENT_DESKTOP");
+
+        if (desktop == "KDE") { //or theShell. :)
+            QProcess::startDetached("kcmshell5 proxy");
+        } else if (desktop.contains("GNOME")) {
+            QProcess::startDetached("gnome-control-center network");
+        } else if (desktop == "Unity") {
+            QProcess::startDetached("unity-control-center network");
+        } else if (desktop == "XFCE") {
+
+        } else if (desktop == "Cinnamon" || desktop == "X-Cimmamon") {
+            QProcess::startDetached("cinnamon-control-center network");
+        } else if (desktop == "ENLIGHTENMENT") {
+
+        } else if (desktop == "LXDE") {
+
+        } else if (desktop == "MATE") {
+
+        }
     }
     return true;
 }
@@ -294,4 +314,9 @@ bool CefHandler::OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame
         return false;
     }
     return true;
+}
+
+void CefHandler::OnProtocolExecution(Browser browser, const CefString &url, bool &allow_os_execution) {
+    emit signalBroker->ProtocolExecution(browser, url, allow_os_execution);
+    allow_os_execution = false;
 }

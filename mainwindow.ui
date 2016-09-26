@@ -35,7 +35,11 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="SpaceSearchBox" name="spaceSearch"/>
+     <widget class="SpaceSearchBox" name="spaceSearch">
+      <property name="cursor">
+       <cursorShape>ArrowCursor</cursorShape>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QFrame" name="securityInfoFrame">
