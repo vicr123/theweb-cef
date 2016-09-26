@@ -5,7 +5,14 @@
 #include <QDebug>
 #include <QSettings>
 #include <QMessageBox>
+#include <X11/Xlib.h>
+#include <QX11Info>
+#include <X11/keysym.h>
+#include <X11/XF86keysym.h>
 #include "cefheaders.h"
+
+#undef Unsorted
+#undef None
 
 class CefEngine : public CefApp, public CefRefCount, public CefBrowserProcessHandler, public CefRenderProcessHandler
 {
@@ -28,7 +35,10 @@ public:
     void OnContextReleased(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) override;
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 
+private:
     QSettings settings;
+
+    CefRefPtr<CefV8Value> videoElement;
 };
 
 #include "thewebschemes.h"

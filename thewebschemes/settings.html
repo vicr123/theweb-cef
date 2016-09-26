@@ -58,6 +58,10 @@
     </div>
     <div class="sectionHeader">Data</div>
     <div class="pageContent"> <button>Clear Data...</button><br>
+      theWeb uses a web service to protect you from malicious website. <br>
+      <input id="malwareProtect" onchange="theWebSettingsObject.malwareProtect = document.getElementById('malwareProtect').checked"
+        type="checkbox"><label for="malwareProtect">Show a warning when trying
+        to access a potentially malicious site</label> <br>
       <input id="doNotTrack" onchange="setDoNotTrack()" type="checkbox"><label for="doNotTrack">Send
         a "Do Not Track" request with your browsing traffic</label> <br>
     </div>

@@ -312,7 +312,7 @@ void MainWindow::on_spaceSearch_returnPressed()
 }
 
 void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const CefString &url) {
-    if (indexOfBrowser(browser) != -1 && frame.get()->IsMain()) {
+    if (indexOfBrowser(browser) != -1 && frame.get()->IsMain()) { //Make sure frame is in this window
         QStringList securityMetadata;
 
         QUrl currentUrl(QString::fromStdString(url.ToString()));
@@ -386,11 +386,9 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                             EVOids.insert("VeriSign Class 3 Public Primary Certification Authority - G5", "2.16.840.1.113733.1.7.23.6");
                             EVOids.insert("Verizon Business", "1.3.6.1.4.1.6334.1.100.1");
 
-                            qDebug() << "Number of Certificate Extensions: " << certificate.extensions().count();
                             for (QSslCertificateExtension ext : certificate.extensions()) {
                                 if (!isEv) {
                                     if (ext.oid() == "2.5.29.32") {
-                                        qDebug() << ext.value().toByteArray();
                                         for (QString auths : EVOids.keys()) {
                                             QString oid = EVOids.value(auths);
                                             if (ext.value().toString().contains(oid)) {
@@ -515,13 +513,17 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
 }
 
 void MainWindow::insertIntoMetadata(Browser browser, QString key, QVariant value) {
+    //Add a value into a browser's metadata
     QVariantMap currentBrowserMap = browserMetadata.at(indexOfBrowser(browser));
     currentBrowserMap.insert(key, value);
     browserMetadata.replace(indexOfBrowser(browser), currentBrowserMap);
 }
 
 void MainWindow::removeFromMetadata(Browser browser, QString key) {
+    //Remove a value from a browser's metadata
     QVariantMap currentBrowserMap = browserMetadata.at(indexOfBrowser(browser));
+
+    //If the key does not exist, ignore the request.
     if (currentBrowserMap.keys().contains(key)) {
         currentBrowserMap.remove(key);
         browserMetadata.replace(indexOfBrowser(browser), currentBrowserMap);
@@ -529,8 +531,10 @@ void MainWindow::removeFromMetadata(Browser browser, QString key) {
 }
 
 void MainWindow::FullscreenModeChange(Browser browser, bool fullscreen) {
-    if (IsCorrectBrowser(browser)) {
-        static bool wasMaximized = false;
+    if (IsCorrectBrowser(browser)) { //Check if this is the current browser
+        static bool wasMaximized = false; //Keep track of whether the window is currently maximized.
+
+        //Check if the browser is full screen
         if (fullscreen) {
             wasMaximized = this->isMaximized();
             ui->toolBar->setVisible(false);
@@ -882,6 +886,7 @@ void MainWindow::on_actionLimit_to_60_fps_triggered()
     ui->actionLimit_to_15_fps->setChecked(false);
     ui->actionLimit_to_1_fps->setChecked(false);
     cefEventLoopTimer.setInterval(1000 / 60);
+    emit signalBroker->ReloadSettings();
 }
 
 void MainWindow::on_actionLimit_to_30_fps_triggered()
@@ -892,6 +897,7 @@ void MainWindow::on_actionLimit_to_30_fps_triggered()
     ui->actionLimit_to_15_fps->setChecked(false);
     ui->actionLimit_to_1_fps->setChecked(false);
     cefEventLoopTimer.setInterval(1000 / 30);
+    emit signalBroker->ReloadSettings();
 }
 
 void MainWindow::on_actionLimit_to_15_fps_triggered()
@@ -902,6 +908,7 @@ void MainWindow::on_actionLimit_to_15_fps_triggered()
     ui->actionLimit_to_15_fps->setChecked(true);
     ui->actionLimit_to_1_fps->setChecked(false);
     cefEventLoopTimer.setInterval(1000 / 15);
+    emit signalBroker->ReloadSettings();
 }
 
 void MainWindow::on_actionLimit_to_1_fps_triggered()
@@ -912,6 +919,7 @@ void MainWindow::on_actionLimit_to_1_fps_triggered()
     ui->actionLimit_to_15_fps->setChecked(false);
     ui->actionLimit_to_1_fps->setChecked(true);
     cefEventLoopTimer.setInterval(1000);
+    emit signalBroker->ReloadSettings();
 }
 
 void MainWindow::on_actionDon_t_Limit_triggered()
@@ -922,6 +930,7 @@ void MainWindow::on_actionDon_t_Limit_triggered()
     ui->actionLimit_to_15_fps->setChecked(false);
     ui->actionLimit_to_1_fps->setChecked(false);
     cefEventLoopTimer.setInterval(0);
+    emit signalBroker->ReloadSettings();
 }
 
 void MainWindow::on_actionAbout_theWeb_triggered()
@@ -932,7 +941,7 @@ void MainWindow::on_actionAbout_theWeb_triggered()
         CefWindowInfo windowInfo;
         CefBrowserSettings settings;
 
-        Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), "theweb://theweb", settings, CefRefPtr<CefRequestContext>());
+        Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, handler, "theweb://theweb", settings, CefRefPtr<CefRequestContext>());
 
         createNewTab(browser);
     }
@@ -946,7 +955,7 @@ void MainWindow::on_actionSettings_triggered()
         CefWindowInfo windowInfo;
         CefBrowserSettings settings;
 
-        Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), "theweb://settings", settings, CefRefPtr<CefRequestContext>());
+        Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, handler, "theweb://settings", settings, CefRefPtr<CefRequestContext>());
 
         createNewTab(browser);
     }
@@ -1084,6 +1093,33 @@ void MainWindow::ReloadSettings() {
             tabBar->setTabText(i, tabBar->fontMetrics().elidedText(tabBar->tabData(i).toString(), Qt::ElideRight, 200));
         } else {
             tabBar->setTabText(i, "");
+        }
+    }
+
+    {
+        //Update the FPS limit checkbox
+        ui->actionDon_t_Limit->setChecked(false);
+        ui->actionLimit_to_60_fps->setChecked(false);
+        ui->actionLimit_to_30_fps->setChecked(false);
+        ui->actionLimit_to_15_fps->setChecked(false);
+        ui->actionLimit_to_1_fps->setChecked(false);
+
+        switch (cefEventLoopTimer.interval()) {
+        case 0:
+            ui->actionDon_t_Limit->setChecked(true);
+            break;
+        case (1000 / 60):
+            ui->actionLimit_to_60_fps->setChecked(true);
+            break;
+        case (1000 / 30):
+            ui->actionLimit_to_30_fps->setChecked(true);
+            break;
+        case (1000 / 15):
+            ui->actionLimit_to_15_fps->setChecked(true);
+            break;
+        case 1000:
+            ui->actionLimit_to_1_fps->setChecked(true);
+            break;
         }
     }
 }

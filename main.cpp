@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    //Set Application Information
     a.setOrganizationName("theSuite");
     a.setOrganizationDomain("");
     a.setApplicationName("theWeb");
@@ -47,7 +48,10 @@ int main(int argc, char *argv[])
     cef_string_utf16_set((const char16*) userAgent.toStdString().data(), userAgent.length(), userAgentString, 1);
     settings.user_agent = *userAgentString;*/
 
-    CefString(&settings.user_agent) = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) theWeb/15.00 Chrome/51.0.2704.103 Safari/537.36";
+    CefString(&settings.user_agent) = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) theWeb/15.00 Chrome/53.0.2785.101 Safari/537.36";
+    /*QString userAgent = QString::fromStdString(CefString(&settings.user_agent).ToString());
+    userAgent.insert(userAgent.indexOf("Chrome/"), "theWeb/15.00 ");
+    CefString(&settings.user_agent) = userAgent.toStdString();*/
     CefString(&settings.cache_path) = QDir::homePath().append("/.theweb/cache").toStdString();
     CefString(&settings.locale) = "en-US";
     settings.remote_debugging_port = 26154;
@@ -92,8 +96,29 @@ int main(int argc, char *argv[])
     cefEventLoopTimer.setInterval(0);
     QObject::connect(&cefEventLoopTimer, &QTimer::timeout, [=]() {
         CefDoMessageLoopWork();
+
     });
     cefEventLoopTimer.start();
+
+    QTimer batteryCheckTimer;
+    batteryCheckTimer.setInterval(1000);
+    QObject::connect(&batteryCheckTimer, &QTimer::timeout, [=]() {
+        QDBusInterface upower("org.freedesktop.UPower", "/org/freedesktop/UPower", "org.freedesktop.UPower", QDBusConnection::systemBus());
+        if (upower.isValid()) {
+            if (upower.property("OnBattery").toBool()) {
+                if (cefEventLoopTimer.interval() == 0) {
+                    cefEventLoopTimer.setInterval(1000 / 60);
+                    emit signalBroker->ReloadSettings();
+                }
+            } else {
+                if (cefEventLoopTimer.interval() == (1000 / 60)) {
+                    cefEventLoopTimer.setInterval(0);
+                    emit signalBroker->ReloadSettings();
+                }
+            }
+        }
+    });
+    batteryCheckTimer.start();
 
     int ret = a.exec();
 

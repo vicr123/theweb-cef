@@ -144,7 +144,7 @@ void CefHandler::OnFaviconURLChange(Browser browser, const std::vector<CefString
 }
 
 bool CefHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event, bool *is_keyboard_shortcut) {
-    //qDebug() << os_event->xkey.keycode;
+
     if (os_event) {
         if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_Escape)) { //ESC key
             //Leave Full Screen (if the browser is in full screen)
@@ -156,7 +156,7 @@ bool CefHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent 
 }
 
 void CefHandler::OnBeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString &suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) {
-
+    browser.get()->GetMainFrame().get()->ExecuteJavaScript("alert(\"Downloads aren't supported in theWeb yet. Sorry for the inconvenience... :(\")", "", 0);
 }
 
 bool CefHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event) {

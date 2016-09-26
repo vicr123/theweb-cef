@@ -26,6 +26,7 @@ void AnimatedStackedWidget::setCurrentIndex(int index, bool isNew) {
                     nextWidget->setGeometry(-this->width(), 0, this->width(), this->height());
                 }
             }
+            nextWidget->repaint();
             nextWidget->show();
             nextWidget->raise();
 

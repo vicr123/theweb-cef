@@ -870,7 +870,7 @@
            <number>20</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_5">
+           <widget class="QLabel" name="certificateErrorTitle">
             <property name="font">
              <font>
               <pointsize>20</pointsize>
