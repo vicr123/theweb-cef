@@ -36,10 +36,12 @@ public:
     void OnContextReleased(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) override;
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 
+    bool videoPlaying;
 private:
     QSettings settings;
 
     CefRefPtr<CefV8Value> videoElement;
+    CefRefPtr<CefV8Context> videoContext;
 };
 
 #include "thewebschemes.h"

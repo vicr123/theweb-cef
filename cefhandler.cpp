@@ -1,4 +1,5 @@
 #include "cefhandler.h"
+#include "theweb_adaptor.h"
 
 extern SignalBroker* signalBroker;
 extern void QuitApp(int exitCode = 0);
@@ -6,11 +7,36 @@ extern QVariantMap settingsData;
 
 CefHandler::CefHandler(QObject* parent) : QObject(parent)
 {
+    new PlayerAdaptor(this);
+    new MediaPlayer2Adaptor(this);
+    QDBusConnection::sessionBus().registerObject("/org/mpris/MediaPlayer2", this, QDBusConnection::ExportAdaptors | QDBusConnection::ExportChildObjects);
 
+    QTimer* mprisDetectTimer = new QTimer;
+    mprisDetectTimer->setInterval(1000);
+    connect(mprisDetectTimer, &QTimer::timeout, [=]() {
+        for (Browser browser : currentBrowsers) {
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
+            browser.get()->SendProcessMessage(PID_RENDERER, message);
+        }
+    });
+    mprisDetectTimer->start();
+}
+
+void CefHandler::AddRef() const {
+    CefRefCount::AddRef();
+}
+
+bool CefHandler::Release() const {
+    return CefRefCount::Release();
+}
+
+bool CefHandler::HasOneRef() const {
+    return CefRefCount::HasOneRef();
 }
 
 void CefHandler::OnAfterCreated(Browser browser) {
     numberOfBrowsers++;
+    currentBrowsers.append(browser);
     if (newBrowserTabWindow != NULL) {
         newBrowserTabWindow->createNewTab(browser);
     }
@@ -63,6 +89,7 @@ bool CefHandler::DoClose(Browser browser) {
 
 void CefHandler::OnBeforeClose(Browser browser) {
     emit signalBroker->BeforeClose(browser);
+    currentBrowsers.removeAll(browser);
     browser = NULL;
 }
 
@@ -140,6 +167,21 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         } else if (desktop == "MATE") {
 
         }
+    } else if (message.get()->GetName() == "mprisStart") {
+        if (currentMprisBrowser.get() == NULL) {
+            QDBusConnection::sessionBus().registerService("org.mpris.MediaPlayer2.theweb");
+            currentMprisBrowser = browser;
+        }
+    } else if (message.get()->GetName() == "mprisStop") {
+        if (currentMprisBrowser.get() != NULL) {
+            QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theweb");
+            currentMprisBrowser = NULL;
+        }
+    } else if (message.get()->GetName() == "mprisData") {
+        this->mprisIsPlaying = message.get()->GetArgumentList().get()->GetBool(0);
+        this->mprisTitle = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(1).ToString());
+        this->mprisArtist = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(2));
+        this->mprisAlbum = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(3));
     }
     return true;
 }
@@ -324,4 +366,58 @@ void CefHandler::OnProtocolExecution(Browser browser, const CefString &url, bool
 bool CefHandler::OnTooltip(Browser browser, CefString &text) {
     emit signalBroker->Tooltip(browser, text);
     return true;
+}
+
+void CefHandler::PlayPause() {
+    qDebug() << "PlayPause";
+    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPlayPause");
+    currentMprisBrowser.get()->SendProcessMessage(PID_RENDERER, message);
+}
+
+void CefHandler::Raise() {
+    qDebug() << "Raise";
+}
+
+QVariantMap CefHandler::Metadata() {
+    if (currentMprisBrowser.get() != NULL) {
+        QUrl browserUrl(QString::fromStdString(currentMprisBrowser.get()->GetMainFrame().get()->GetURL().ToString()));
+
+        QVariantMap retval;
+        retval.insert("mpris.length", -1000);
+        retval.insert("mpris:trackid", QVariant::fromValue(QDBusObjectPath("/org/thesuite/theweb/webvideo")));
+        retval.insert("xesam:url", QString::fromStdString(currentMprisBrowser.get()->GetMainFrame().get()->GetURL().ToString()));
+
+        if (mprisTitle == "") {
+            retval.insert("xesam:title", browserUrl.host());
+        } else {
+            retval.insert("xesam:title", mprisTitle);
+        }
+
+        if (mprisArtist != "") {
+            retval.insert("xesam:artist", QStringList() << mprisArtist);
+        }
+
+        if (mprisAlbum != "") {
+            retval.insert("xesam:album", mprisAlbum);
+        }
+        return retval;
+    } else {
+        return QVariantMap();
+    }
+}
+
+QString CefHandler::PlaybackStatus() {
+    if (currentMprisBrowser.get() != NULL) {
+        if (mprisIsPlaying) {
+            return "Playing";
+        } else {
+            return "Paused";
+        }
+    } else {
+        return "";
+    }
+}
+
+MprisDBusMain::MprisDBusMain(QObject *parent) : QObject(parent) {
+    new MediaPlayer2Adaptor(this);
 }

@@ -13,8 +13,8 @@ QMAKE_CXXFLAGS += -Wno-unused-parameter
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-DBUS_ADAPTORS += mainDBus
 mainDBus.files = org.thesuite.theweb.xml
+DBUS_ADAPTORS += mainDBus
 
 TARGET = theweb
 TEMPLATE = app
@@ -47,7 +47,6 @@ HEADERS  += \
     clickableframe.h \
     downloadimagecallback.h \
     oblivionrequestcontext.h \
-    maindbus.h \
     animatedstackedwidget.h
 
 FORMS    += \

@@ -5,4 +5,17 @@
     <method name="newWindow">
     </method>
   </interface>
+  <interface name="org.mpris.MediaPlayer2">
+    <property name="Identity" type="s" access="read"/>
+    <method name="Raise">
+    </method>
+  </interface>
+  <interface name="org.mpris.MediaPlayer2.Player">
+    <property name="Metadata" type="a{sv}" access="read">
+      <annotation name="org.qtproject.QtDBus.QtTypeName" value="QVariantMap"/>
+    </property>
+    <property name="PlaybackStatus" type="s" access="read"/>
+    <method name="PlayPause">
+    </method>
+  </interface>
 </node>

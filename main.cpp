@@ -4,7 +4,6 @@
 #include "cefhandler.h"
 #include "signalbroker.h"
 #include "completioncallback.h"
-#include "maindbus.h"
 #include <QApplication>
 #include <QTimer>
 #include <QDir>
@@ -93,7 +92,7 @@ int main(int argc, char *argv[])
     bool windowOpened = false;
     qDebug() << a.arguments();
     for (QString arg : a.arguments().first().split(" ")) {
-        if (arg != a.applicationFilePath() && arg != "") {
+        if (arg != a.applicationFilePath() && arg != "" && !arg.startsWith("-")) {
             windowOpened = true;
 
             CefWindowInfo windowInfo;

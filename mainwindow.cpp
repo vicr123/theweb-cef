@@ -55,7 +55,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     ui->securityInfoFrame->setVisible(false);
     ui->badCertificateFrame->setVisible(false);
     ui->certMoreInfo->setVisible(false);
-    //ui->hoverUrlLabel->setVisible(false);
+    ui->hoverUrlLabel->setVisible(false);
 
     ui->hoverUrlLabel->setParent(this);
     ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);

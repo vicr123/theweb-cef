@@ -14,12 +14,45 @@
 #include <QFileDialog>
 #include <QClipboard>
 #include <QMenu>
+#include <QDBusInterface>
 
 #undef Bool
 #undef None
 
 class SignalBroker;
 class MainWindow;
+
+//MainDBus is defined here because of qdbuscpp2xml.
+class MainDBus : public QObject
+{
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.thesuite.theweb")
+
+    Q_PROPERTY(uint processID READ processID)
+public:
+    explicit MainDBus(QObject *parent = 0);
+
+    uint processID();
+signals:
+
+public slots:
+    Q_SCRIPTABLE void newWindow();
+};
+
+class MprisDBusMain : public QObject
+{
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2")
+
+    Q_PROPERTY(QString Identity READ Identity)
+public:
+    explicit MprisDBusMain(QObject* parent);
+
+    virtual QString Identity() {}
+public Q_SLOTS:
+    Q_SCRIPTABLE virtual void Raise() {}
+
+};
 
 class CefHandler : public QObject,
         public CefClient,
@@ -33,9 +66,13 @@ class CefHandler : public QObject,
         public CefDownloadHandler,
         public CefDialogHandler,
         public CefContextMenuHandler,
-        public CefEngine
+        public CefRefCount
 {
     Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2.Player")
+
+    Q_PROPERTY(QVariantMap Metadata READ Metadata)
+    Q_PROPERTY(QString PlaybackStatus READ PlaybackStatus)
 public:
     explicit CefHandler(QObject* parent = 0);
 
@@ -44,6 +81,10 @@ public:
         MisspelledWordSubmenu,
         Generic
     };
+
+    void AddRef() const;
+    bool Release() const;
+    bool HasOneRef() const;
 
     virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override {
         return this;
@@ -122,11 +163,28 @@ public:
         }
     }
 
-    int numberOfBrowsers = 0;
-
-    QSettings settings;
 
     MainWindow* newBrowserTabWindow = NULL;
+    MprisDBusMain* mainMprisDbus;
+
+public Q_SLOTS:
+    //org.mpris.MediaPlayer2.Player methods
+    Q_SCRIPTABLE void PlayPause();
+    QVariantMap Metadata();
+    QString PlaybackStatus();
+
+    //org.mpris.MediaPlayer2 methods
+    void Raise();
+    QString Identity() { return "theWeb"; }
+private:
+    int numberOfBrowsers = 0;
+
+    Browser currentMprisBrowser = NULL;
+    QList<Browser> currentBrowsers;
+    bool mprisIsPlaying;
+    QString mprisTitle, mprisArtist, mprisAlbum;
+
+    QSettings settings;
 };
 
 #include "signalbroker.h"
