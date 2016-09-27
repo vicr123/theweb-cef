@@ -134,6 +134,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(ContextMenuCommand(Browser,int,CefRefPtr<CefContextMenuParams>)), this, SLOT(ContextMenuCommand(Browser,int,CefRefPtr<CefContextMenuParams>)));
     connect(signalBroker, SIGNAL(ProtocolExecution(Browser,CefString,bool&)), this, SLOT(ProtocolExecution(Browser,CefString,bool&)));
     connect(signalBroker, SIGNAL(Tooltip(Browser,CefString&)), this, SLOT(Tooltip(Browser,CefString&)));
+    connect(signalBroker, SIGNAL(ShowBrowser(Browser)), this, SLOT(ShowBrowser(Browser)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -1528,4 +1529,12 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
     ui->hoverUrlLabel->raise();
     ui->browserStack->lower();
     ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);
+}
+
+void MainWindow::ShowBrowser(Browser browser) {
+    if (indexOfBrowser(browser) != -1) {
+        this->show();
+        this->raise();
+        ui->browserStack->setCurrentIndex(indexOfBrowser(browser));
+    }
 }

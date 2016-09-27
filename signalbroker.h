@@ -31,6 +31,7 @@ signals:
     void ContextMenuCommand(Browser browser, int command_id, CefRefPtr<CefContextMenuParams> params);
     void ProtocolExecution(Browser browser, const CefString& url, bool& allow_os_execution);
     void Tooltip(Browser browser, CefString& text);
+    void ShowBrowser(Browser browser);
     void ReloadSettings();
 
 public slots:

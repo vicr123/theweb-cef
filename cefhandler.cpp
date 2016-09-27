@@ -369,13 +369,12 @@ bool CefHandler::OnTooltip(Browser browser, CefString &text) {
 }
 
 void CefHandler::PlayPause() {
-    qDebug() << "PlayPause";
     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPlayPause");
     currentMprisBrowser.get()->SendProcessMessage(PID_RENDERER, message);
 }
 
 void CefHandler::Raise() {
-    qDebug() << "Raise";
+    emit signalBroker->ShowBrowser(currentMprisBrowser);
 }
 
 QVariantMap CefHandler::Metadata() {

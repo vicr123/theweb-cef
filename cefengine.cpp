@@ -112,19 +112,16 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
             //Provide extra information for videos from youtube.com
             if (QUrl(QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString())).host().startsWith("www.youtube.com")) {
                 context.get()->Eval("document.getElementById('eow-title').innerHTML", returnVal, exception);
-                if (!returnVal.get()->HasException()) {
+                if (returnVal.get() != NULL) {
                     title = QString::fromStdString(returnVal.get()->GetStringValue().ToString()).trimmed().toStdString();
                 }
 
-                if (!returnVal.get()->HasException()) {
-                    context.get()->Eval("document.getElementById('watch7-user-header').childNodes[3].childNodes[1].innerHTML", returnVal, exception);
+                context.get()->Eval("document.getElementById('watch7-user-header').childNodes[3].childNodes[1].innerHTML", returnVal, exception);
+                if (returnVal.get() != NULL) {
                     artist = QString::fromStdString(returnVal.get()->GetStringValue().ToString()).trimmed().toStdString();
                 }
 
-                if (!returnVal.get()->HasException()) {
-                    album = QUrl(QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString())).host().toStdString();
-                }
-
+                album = QUrl(QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString())).host().toStdString();
             }
 
             {
