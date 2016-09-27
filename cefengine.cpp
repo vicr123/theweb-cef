@@ -101,6 +101,18 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
             context.get()->Eval("document.getElementsByTagName('video').length;", returnVal, exception);
 
             if (returnVal.get()->GetIntValue() > 0) {
+                mprisElementTagType = "video";
+            } else {
+                //Get all <audio> elements
+                context.get()->Eval("document.getElementsByTagName('audio').length;", returnVal, exception);
+                if (returnVal.get()->GetIntValue() > 0) {
+                    mprisElementTagType = "audio";
+                } else {
+                    mprisElementTagType = "";
+                }
+            }
+
+            if (mprisElementTagType != "") {
                 this->videoContext = context;
                 this->videoBrowser = browser;
                 /*XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
@@ -113,7 +125,7 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
 
 
                 //Get if the video is paused
-                context.get()->Eval("document.getElementsByTagName('video')[0].paused", returnVal, exception);
+                context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].paused", returnVal, exception);
                 videoPlaying = returnVal.get()->GetBoolValue();
 
                 CefString title, artist, album;
@@ -162,14 +174,14 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
         //Get if the video is paused
         CefRefPtr<CefV8Value> returnVal;
         CefRefPtr<CefV8Exception> exception;
-        context.get()->Eval("document.getElementsByTagName('video')[0].paused", returnVal, exception);
+        context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].paused", returnVal, exception);
 
         if (videoPlaying) {
-            //The video is paused, play the video.
-            context.get()->Eval("document.getElementsByTagName('video')[0].play()", returnVal, exception);
+            //The media is paused, play the media.
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].play()", returnVal, exception);
         } else {
-            //The video is playing, pause the video.
-            context.get()->Eval("document.getElementsByTagName('video')[0].pause()", returnVal, exception);
+            //The media is playing, pause the meda.
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].pause()", returnVal, exception);
         }
 
         //Exit the V8 Context

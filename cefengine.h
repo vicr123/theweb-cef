@@ -43,6 +43,7 @@ private:
     CefRefPtr<CefV8Value> videoElement;
     CefRefPtr<CefV8Context> videoContext;
     Browser videoBrowser;
+    QString mprisElementTagType;
 };
 
 #include "thewebschemes.h"
