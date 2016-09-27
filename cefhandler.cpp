@@ -173,7 +173,7 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             currentMprisBrowser = browser;
         }
     } else if (message.get()->GetName() == "mprisStop") {
-        if (currentMprisBrowser.get() != NULL) {
+        if (currentMprisBrowser.get() != NULL && browser.get()->IsSame(currentMprisBrowser)) {
             QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theweb");
             currentMprisBrowser = NULL;
         }

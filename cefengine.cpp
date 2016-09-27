@@ -83,64 +83,77 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
             }
         }
     } else if (message.get()->GetName() == "mprisCheck") {
-        //Enter the V8 Context
-        CefRefPtr<CefV8Context> context = browser.get()->GetMainFrame().get()->GetV8Context();
-        context.get()->Enter();
-
-        //Get all <video> elements
-        CefRefPtr<CefV8Value> returnVal;
-        CefRefPtr<CefV8Exception> exception;
-        context.get()->Eval("document.getElementsByTagName('video').length;", returnVal, exception);
-
-        if (returnVal.get()->GetIntValue() > 0) {
-            this->videoContext = context;
-            /*XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
-            XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioNext), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
-            XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
-            XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);*/
-
-            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisStart");
-            browser.get()->SendProcessMessage(PID_BROWSER, message);
-
-
-            //Get if the video is paused
-            context.get()->Eval("document.getElementsByTagName('video')[0].paused", returnVal, exception);
-            videoPlaying = returnVal.get()->GetBoolValue();
-
-            CefString title, artist, album;
-
-            //Provide extra information for videos from youtube.com
-            if (QUrl(QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString())).host().startsWith("www.youtube.com")) {
-                context.get()->Eval("document.getElementById('eow-title').innerHTML", returnVal, exception);
-                if (returnVal.get() != NULL) {
-                    title = QString::fromStdString(returnVal.get()->GetStringValue().ToString()).trimmed().toStdString();
-                }
-
-                context.get()->Eval("document.getElementById('watch7-user-header').childNodes[3].childNodes[1].innerHTML", returnVal, exception);
-                if (returnVal.get() != NULL) {
-                    artist = QString::fromStdString(returnVal.get()->GetStringValue().ToString()).trimmed().toStdString();
-                }
-
-                album = QUrl(QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString())).host().toStdString();
-            }
-
-            {
-                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisData");
-                message.get()->GetArgumentList().get()->SetBool(0, !videoPlaying);
-                message.get()->GetArgumentList().get()->SetString(1, title);
-                message.get()->GetArgumentList().get()->SetString(2, artist);
-                message.get()->GetArgumentList().get()->SetString(3, album);
-                browser.get()->SendProcessMessage(PID_BROWSER, message);
-            }
-
-
-        } else {
-            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisStop");
-            browser.get()->SendProcessMessage(PID_BROWSER, message);
+        bool doCheck = false;
+        if (this->videoBrowser == NULL) {
+            doCheck = true;
+        } else if (this->videoBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+            doCheck = true;
         }
 
-        //Exit the V8 Context
-        context.get()->Exit();
+        if (doCheck) {
+            //Enter the V8 Context
+            CefRefPtr<CefV8Context> context = browser.get()->GetMainFrame().get()->GetV8Context();
+            context.get()->Enter();
+
+            //Get all <video> elements
+            CefRefPtr<CefV8Value> returnVal;
+            CefRefPtr<CefV8Exception> exception;
+            context.get()->Eval("document.getElementsByTagName('video').length;", returnVal, exception);
+
+            if (returnVal.get()->GetIntValue() > 0) {
+                this->videoContext = context;
+                this->videoBrowser = browser;
+                /*XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
+                XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioNext), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
+                XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
+                XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);*/
+
+                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisStart");
+                browser.get()->SendProcessMessage(PID_BROWSER, message);
+
+
+                //Get if the video is paused
+                context.get()->Eval("document.getElementsByTagName('video')[0].paused", returnVal, exception);
+                videoPlaying = returnVal.get()->GetBoolValue();
+
+                CefString title, artist, album;
+
+                //Provide extra information for videos from youtube.com
+                if (QUrl(QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString())).host().startsWith("www.youtube.com")) {
+                    context.get()->Eval("document.getElementById('eow-title').innerHTML", returnVal, exception);
+                    if (returnVal.get() != NULL) {
+                        title = QString::fromStdString(returnVal.get()->GetStringValue().ToString()).trimmed().replace("&amp;", "&")
+                                .replace("&lt;", "<").replace("&gt;", ">").toStdString();
+                    }
+
+                    context.get()->Eval("document.getElementById('watch7-user-header').childNodes[3].childNodes[1].innerHTML", returnVal, exception);
+                    if (returnVal.get() != NULL) {
+                        artist = QString::fromStdString(returnVal.get()->GetStringValue().ToString()).replace("&amp;", "&")
+                                .replace("&lt;", "<").replace("&gt;", ">").toStdString();
+                    }
+
+                    album = QUrl(QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString())).host().toStdString();
+                }
+
+                {
+                    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisData");
+                    message.get()->GetArgumentList().get()->SetBool(0, !videoPlaying);
+                    message.get()->GetArgumentList().get()->SetString(1, title);
+                    message.get()->GetArgumentList().get()->SetString(2, artist);
+                    message.get()->GetArgumentList().get()->SetString(3, album);
+                    browser.get()->SendProcessMessage(PID_BROWSER, message);
+                }
+
+
+            } else {
+                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisStop");
+                browser.get()->SendProcessMessage(PID_BROWSER, message);
+                this->videoBrowser = NULL;
+            }
+
+            //Exit the V8 Context
+            context.get()->Exit();
+        }
     } else if (message.get()->GetName() == "mprisPlayPause") {
         //Enter the V8 Context
         CefRefPtr<CefV8Context> context = browser.get()->GetMainFrame().get()->GetV8Context();
