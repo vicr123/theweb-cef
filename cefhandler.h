@@ -88,7 +88,7 @@ public:
     void OnFaviconURLChange(Browser browser, const std::vector<CefString> &urls) override;
     void OnBeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString& suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) override;
     void OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) override;
-    void OnProtocolExecution(Browser browser, const CefString& url, bool& allow_os_execution);
+    void OnProtocolExecution(Browser browser, const CefString& url, bool& allow_os_execution) override;
 
     ReturnValue OnBeforeResourceLoad(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefRequestCallback> callback) override;
 
@@ -105,6 +105,7 @@ public:
     bool OnFileDialog(Browser browser, FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback) override;
     bool RunContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback) override;
     bool OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) override;
+    bool OnTooltip(Browser browser, CefString& text) override;
 
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 

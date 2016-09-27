@@ -42,6 +42,13 @@
      </widget>
     </item>
     <item>
+     <widget class="QLabel" name="hoverUrlLabel">
+      <property name="text">
+       <string>http://current-link.com/path</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QFrame" name="securityInfoFrame">
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>

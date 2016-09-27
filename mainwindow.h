@@ -26,6 +26,7 @@
 #include <QTabBar>
 #include <QMovie>
 #include <QX11Info>
+#include <QToolTip>
 
 namespace Ui {
 class MainWindow;
@@ -62,6 +63,7 @@ public slots:
     void ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback);
     void ContextMenuCommand(Browser browser, int command_id, CefRefPtr<CefContextMenuParams> params);
     void ProtocolExecution(Browser browser, const CefString& url, bool& allow_os_execution);
+    void Tooltip(Browser browser, CefString& text);
     void ReloadSettings();
 
     void createNewTab(Browser newBrowser = NULL, bool openInBackground = false);
@@ -145,7 +147,7 @@ private:
     void insertIntoMetadata(Browser browser, QString key, QVariant value);
     void removeFromMetadata(Browser browser, QString key);
 
-    QWidget* browserWidget;
+    //QWidget* browserWidget;
     QTabBar* tabBar;
     bool IsCorrectBrowser(Browser browser);
     Browser getBrowserFor(Browser browser);
@@ -161,6 +163,7 @@ private:
     QSettings settings;
 
     void closeEvent(QCloseEvent *event);
+    void resizeEvent(QResizeEvent *event);
 };
 
 #endif // MAINWINDOW_H

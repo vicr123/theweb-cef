@@ -89,9 +89,24 @@ int main(int argc, char *argv[])
         new MainDBus(); //Initialize DBus service
     }
 
-    //Initialize Qt
-    MainWindow w;
-    w.show();
+    //Initialize Windows
+    bool windowOpened = false;
+    qDebug() << a.arguments();
+    for (QString arg : a.arguments().first().split(" ")) {
+        if (arg != a.applicationFilePath() && arg != "") {
+            windowOpened = true;
+
+            CefWindowInfo windowInfo;
+            CefBrowserSettings settings;
+            MainWindow* w = new MainWindow(CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), arg.toStdString(), settings, CefRefPtr<CefRequestContext>()));
+            w->show();
+        }
+    }
+
+    if (!windowOpened) {
+        MainWindow* w = new MainWindow();
+        w->show();
+    }
 
     cefEventLoopTimer.setInterval(0);
     QObject::connect(&cefEventLoopTimer, &QTimer::timeout, [=]() {

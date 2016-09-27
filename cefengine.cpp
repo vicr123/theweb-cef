@@ -24,10 +24,11 @@ void CefEngine::OnContextInitialized() {
 }
 
 void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) {
+    //Get browser settings
+    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("theWebSettings_get");
+    browser.get()->SendProcessMessage(PID_BROWSER, message);
+
     if (QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).scheme() == "theweb") {
-        //Get browser settings
-        CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("theWebSettings_get");
-        browser.get()->SendProcessMessage(PID_BROWSER, message);
 
         //Register the theWebSettingsObject JavaScript object
         CefRefPtr<theWebSettingsAccessor> accessor = new theWebSettingsAccessor(browser);

@@ -320,3 +320,8 @@ void CefHandler::OnProtocolExecution(Browser browser, const CefString &url, bool
     emit signalBroker->ProtocolExecution(browser, url, allow_os_execution);
     allow_os_execution = false;
 }
+
+bool CefHandler::OnTooltip(Browser browser, CefString &text) {
+    emit signalBroker->Tooltip(browser, text);
+    return true;
+}

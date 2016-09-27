@@ -55,6 +55,10 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     ui->securityInfoFrame->setVisible(false);
     ui->badCertificateFrame->setVisible(false);
     ui->certMoreInfo->setVisible(false);
+    //ui->hoverUrlLabel->setVisible(false);
+
+    ui->hoverUrlLabel->setParent(this);
+    ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);
 
     QPalette oldFraudContentPalette = ui->fraudContent->palette();
     oldFraudContentPalette.setColor(QPalette::Window, oldFraudContentPalette.color(QPalette::Window));
@@ -111,6 +115,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     powerButton->setMenu(powerMenu);
     ui->toolBar->addWidget(powerButton);
 
+    //Connect signals and slots from the signal broker. Usually these are sent from the CEF Handler.
     connect(signalBroker, SIGNAL(RenderProcessTerminated(Browser,CefRequestHandler::TerminationStatus)), this, SLOT(RenderProcessTerminated(Browser,CefRequestHandler::TerminationStatus)));
     connect(signalBroker, SIGNAL(TitleChanged(Browser,CefString)), this, SLOT(TitleChanged(Browser,CefString)));
     connect(signalBroker, SIGNAL(AddressChange(Browser,CefRefPtr<CefFrame>,CefString)), this, SLOT(AddressChange(Browser,CefRefPtr<CefFrame>,CefString)));
@@ -128,6 +133,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(ContextMenu(Browser,CefRefPtr<CefFrame>,CefRefPtr<CefContextMenuParams>,CefRefPtr<CefMenuModel>,CefRefPtr<CefRunContextMenuCallback>)), this, SLOT(ContextMenu(Browser,CefRefPtr<CefFrame>,CefRefPtr<CefContextMenuParams>,CefRefPtr<CefMenuModel>,CefRefPtr<CefRunContextMenuCallback>)));
     connect(signalBroker, SIGNAL(ContextMenuCommand(Browser,int,CefRefPtr<CefContextMenuParams>)), this, SLOT(ContextMenuCommand(Browser,int,CefRefPtr<CefContextMenuParams>)));
     connect(signalBroker, SIGNAL(ProtocolExecution(Browser,CefString,bool&)), this, SLOT(ProtocolExecution(Browser,CefString,bool&)));
+    connect(signalBroker, SIGNAL(Tooltip(Browser,CefString&)), this, SLOT(Tooltip(Browser,CefString&)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -184,7 +190,7 @@ void MainWindow::createNewTab(Browser newBrowser, bool openInBackground) {
     }
 
     QWindow* window = QWindow::fromWinId(browser.get()->GetHost()->GetWindowHandle());
-    browserWidget = QWidget::createWindowContainer(window);
+    QWidget* browserWidget = QWidget::createWindowContainer(window);
     browserWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
     ui->browserStack->addWidget(browserWidget);
@@ -203,10 +209,6 @@ void MainWindow::closeEvent(QCloseEvent *event) {
             browser.get()->GetHost().get()->CloseBrowser(false);
             event->ignore();
         }
-    }
-
-    if (event->isAccepted()) {
-        browserWidget->close();
     }
 }
 
@@ -1512,4 +1514,18 @@ void MainWindow::ContextMenuCommand(Browser browser, int command_id, CefRefPtr<C
 
 void MainWindow::ProtocolExecution(Browser browser, const CefString &url, bool &allow_os_execution) {
     insertIntoMetadata(browser, "protocol", QString::fromStdString(url.ToString()));
+}
+
+void MainWindow::Tooltip(Browser browser, CefString &text) {
+    //Check if this is the current browser tab
+    if (IsCorrectBrowser(browser)) {
+        //Show the tooltip
+        QToolTip::showText(QCursor::pos(), QString::fromStdString(text.ToString()));
+    }
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event) {
+    ui->hoverUrlLabel->raise();
+    ui->browserStack->lower();
+    ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);
 }
