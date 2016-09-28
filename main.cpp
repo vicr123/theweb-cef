@@ -63,12 +63,14 @@ int main(int argc, char *argv[])
     CefRefPtr<CefEngine> app(new CefEngine);
     CefMainArgs cefArgs(argc, argv);
 
-
+    //Initialize CEF
     CefInitialize(cefArgs, settings, app.get(), NULL);
-    //CefCookieManager::GetGlobalManager(NULL).get()->SetStoragePath(QDir::homePath().append("/.theweb/cookies").toStdString(), false, NULL);
 
+    //Create a handler
     handler = new CefHandler();
+    //Connect required signals
     QObject::connect(nativeFilter, SIGNAL(PlayPause()), handler, SLOT(PlayPause()));
+    QObject::connect(nativeFilter, SIGNAL(Previous()), handler, SLOT(Previous()));
 
     //Check if theWeb is already running. We do this after CEF initializes because CEF can block things.
     bool isRunning;

@@ -14,6 +14,8 @@ bool NativeEventFilter::nativeEventFilter(const QByteArray &eventType, void *mes
 
                 if (button->detail == XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay) || button->detail == XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop)) {
                     emit PlayPause();
+                } else if (button->detail == XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev)) {
+                    emit Previous();
                 }
             //}
         }

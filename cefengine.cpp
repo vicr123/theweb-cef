@@ -183,6 +183,22 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
         //Do MPRIS Check
         CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
         browser.get()->SendProcessMessage(PID_RENDERER, message);
+    } else if (message.get()->GetName() == "mprisBack") {
+        //Enter the V8 Context
+        CefRefPtr<CefV8Context> context = browser.get()->GetMainFrame().get()->GetV8Context();
+        context.get()->Enter();
+
+        //Set the media to 0 seconds
+        CefRefPtr<CefV8Value> returnVal;
+        CefRefPtr<CefV8Exception> exception;
+        context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].currentTime = 0", returnVal, exception);
+
+        //Exit the V8 Context
+        context.get()->Exit();
+
+        //Do MPRIS Check
+        CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
+        browser.get()->SendProcessMessage(PID_RENDERER, message);
     }
     return true;
 }

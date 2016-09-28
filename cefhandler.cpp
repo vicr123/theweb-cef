@@ -18,6 +18,24 @@ CefHandler::CefHandler(QObject* parent) : QObject(parent)
             CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
             browser.get()->SendProcessMessage(PID_RENDERER, message);
         }
+        QDBusMessage signal = QDBusMessage::createSignal("/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Properties", "PropertiesChanged");
+
+        QList<QVariant> args;
+        args.append("org.mpris.MediaPlayer2.Player");
+
+        QVariantMap changedProperties;
+        changedProperties.insert("Metadata", this->Metadata());
+        changedProperties.insert("PlaybackStatus", this->PlaybackStatus());
+        args.append(changedProperties);
+
+        QStringList invalidatedProperties;
+        invalidatedProperties.append("Metadata");
+        invalidatedProperties.append("PlaybackStatus");
+        args.append(invalidatedProperties);
+
+        signal.setArguments(args);
+
+        QDBusConnection::sessionBus().send(signal);
     });
     mprisDetectTimer->start();
 }
@@ -173,6 +191,7 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             currentMprisBrowser = browser;
 
             XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
+            XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
             XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
         }
     } else if (message.get()->GetName() == "mprisStop") {
@@ -181,6 +200,7 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             currentMprisBrowser = NULL;
 
             XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, QX11Info::appRootWindow());
+            XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, QX11Info::appRootWindow());
             XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, QX11Info::appRootWindow());
         }
     } else if (message.get()->GetName() == "mprisData") {
@@ -376,6 +396,11 @@ bool CefHandler::OnTooltip(Browser browser, CefString &text) {
 
 void CefHandler::PlayPause() {
     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPlayPause");
+    currentMprisBrowser.get()->SendProcessMessage(PID_RENDERER, message);
+}
+
+void CefHandler::Previous() {
+    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisBack");
     currentMprisBrowser.get()->SendProcessMessage(PID_RENDERER, message);
 }
 

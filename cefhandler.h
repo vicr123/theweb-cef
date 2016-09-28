@@ -45,13 +45,26 @@ class MprisDBusMain : public QObject
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2")
 
+    Q_PROPERTY(bool CanQuit READ CanQuit)
+    Q_PROPERTY(bool CanRaise READ CanRaise)
+    Q_PROPERTY(bool HasTrackList READ HasTrackList)
     Q_PROPERTY(QString Identity READ Identity)
+    Q_PROPERTY(QString DesktopEntry READ DesktopEntry)
+    Q_PROPERTY(QStringList SupportedMimeTypes READ SupportedMimeTypes)
+    Q_PROPERTY(QStringList SupportedUriSchemes READ SupportedUriSchemes)
 public:
     explicit MprisDBusMain(QObject* parent);
 
+    virtual bool CanQuit() {}
+    virtual bool CanRaise() {}
+    virtual bool HasTrackList() {}
     virtual QString Identity() {}
+    virtual QString DesktopEntry() {}
+    virtual QStringList SupportedMimeTypes() {}
+    virtual QStringList SupportedUriSchemes() {}
 public Q_SLOTS:
     Q_SCRIPTABLE virtual void Raise() {}
+    Q_SCRIPTABLE virtual void Quit() {}
 
 };
 
@@ -172,12 +185,20 @@ public:
 public Q_SLOTS:
     //org.mpris.MediaPlayer2.Player methods
     Q_SCRIPTABLE void PlayPause();
+    Q_SCRIPTABLE void Previous();
     QVariantMap Metadata();
     QString PlaybackStatus();
 
     //org.mpris.MediaPlayer2 methods
     void Raise();
+    void Quit() {}
+    bool CanQuit() { return false; }
+    bool CanRaise() { return true; }
+    bool HasTrackList() { return false; }
     QString Identity() { return "theWeb"; }
+    QString DesktopEntry() { return "theweb.desktop"; }
+    QStringList SupportedMimeTypes() { return QStringList(); }
+    QStringList SupportedUriSchemes() { return QStringList(); }
 private:
     int numberOfBrowsers = 0;
 

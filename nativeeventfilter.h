@@ -17,6 +17,7 @@ public:
 
 signals:
     void PlayPause();
+    void Previous();
 
 public slots:
 
