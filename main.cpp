@@ -10,6 +10,7 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QDBusInterface>
+#include <nativeeventfilter.h>
 
 CefHandler* handler;
 SignalBroker* signalBroker;
@@ -25,6 +26,9 @@ int main(int argc, char *argv[])
     a.setOrganizationName("theSuite");
     a.setOrganizationDomain("");
     a.setApplicationName("theWeb");
+
+    NativeEventFilter* nativeFilter = new NativeEventFilter;
+    a.installNativeEventFilter(nativeFilter);
 
     qRegisterMetaType<Browser>();
     qRegisterMetaType<CefRefPtr<CefFrame>>();
@@ -64,6 +68,7 @@ int main(int argc, char *argv[])
     //CefCookieManager::GetGlobalManager(NULL).get()->SetStoragePath(QDir::homePath().append("/.theweb/cookies").toStdString(), false, NULL);
 
     handler = new CefHandler();
+    QObject::connect(nativeFilter, SIGNAL(PlayPause()), handler, SLOT(PlayPause()));
 
     //Check if theWeb is already running. We do this after CEF initializes because CEF can block things.
     bool isRunning;

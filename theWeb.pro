@@ -32,7 +32,8 @@ SOURCES += main.cpp\
     downloadimagecallback.cpp \
     oblivionrequestcontext.cpp \
     maindbus.cpp \
-    animatedstackedwidget.cpp
+    animatedstackedwidget.cpp \
+    nativeeventfilter.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -47,7 +48,8 @@ HEADERS  += \
     clickableframe.h \
     downloadimagecallback.h \
     oblivionrequestcontext.h \
-    animatedstackedwidget.h
+    animatedstackedwidget.h \
+    nativeeventfilter.h
 
 FORMS    += \
     mainwindow.ui

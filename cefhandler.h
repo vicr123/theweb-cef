@@ -39,6 +39,7 @@ public slots:
     Q_SCRIPTABLE void newWindow();
 };
 
+//org.mpris.MediaPlayer2 Interface
 class MprisDBusMain : public QObject
 {
     Q_OBJECT
@@ -54,6 +55,7 @@ public Q_SLOTS:
 
 };
 
+//org.mpris.MediaPlayer2.Player interface
 class CefHandler : public QObject,
         public CefClient,
         public CefDisplayHandler,
