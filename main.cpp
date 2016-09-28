@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     CefString(&settings.cache_path) = QDir::homePath().append("/.theweb/cache").toStdString();
     CefString(&settings.locale) = "en-US";
     settings.remote_debugging_port = 26154;
-    settings.single_process = true;
+    //settings.single_process = true;
 
     CefRefPtr<CefEngine> app(new CefEngine);
     CefMainArgs cefArgs(argc, argv);
