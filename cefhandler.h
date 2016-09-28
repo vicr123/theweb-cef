@@ -88,6 +88,12 @@ class CefHandler : public QObject,
 
     Q_PROPERTY(QVariantMap Metadata READ Metadata)
     Q_PROPERTY(QString PlaybackStatus READ PlaybackStatus)
+    Q_PROPERTY(bool CanControl READ CanControl)
+    Q_PROPERTY(bool CanPlay READ CanPlay)
+    Q_PROPERTY(bool CanPause READ CanPause)
+    Q_PROPERTY(bool CanGoPrevious READ CanGoPrevious)
+    Q_PROPERTY(bool CanGoNext READ CanGoNext)
+    Q_PROPERTY(bool CanSeek READ CanSeek)
 public:
     explicit CefHandler(QObject* parent = 0);
 
@@ -185,9 +191,10 @@ public:
 public Q_SLOTS:
     //org.mpris.MediaPlayer2.Player methods
     Q_SCRIPTABLE void PlayPause();
+    Q_SCRIPTABLE void Play();
+    Q_SCRIPTABLE void Pause();
+    Q_SCRIPTABLE void Stop();
     Q_SCRIPTABLE void Previous();
-    QVariantMap Metadata();
-    QString PlaybackStatus();
 
     //org.mpris.MediaPlayer2 methods
     void Raise();
@@ -200,6 +207,17 @@ public Q_SLOTS:
     QStringList SupportedMimeTypes() { return QStringList(); }
     QStringList SupportedUriSchemes() { return QStringList(); }
 private:
+    //DBus Properties
+    QVariantMap Metadata();
+    QString PlaybackStatus();
+    bool CanControl() { return true; }
+    bool CanPlay() { return true; }
+    bool CanPause() { return true; }
+    bool CanGoPrevious() { return true; }
+    bool CanGoNext() { return false; }
+    bool CanSeek() { return false; }
+
+    //Private Variables
     int numberOfBrowsers = 0;
 
     Browser currentMprisBrowser = NULL;

@@ -14,10 +14,13 @@ CefHandler::CefHandler(QObject* parent) : QObject(parent)
     QTimer* mprisDetectTimer = new QTimer;
     mprisDetectTimer->setInterval(1000);
     connect(mprisDetectTimer, &QTimer::timeout, [=]() {
+        //Send all browsers the mprisCheck signal
         for (Browser browser : currentBrowsers) {
             CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
             browser.get()->SendProcessMessage(PID_RENDERER, message);
         }
+
+        //Send the PropertiesChanged signal.
         QDBusMessage signal = QDBusMessage::createSignal("/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Properties", "PropertiesChanged");
 
         QList<QVariant> args;
@@ -187,7 +190,7 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         }
     } else if (message.get()->GetName() == "mprisStart") {
         if (currentMprisBrowser.get() == NULL) {
-            QDBusConnection::sessionBus().registerService("org.mpris.MediaPlayer2.theweb");
+            QDBusConnection::sessionBus().registerService("org.mpris.MediaPlayer2.theWeb");
             currentMprisBrowser = browser;
 
             XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
@@ -196,7 +199,7 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         }
     } else if (message.get()->GetName() == "mprisStop") {
         if (currentMprisBrowser.get() != NULL && browser.get()->IsSame(currentMprisBrowser)) {
-            QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theweb");
+            QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theWeb");
             currentMprisBrowser = NULL;
 
             XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, QX11Info::appRootWindow());
@@ -397,6 +400,20 @@ bool CefHandler::OnTooltip(Browser browser, CefString &text) {
 void CefHandler::PlayPause() {
     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPlayPause");
     currentMprisBrowser.get()->SendProcessMessage(PID_RENDERER, message);
+}
+
+void CefHandler::Play() {
+    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPlay");
+    currentMprisBrowser.get()->SendProcessMessage(PID_RENDERER, message);
+}
+
+void CefHandler::Pause() {
+    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPause");
+    currentMprisBrowser.get()->SendProcessMessage(PID_RENDERER, message);
+}
+
+void CefHandler::Stop() {
+    Pause();
 }
 
 void CefHandler::Previous() {

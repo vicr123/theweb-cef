@@ -37,12 +37,12 @@ public:
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 
     bool videoPlaying;
+    Browser videoBrowser;
 private:
     QSettings settings;
 
     CefRefPtr<CefV8Value> videoElement;
     CefRefPtr<CefV8Context> videoContext;
-    Browser videoBrowser;
     QString mprisElementTagType;
 };
 

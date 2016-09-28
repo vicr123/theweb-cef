@@ -62,7 +62,13 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
 }
 
 void CefEngine::OnContextReleased(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) {
-
+    if (this->videoBrowser.get() != NULL) {
+        if (this->videoBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisStop");
+            browser.get()->SendProcessMessage(PID_BROWSER, message);
+            this->videoBrowser = NULL;
+        }
+    }
 }
 
 bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) {
@@ -119,7 +125,7 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
 
                 //Get if the video is paused
                 context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].paused", returnVal, exception);
-                videoPlaying = returnVal.get()->GetBoolValue();
+                videoPlaying = !returnVal.get()->GetBoolValue();
 
                 CefString title, artist, album;
 
@@ -142,14 +148,12 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
 
                 {
                     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisData");
-                    message.get()->GetArgumentList().get()->SetBool(0, !videoPlaying);
+                    message.get()->GetArgumentList().get()->SetBool(0, videoPlaying);
                     message.get()->GetArgumentList().get()->SetString(1, title);
                     message.get()->GetArgumentList().get()->SetString(2, artist);
                     message.get()->GetArgumentList().get()->SetString(3, album);
                     browser.get()->SendProcessMessage(PID_BROWSER, message);
                 }
-
-
             } else {
                 CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisStop");
                 browser.get()->SendProcessMessage(PID_BROWSER, message);
@@ -164,21 +168,54 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
         CefRefPtr<CefV8Context> context = browser.get()->GetMainFrame().get()->GetV8Context();
         context.get()->Enter();
 
-        //Get if the video is paused
         CefRefPtr<CefV8Value> returnVal;
         CefRefPtr<CefV8Exception> exception;
-        context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].paused", returnVal, exception);
-
         if (videoPlaying) {
+            //The media is playing, pause the media.
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].pause()", returnVal, exception);
+        } else {
             //The media is paused, play the media.
             context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].play()", returnVal, exception);
-        } else {
-            //The media is playing, pause the meda.
-            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].pause()", returnVal, exception);
         }
 
         //Exit the V8 Context
         context.get()->Exit();
+
+        //Do MPRIS Check
+        CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
+        browser.get()->SendProcessMessage(PID_RENDERER, message);
+    } else if (message.get()->GetName() == "mprisPlay") {
+        if (!videoPlaying) {
+            //Enter the V8 Context
+            CefRefPtr<CefV8Context> context = browser.get()->GetMainFrame().get()->GetV8Context();
+            context.get()->Enter();
+
+            //The media is paused, play the media.
+            CefRefPtr<CefV8Value> returnVal;
+            CefRefPtr<CefV8Exception> exception;
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].play()", returnVal, exception);
+
+            //Exit the V8 Context
+            context.get()->Exit();
+        }
+
+        //Do MPRIS Check
+        CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
+        browser.get()->SendProcessMessage(PID_RENDERER, message);
+    } else if (message.get()->GetName() == "mprisPause") {
+        if (videoPlaying) {
+            //Enter the V8 Context
+            CefRefPtr<CefV8Context> context = browser.get()->GetMainFrame().get()->GetV8Context();
+            context.get()->Enter();
+
+            //The media is playing, pause the media.
+            CefRefPtr<CefV8Value> returnVal;
+            CefRefPtr<CefV8Exception> exception;
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].pause()", returnVal, exception);
+
+            //Exit the V8 Context
+            context.get()->Exit();
+        }
 
         //Do MPRIS Check
         CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
