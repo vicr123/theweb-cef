@@ -101,6 +101,8 @@ public:
     enum MenuItemIds {
         LinkSubmenu = MENU_ID_USER_FIRST, CopyLink, OpenLinkInNewTab, OpenLinkInNewWindow, OpenLinkInNewOblivion,
         MisspelledWordSubmenu,
+        TextSubmenu,
+        EditableSubmenu,
         Generic
     };
 

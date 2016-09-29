@@ -1468,6 +1468,27 @@ void MainWindow::ContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefP
                 case MENU_ID_NO_SPELLING_SUGGESTIONS:
                     icon = "tools-check-spelling";
                     break;
+                case MENU_ID_ADD_TO_DICTIONARY:
+                    icon = "list-add";
+                    break;
+                case MENU_ID_CUT:
+                    icon = "edit-cut";
+                    break;
+                case MENU_ID_PASTE:
+                    icon = "edit-paste";
+                    break;
+                case MENU_ID_UNDO:
+                    icon = "edit-undo";
+                    break;
+                case MENU_ID_REDO:
+                    icon = "edit-redo";
+                    break;
+                case MENU_ID_SELECT_ALL:
+                    icon = "edit-select-all";
+                    break;
+                case MENU_ID_DELETE:
+                    icon = "edit-delete";
+                    break;
                 case MENU_ID_COPY:
                 case CefHandler::CopyLink:
                     icon = "edit-copy";

@@ -240,10 +240,12 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, QX11Info::appRootWindow());
         }
     } else if (message.get()->GetName() == "mprisData") {
-        this->mprisIsPlaying = message.get()->GetArgumentList().get()->GetBool(0);
-        this->mprisTitle = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(1).ToString());
-        this->mprisArtist = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(2));
-        this->mprisAlbum = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(3));
+        if (browser.get()->GetIdentifier() == currentMprisBrowser.get()->GetIdentifier()) {
+            this->mprisIsPlaying = message.get()->GetArgumentList().get()->GetBool(0);
+            this->mprisTitle = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(1).ToString());
+            this->mprisArtist = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(2));
+            this->mprisAlbum = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(3));
+        }
     } else if (message.get()->GetName() == "jsNotificationRequest") {
         emit signalBroker->AskForNotification(browser, message.get()->GetArgumentList().get()->GetString(0));
     } else if (message.get()->GetName() == "jsNotifications_set") {
@@ -360,6 +362,7 @@ bool CefHandler::RunContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefR
 
 void CefHandler::OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) {
     if (!params.get()->IsPepperMenu()) {
+        QMenu* menu = new QMenu;
         model.get()->Clear();
 
         if (params.get()->GetMisspelledWord() != "") {
@@ -385,11 +388,11 @@ void CefHandler::OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame,
                 case 1:
                     model.get()->AddItem(MENU_ID_SPELLCHECK_SUGGESTION_0, suggestionsList.at(0));
                 }
+                model.get()->AddItem(MENU_ID_ADD_TO_DICTIONARY, "Add to Dictionary");
             }
         }
 
         if (params.get()->GetLinkUrl() != "") {
-            QMenu* menu = new QMenu;
 
             model.get()->AddSubMenu(LinkSubmenu, "For link \"" + menu->fontMetrics().elidedText(QString::fromStdString(params.get()->GetLinkUrl().ToString()), Qt::ElideMiddle, 400).toStdString() + "\"");
             model.get()->AddItem(CopyLink, "Copy Link");
@@ -398,6 +401,53 @@ void CefHandler::OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame,
             model.get()->AddItem(OpenLinkInNewOblivion, "Open Link in new Oblivion Window");
 
             menu->deleteLater();
+        }
+
+        if (params.get()->GetSelectionText() != "") {
+            model.get()->AddSubMenu(TextSubmenu, "For text \"" + menu->fontMetrics().elidedText(QString::fromStdString(params.get()->GetSelectionText().ToString()), Qt::ElideMiddle, 400).toStdString() + "\"");
+            model.get()->AddItem(MENU_ID_COPY, "Copy");
+
+            if ((params.get()->GetEditStateFlags() & CM_EDITFLAG_CAN_COPY) == 0) {
+                model.get()->SetEnabled(MENU_ID_COPY, false);
+            }
+
+            if (params.get()->IsEditable()) {
+                model.get()->AddItem(MENU_ID_CUT, "Cut");
+                model.get()->AddItem(MENU_ID_DELETE, "Delete");
+
+                if ((params.get()->GetEditStateFlags() & CM_EDITFLAG_CAN_CUT) == 0) {
+                    model.get()->SetEnabled(MENU_ID_CUT, false);
+                }
+
+                if ((params.get()->GetEditStateFlags() & CM_EDITFLAG_CAN_DELETE) == 0) {
+                    model.get()->SetEnabled(MENU_ID_DELETE, false);
+                }
+            }
+        }
+
+        if (params.get()->IsEditable()) {
+            model.get()->AddSubMenu(EditableSubmenu, "For editable box");
+            model.get()->AddItem(MENU_ID_PASTE, "Paste");
+            model.get()->AddItem(MENU_ID_SELECT_ALL, "Select All");
+            model.get()->AddItem(MENU_ID_UNDO, "Undo");
+            model.get()->AddItem(MENU_ID_REDO, "Redo");
+
+
+            if ((params.get()->GetEditStateFlags() & CM_EDITFLAG_CAN_PASTE) == 0) {
+                model.get()->SetEnabled(MENU_ID_PASTE, false);
+            }
+
+            if ((params.get()->GetEditStateFlags() & CM_EDITFLAG_CAN_SELECT_ALL) == 0) {
+                model.get()->SetEnabled(MENU_ID_SELECT_ALL, false);
+            }
+
+            if ((params.get()->GetEditStateFlags() & CM_EDITFLAG_CAN_UNDO) == 0) {
+                model.get()->SetEnabled(MENU_ID_UNDO, false);
+            }
+
+            if ((params.get()->GetEditStateFlags() & CM_EDITFLAG_CAN_REDO) == 0) {
+                model.get()->SetEnabled(MENU_ID_REDO, false);
+            }
         }
 
         model.get()->AddSubMenu(Generic, "For Webpage");
