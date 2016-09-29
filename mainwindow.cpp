@@ -1302,6 +1302,7 @@ void MainWindow::updateCurrentBrowserDisplay() {
             if (JsMetadata.at(0).toString() == "unload") {
                 ui->JsDialogText->setText(JsMetadata.at(1).toString());
                 ui->JsDialogFrame->setVisible(true);
+                ui->JsDialogCancel->setVisible(true);
                 if (JsMetadata.at(3).toBool()) {
                     ui->JsDialogOk->setText("Reload anyway");
                     ui->JsDialogCancel->setText("Don't Reload");
