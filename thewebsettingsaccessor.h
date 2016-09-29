@@ -34,12 +34,18 @@ private:
 class V8Function : public CefV8Handler, public CefEngine
 {
 public:
-    V8Function(std::function<void()> function);
+    explicit V8Function(std::function<void(CefV8ValueList &arguments)> function);
+    explicit V8Function(std::function<void()> function);
+    explicit V8Function(std::function<CefRefPtr<CefV8Value>()> function);
 
     bool Execute(const CefString &name, CefRefPtr<CefV8Value> object, const CefV8ValueList &arguments, CefRefPtr<CefV8Value> &retval, CefString &exception) override;
 
 private:
-    std::function<void()> function;
+    std::function<void(CefV8ValueList &arguments)> function;
+    std::function<void()> noArgFunction;
+    std::function<CefRefPtr<CefV8Value>()> returnFunction;
+    bool hasArguments;
+    bool returnsValue;
 };
 
 #endif // THEWEBSETTINGSACCESSOR_H

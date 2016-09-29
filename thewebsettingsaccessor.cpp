@@ -138,11 +138,37 @@ bool theWebSettingsAccessor::HasOneRef() const {
     return CefRefCount::HasOneRef();
 }
 
-V8Function::V8Function(std::function<void()> function) {
+V8Function::V8Function(std::function<void (CefV8ValueList &)> function) {
     this->function = function;
+    hasArguments = true;
+    returnsValue = false;
+}
+
+V8Function::V8Function(std::function<void()> function) {
+    this->noArgFunction = function;
+    hasArguments = false;
+    returnsValue = false;
+}
+
+V8Function::V8Function(std::function<CefRefPtr<CefV8Value>()> function) {
+    this->returnFunction = function;
+    hasArguments = false;
+    returnsValue = true;
 }
 
 bool V8Function::Execute(const CefString &name, CefRefPtr<CefV8Value> object, const CefV8ValueList &arguments, CefRefPtr<CefV8Value> &retval, CefString &exception) {
-    function();
+    if (returnsValue) {
+        if (hasArguments) {
+            //TODO: Create handler for function that returns a value with arguments
+        } else {
+            retval = returnFunction();
+        }
+    } else {
+        if (hasArguments) {
+            function(const_cast<CefV8ValueList&>(arguments));
+        } else {
+            noArgFunction();
+        }
+    }
     return true;
 }

@@ -175,8 +175,17 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
                 }
             }
         }
-
         args.get()->SetDictionary(0, settingsDictionary);
+
+        settings.beginGroup("notifications");
+        CefRefPtr<CefDictionaryValue> notificationsDictionary = CefDictionaryValue::Create();
+
+        for (QString key : settings.allKeys()) {
+            notificationsDictionary.get()->SetString(key.toStdString(), settings.value(key).toString().toStdString());
+        }
+        settings.endGroup();
+
+        args.get()->SetDictionary(1, notificationsDictionary);
         browser.get()->SendProcessMessage(PID_RENDERER, message);
     } else if (message.get()->GetName() == "ReloadSettings") {
         emit signalBroker->ReloadSettings();
@@ -235,6 +244,30 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         this->mprisTitle = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(1).ToString());
         this->mprisArtist = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(2));
         this->mprisAlbum = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(3));
+    } else if (message.get()->GetName() == "jsNotificationRequest") {
+        emit signalBroker->AskForNotification(browser, message.get()->GetArgumentList().get()->GetString(0));
+    } else if (message.get()->GetName() == "jsNotifications_set") {
+        settings.beginGroup("notifications");
+        settings.setValue(QString::fromStdString(message.get()->GetArgumentList().get()->GetString(0).ToString()), QString::fromStdString(message.get()->GetArgumentList().get()->GetString(1).ToString()));
+        settings.endGroup();
+    } else if (message.get()->GetName() == "jsNotifications_post") {
+        //Create DBus Message
+        QDBusMessage dbusMessage = QDBusMessage::createMethodCall("org.freedesktop.Notifications", "/org/freedesktop/Notifications", "org.freedesktop.Notifications", "Notify");
+
+        //Create message arguments
+        QVariantList args;
+        args.append("theWeb"); //app_name
+        args.append((uint) 0); //replaces_id
+        args.append(""); //app_icon
+        args.append(QString::fromStdString(message.get()->GetArgumentList().get()->GetString(0).ToString())); //summary
+        args.append(QString::fromStdString(message.get()->GetArgumentList().get()->GetString(1).ToString())); //body
+        args.append(QStringList() << "1" << "Activate"); //actions
+        args.append(QVariantMap()); //hints
+        args.append(-1); //expire_timeout
+        dbusMessage.setArguments(args);
+
+        //Send the message to the notification server
+        QDBusConnection::sessionBus().call(dbusMessage, QDBus::NoBlock);
     }
     return true;
 }

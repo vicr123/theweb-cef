@@ -1,6 +1,7 @@
 #include "cefengine.h"
 
 extern QVariantMap settingsData;
+extern QVariantMap notificationsData;
 
 CefEngine::CefEngine() : CefApp()
 {
@@ -29,7 +30,6 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
     browser.get()->SendProcessMessage(PID_BROWSER, message);
 
     if (QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).scheme() == "theweb") {
-
         //Register the theWebSettingsObject JavaScript object
         CefRefPtr<theWebSettingsAccessor> accessor = new theWebSettingsAccessor(browser);
         CefRefPtr<CefV8Value> JsObject = CefV8Value::CreateObject(accessor);
@@ -56,8 +56,66 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
             CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("showProxy");
             browser.get()->SendProcessMessage(PID_BROWSER, message);
         })), V8_PROPERTY_ATTRIBUTE_NONE);
+        JsObject.get()->SetValue("clearData", CefV8Value::CreateFunction("clearData", new V8Function([=](CefV8ValueList &arguments) {
+            QVector<CefRefPtr<CefV8Value>> args = QVector<CefRefPtr<CefV8Value>>::fromStdVector(arguments);
+            if (args.size() == 3) {
+                //Erase History
+                if (args[0].get()->GetBoolValue()) {
+                    qDebug() << "Erase History";
+                }
+                //Erase Cache
+                if (args[1].get()->GetBoolValue()) {
+                    qDebug() << "Erase Cache";
+                }
+
+                //Erase Cookies
+                if (args[2].get()->GetBoolValue()) {
+                    qDebug() << "Erase Cookies";
+                }
+            }
+        })), V8_PROPERTY_ATTRIBUTE_NONE);
 
         context.get()->GetGlobal()->SetValue("theWebSettingsObject", JsObject, V8_PROPERTY_ATTRIBUTE_NONE);
+    }
+
+    {
+        CefRefPtr<CefV8Value> notificationObject = CefV8Value::CreateFunction("NotificationConstructor", new V8Function([=](CefV8ValueList &arguments) {
+            QVector<CefRefPtr<CefV8Value>> args = QVector<CefRefPtr<CefV8Value>>::fromStdVector(arguments);
+
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotifications_post");
+            message.get()->GetArgumentList().get()->SetString(0, QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host().toStdString());
+            message.get()->GetArgumentList().get()->SetString(1, args.at(0).get()->GetStringValue());
+            browser.get()->SendProcessMessage(PID_BROWSER, message);
+        }));
+        qDebug() << notificationsData.value(QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host(), "default").toString();
+        notificationObject.get()->SetValue("permission", CefV8Value::CreateString(notificationsData.value(QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host(), "default").toString().toStdString()), V8_PROPERTY_ATTRIBUTE_NONE);
+        notificationObject.get()->SetValue("requestPermission", CefV8Value::CreateFunction("requestPermission", new V8Function((std::function<CefRefPtr<CefV8Value>()>) [=]() {
+            if (notificationObject.get()->GetValue("permission").get()->GetStringValue() == "default") {
+                if (notificationRequestPromise == NULL) {
+                    qDebug() << context.get()->GetGlobal().get()->SetValue("theWebNotificationRequest", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+                    CefRefPtr<CefV8Exception> exception;
+                    context.get()->Eval("new Promise(function(resolve, reject) {"
+                                            "theWebNotificationRequest = resolve;"
+                                        "});", notificationRequestPromise, exception);
+                    notificationRequestResolver = context.get()->GetGlobal().get()->GetValue("theWebNotificationRequest");
+
+                    //Ask user permission to show notifications
+                    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotificationRequest");
+                    message.get()->GetArgumentList().get()->SetString(0, QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host().toStdString());
+                    browser.get()->SendProcessMessage(PID_BROWSER, message);
+
+                    notificationRequestFrame = frame;
+
+                    return notificationRequestPromise;
+                } else {
+                    return CefV8Value::CreateNull();
+                }
+            } else {
+                return CefV8Value::CreateNull();
+            }
+        })), V8_PROPERTY_ATTRIBUTE_NONE);
+
+        context.get()->GetGlobal().get()->SetValue("Notification", notificationObject, V8_PROPERTY_ATTRIBUTE_NONE);
     }
 }
 
@@ -75,15 +133,27 @@ void CefEngine::OnContextReleased(Browser browser, CefRefPtr<CefFrame> frame, Ce
 bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) {
     if (message.get()->GetName() == "theWebSettings_reply") {
         CefRefPtr<CefListValue> args = message.get()->GetArgumentList();
-        CefRefPtr<CefDictionaryValue> settingsDictionary = args.get()->GetDictionary(0);
-        std::vector<CefString> keys;
-        settingsDictionary.get()->GetKeys(keys);
-        for (CefString key : keys) {
-            //Convert CEF types into Qt types
-            if (settingsDictionary.get()->GetType(key) == VTYPE_BOOL) {
-                settingsData.insert(QString::fromStdString(key.ToString()), settingsDictionary.get()->GetBool(key));
-            } else if (settingsDictionary.get()->GetType(key) == VTYPE_STRING) {
-                settingsData.insert(QString::fromStdString(key.ToString()), QString::fromStdString(settingsDictionary.get()->GetString(key).ToString()));
+        {
+            CefRefPtr<CefDictionaryValue> settingsDictionary = args.get()->GetDictionary(0);
+            std::vector<CefString> keys;
+            settingsDictionary.get()->GetKeys(keys);
+            for (CefString key : keys) {
+                //Convert CEF types into Qt types
+                if (settingsDictionary.get()->GetType(key) == VTYPE_BOOL) {
+                    settingsData.insert(QString::fromStdString(key.ToString()), settingsDictionary.get()->GetBool(key));
+                } else if (settingsDictionary.get()->GetType(key) == VTYPE_STRING) {
+                    settingsData.insert(QString::fromStdString(key.ToString()), QString::fromStdString(settingsDictionary.get()->GetString(key).ToString()));
+                }
+            }
+        }
+
+        {
+            CefRefPtr<CefDictionaryValue> notificationsDictionary = args.get()->GetDictionary(1);
+            std::vector<CefString> keys;
+            notificationsDictionary.get()->GetKeys(keys);
+            for (CefString key : keys) {
+                //Convert CEF types into Qt types
+                notificationsData.insert(QString::fromStdString(key.ToString()), QString::fromStdString(notificationsDictionary.get()->GetString(key).ToString()));
             }
         }
     } else if (message.get()->GetName() == "mprisCheck") {
@@ -251,6 +321,40 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
         //Do MPRIS Check
         CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisCheck");
         browser.get()->SendProcessMessage(PID_RENDERER, message);
+    } else if (message.get()->GetName() == "jsNotificationRequest_Reply") {
+        //Enter the V8 Context
+        CefRefPtr<CefV8Context> context = notificationRequestFrame->GetV8Context();
+        context.get()->Enter();
+
+        CefRefPtr<CefProcessMessage> setMessage = CefProcessMessage::Create("jsNotifications_set");
+        setMessage.get()->GetArgumentList().get()->SetString(0, QUrl(QString::fromStdString(notificationRequestFrame.get()->GetURL().ToString())).host().toStdString());
+
+        CefV8ValueList args;
+        if (message.get()->GetArgumentList().get()->GetBool(0)) {
+            args.push_back(CefV8Value::CreateString("granted"));
+            context.get()->GetGlobal().get()->GetValue("Notification").get()->SetValue("permission", CefV8Value::CreateString("granted"), V8_PROPERTY_ATTRIBUTE_NONE);
+            notificationsData.insert(QUrl(QString::fromStdString(notificationRequestFrame.get()->GetURL().ToString())).host(), "granted");
+            setMessage.get()->GetArgumentList().get()->SetString(1, "granted");
+        } else {
+            args.push_back(CefV8Value::CreateString("denied"));
+            context.get()->GetGlobal().get()->GetValue("Notification").get()->SetValue("permission", CefV8Value::CreateString("denied"), V8_PROPERTY_ATTRIBUTE_NONE);
+            notificationsData.insert(QUrl(QString::fromStdString(notificationRequestFrame.get()->GetURL().ToString())).host(), "denied");
+            setMessage.get()->GetArgumentList().get()->SetString(1, "denied");
+        }
+        notificationRequestResolver.get()->ExecuteFunction(NULL, args);
+
+        browser.get()->SendProcessMessage(PID_RENDERER, setMessage);
+
+        //notificationRequestPromise.get()->GetValue("resolve").get()->ExecuteFunction(NULL, args);
+        /*if (message.get()->GetArgumentList().get()->GetBool(0)) {
+            browser.get()->GetMainFrame().get()->ExecuteJavaScript("theWebNotificationRequest(\"granted\")", "", 0);
+        } else {
+            browser.get()->GetMainFrame().get()->ExecuteJavaScript("theWebNotificationRequest(\"denied\")", "", 0);
+        }*/
+
+        //Exit the V8 Context
+        context.get()->Exit();
+        notificationRequestPromise = NULL;
     }
     return true;
 }

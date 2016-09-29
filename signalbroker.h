@@ -32,6 +32,7 @@ signals:
     void ProtocolExecution(Browser browser, const CefString& url, bool& allow_os_execution);
     void Tooltip(Browser browser, CefString& text);
     void ShowBrowser(Browser browser);
+    void AskForNotification(Browser browser, CefString host);
     void ReloadSettings();
 
 public slots:

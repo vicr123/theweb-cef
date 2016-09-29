@@ -11,6 +11,8 @@
 #include <X11/XF86keysym.h>
 #include "cefheaders.h"
 #include <QProcess>
+#include <QVector>
+#include <functional>
 
 #undef Unsorted
 #undef None
@@ -44,6 +46,10 @@ private:
     CefRefPtr<CefV8Value> videoElement;
     CefRefPtr<CefV8Context> videoContext;
     QString mprisElementTagType;
+
+    CefRefPtr<CefV8Value> notificationRequestPromise = NULL;
+    CefRefPtr<CefV8Value> notificationRequestResolver = NULL;
+    CefRefPtr<CefFrame> notificationRequestFrame = NULL;
 };
 
 #include "thewebschemes.h"

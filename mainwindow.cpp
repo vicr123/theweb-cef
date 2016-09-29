@@ -136,6 +136,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(ProtocolExecution(Browser,CefString,bool&)), this, SLOT(ProtocolExecution(Browser,CefString,bool&)));
     connect(signalBroker, SIGNAL(Tooltip(Browser,CefString&)), this, SLOT(Tooltip(Browser,CefString&)));
     connect(signalBroker, SIGNAL(ShowBrowser(Browser)), this, SLOT(ShowBrowser(Browser)));
+    connect(signalBroker, SIGNAL(AskForNotification(Browser,CefString)), this, SLOT(AskForNotification(Browser,CefString)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -578,7 +579,14 @@ void MainWindow::on_warningOk_clicked()
 {
     switch (currentWarning) {
     case fullscreen:
-        ; //do nothing
+        break; //do nothing
+    case notification:
+    {
+        CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotificationRequest_Reply");
+        message.get()->GetArgumentList().get()->SetBool(0, true);
+        browser().get()->SendProcessMessage(PID_RENDERER, message);
+    }
+        break;
     }
     ui->warningFrame->setVisible(false);
 
@@ -590,6 +598,14 @@ void MainWindow::on_warningCancel_clicked()
     switch (currentWarning) {
     case fullscreen:
         browser().get()->GetMainFrame().get()->ExecuteJavaScript("document.webkitExitFullscreen()", "", 0);
+        break;
+    case notification:
+    {
+        CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotificationRequest_Reply");
+        message.get()->GetArgumentList().get()->SetBool(0, false);
+        browser().get()->SendProcessMessage(PID_RENDERER, message);
+    }
+        break;
     }
     ui->warningFrame->setVisible(false);
 
@@ -1542,5 +1558,18 @@ void MainWindow::ShowBrowser(Browser browser) {
         this->show();
         this->raise();
         ui->browserStack->setCurrentIndex(indexOfBrowser(browser));
+    }
+}
+
+void MainWindow::AskForNotification(Browser browser, CefString host) {
+    if (IsCorrectBrowser(browser)) {
+        currentWarning = MainWindow::notification;
+        ui->warningLabel->setText(QString::fromStdString(host.ToString()) + " wants to send you notifications.");
+
+        ui->warningOk->setVisible(true);
+        ui->warningCancel->setVisible(true);
+        ui->warningOk->setText("Allow");
+        ui->warningCancel->setText("Don't Allow");
+        ui->warningFrame->setVisible(true);
     }
 }

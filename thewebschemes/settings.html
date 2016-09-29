@@ -60,13 +60,37 @@
           document.getElementById('body').classList.add("noscroll");
         }
       }
+      
+      function doClearData() {
+        document.getElementById('clearHistory').disabled = true;
+        document.getElementById('clearCache').disabled = true;
+        document.getElementById('clearCookie').disabled = true;
+        document.getElementById('clearDataButton').disabled = true;
+        
+        var clearHistory, clearCache, clearCookie;
+        
+        clearHistory = document.getElementById('clearHistory').checked;
+        clearCache = document.getElementById('clearCache').checked;
+        clearCookie = document.getElementById('clearCookie').checked;
+        
+        theWebSettingsObject.clearData(clearHistory, clearCache, clearCookie);
+        
+        setTimeout(function() {
+        	document.getElementById('clearHistory').disabled = false;
+        	document.getElementById('clearCache').disabled = false;
+        	document.getElementById('clearCookie').disabled = false;
+        document.getElementById('clearDataButton').disabled = false;
+        	toggleClearData();
+        }, 3000);
+      }
     </script>
   </head>
   <body onload="initPage();" id="body">
     <div class="navbar">
       <div class="navbarContent">
-        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg" width="40"
-            height="40">&nbsp; <span class="navbarHeader">theWeb</span> </div>
+        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg"
+            width="40" height="40">&nbsp; <span class="navbarHeader">theWeb</span>
+        </div>
         <ul class="navbarItems">
           <li> <a href="theweb://settings" class="selectedItem"> Settings </a>
           </li>
@@ -123,8 +147,8 @@
         <input id="clearCache" checked="checked" type="checkbox"><label for="clearCache">Cached
           webpages (and other cached data)</label><br>
         <input id="clearCookie" checked="checked" type="checkbox"><label for="clearCookie">Cookies</label><br>
+      <button id="clearDataButton" onclick="doClearData()">Clear Data</button>
       </div>
-      <br>
     </div>
   </body>
 </html>
