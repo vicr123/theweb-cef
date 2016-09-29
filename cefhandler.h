@@ -15,6 +15,7 @@
 #include <QClipboard>
 #include <QMenu>
 #include <QDBusInterface>
+#include <QTimer>
 
 #undef Bool
 #undef None
@@ -224,6 +225,7 @@ private:
     QList<Browser> currentBrowsers;
     bool mprisIsPlaying;
     QString mprisTitle, mprisArtist, mprisAlbum;
+    QTimer mprisStopTimer;
 
     QSettings settings;
 };

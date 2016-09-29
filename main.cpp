@@ -17,6 +17,7 @@ SignalBroker* signalBroker;
 QTimer cefEventLoopTimer;
 QVariantMap settingsData;
 QStringList certErrorUrls;
+QTimer batteryCheckTimer;
 
 int main(int argc, char *argv[])
 {
@@ -121,7 +122,6 @@ int main(int argc, char *argv[])
     });
     cefEventLoopTimer.start();
 
-    QTimer batteryCheckTimer;
     batteryCheckTimer.setInterval(1000);
     QObject::connect(&batteryCheckTimer, &QTimer::timeout, [=]() {
         QDBusInterface upower("org.freedesktop.UPower", "/org/freedesktop/UPower", "org.freedesktop.UPower", QDBusConnection::systemBus());

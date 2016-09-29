@@ -6,6 +6,7 @@ extern SignalBroker* signalBroker;
 extern void QuitApp(int exitCode = 0);
 extern QTimer cefEventLoopTimer;
 extern QStringList certErrorUrls;
+extern QTimer batteryCheckTimer;
 
 MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     QMainWindow(parent),
@@ -896,6 +897,7 @@ void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const C
 
 void MainWindow::on_actionLimit_to_60_fps_triggered()
 {
+    batteryCheckTimer.stop();
     ui->actionDon_t_Limit->setChecked(false);
     ui->actionLimit_to_60_fps->setChecked(true);
     ui->actionLimit_to_30_fps->setChecked(false);
@@ -907,6 +909,7 @@ void MainWindow::on_actionLimit_to_60_fps_triggered()
 
 void MainWindow::on_actionLimit_to_30_fps_triggered()
 {
+    batteryCheckTimer.stop();
     ui->actionDon_t_Limit->setChecked(false);
     ui->actionLimit_to_60_fps->setChecked(false);
     ui->actionLimit_to_30_fps->setChecked(true);
@@ -918,6 +921,7 @@ void MainWindow::on_actionLimit_to_30_fps_triggered()
 
 void MainWindow::on_actionLimit_to_15_fps_triggered()
 {
+    batteryCheckTimer.stop();
     ui->actionDon_t_Limit->setChecked(false);
     ui->actionLimit_to_60_fps->setChecked(false);
     ui->actionLimit_to_30_fps->setChecked(false);
@@ -929,6 +933,7 @@ void MainWindow::on_actionLimit_to_15_fps_triggered()
 
 void MainWindow::on_actionLimit_to_1_fps_triggered()
 {
+    batteryCheckTimer.stop();
     ui->actionDon_t_Limit->setChecked(false);
     ui->actionLimit_to_60_fps->setChecked(false);
     ui->actionLimit_to_30_fps->setChecked(false);
@@ -940,6 +945,7 @@ void MainWindow::on_actionLimit_to_1_fps_triggered()
 
 void MainWindow::on_actionDon_t_Limit_triggered()
 {
+    batteryCheckTimer.stop();
     ui->actionDon_t_Limit->setChecked(true);
     ui->actionLimit_to_60_fps->setChecked(false);
     ui->actionLimit_to_30_fps->setChecked(false);

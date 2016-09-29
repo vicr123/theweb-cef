@@ -41,6 +41,18 @@ CefHandler::CefHandler(QObject* parent) : QObject(parent)
         QDBusConnection::sessionBus().send(signal);
     });
     mprisDetectTimer->start();
+
+    mprisStopTimer.setInterval(3000);
+    mprisStopTimer.setSingleShot(true);
+    connect(&mprisStopTimer, &QTimer::timeout, [=]() {
+        //Stop MPRIS interfaces
+        QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theWeb");
+        currentMprisBrowser = NULL;
+
+        XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, QX11Info::appRootWindow());
+        XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, QX11Info::appRootWindow());
+        XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, QX11Info::appRootWindow());
+    });
 }
 
 void CefHandler::AddRef() const {
@@ -190,6 +202,7 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         }
     } else if (message.get()->GetName() == "mprisStart") {
         if (currentMprisBrowser.get() == NULL) {
+            qDebug() << "New!";
             QDBusConnection::sessionBus().registerService("org.mpris.MediaPlayer2.theWeb");
             currentMprisBrowser = browser;
 
@@ -197,8 +210,19 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
             XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
         }
+
+        //Cancel MPRIS stopping
+        mprisStopTimer.stop();
     } else if (message.get()->GetName() == "mprisStop") {
-        if (currentMprisBrowser.get() != NULL && browser.get()->IsSame(currentMprisBrowser)) {
+        if (currentMprisBrowser.get() != NULL) {
+            //Stop MPRIS after a delay. If the Start signal is sent, cancel stopping.
+            if (!mprisStopTimer.isActive()) {
+                mprisStopTimer.start();
+            }
+        }
+    } else if (message.get()->GetName() == "mprisForceStop") {
+        if (currentMprisBrowser.get() != NULL) {
+            //Stop MPRIS interfaces
             QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theWeb");
             currentMprisBrowser = NULL;
 
