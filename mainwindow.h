@@ -10,6 +10,7 @@
 #include "thewebsettingsaccessor.h"
 #include "downloadimagecallback.h"
 #include "oblivionrequestcontext.h"
+#include "hovertabbar.h"
 #include <QToolButton>
 #include <QMessageBox>
 #include <QTimer>
@@ -151,7 +152,7 @@ private:
     void removeFromMetadata(Browser browser, QString key);
 
     //QWidget* browserWidget;
-    QTabBar* tabBar;
+    HoverTabBar* tabBar;
     bool IsCorrectBrowser(Browser browser);
     Browser getBrowserFor(Browser browser);
     int indexOfBrowser(Browser browser);

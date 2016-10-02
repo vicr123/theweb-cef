@@ -16,12 +16,14 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
 
     this->isOblivion = isOblivion;
 
-    tabBar = new QTabBar();
+    tabBar = new HoverTabBar();
     tabBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     tabBar->setTabsClosable(true);
     tabBar->setShape(QTabBar::TriangularNorth);
     tabBar->setExpanding(false);
     ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->errorFrame), tabBar);
+    connect(tabBar, SIGNAL(previewTab(int)), ui->browserStack, SLOT(previewTab(int)));
+    connect(tabBar, SIGNAL(cancelPreview()), ui->browserStack, SLOT(cancelPreview()));
 
     QString resourceName;
     QColor panelColor = ui->securityFrame->palette().color(QPalette::Window);
@@ -141,7 +143,8 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
 
     createNewTab(newBrowser);
 
-    connect(tabBar, &QTabBar::currentChanged, [=](int currentIndex) {
+    //Connect tabBar signals down here because some things aren't initialized yet. :)
+    connect(tabBar, &HoverTabBar::currentChanged, [=](int currentIndex) {
         if (currentIndex != -1) {
             Browser newBrowser = browserList.at(currentIndex);
             ui->browserStack->setCurrentIndex(currentIndex);
@@ -150,9 +153,10 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
 
         updateCurrentBrowserDisplay();
     });
-    connect(tabBar, &QTabBar::tabCloseRequested, [=](int closeIndex) {
+    connect(tabBar, &HoverTabBar::tabCloseRequested, [=](int closeIndex) {
         browserList.at(closeIndex).get()->GetHost().get()->CloseBrowser(false);
     });
+    ui->browserStack->lower();
     ReloadSettings();
 }
 
@@ -276,7 +280,7 @@ void MainWindow::RenderProcessTerminated(Browser browser, CefRequestHandler::Ter
             tabBar->setTabText(indexOfBrowser(browser), "");
         }
         tabBar->setTabData(indexOfBrowser(browser), "Well, this is strange...");
-        tabBar->setTabToolTip(indexOfBrowser(browser), "Well, this is strange...");
+        //tabBar->setTabToolTip(indexOfBrowser(browser), "Well, this is strange...");
 
         QIcon icon = QIcon::fromTheme("dialog-error");
         tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));
@@ -294,7 +298,7 @@ void MainWindow::TitleChanged(Browser browser, const CefString& title) {
             tabBar->setTabText(indexOfBrowser(browser), "");
         }
         tabBar->setTabData(indexOfBrowser(browser), QString::fromStdString(title.ToString()));
-        tabBar->setTabToolTip(indexOfBrowser(browser), QString::fromStdString(title.ToString()));
+        //tabBar->setTabToolTip(indexOfBrowser(browser), QString::fromStdString(title.ToString()));
         if (IsCorrectBrowser(browser)) {
             this->setWindowTitle(QString::fromStdString(title.ToString()).append(" - theWeb"));
         }
@@ -748,7 +752,7 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
                 tabBar->setTabText(indexOfBrowser(browser), "");
             }
             tabBar->setTabData(indexOfBrowser(browser), errorDisplayMetadata.at(0));
-            tabBar->setTabToolTip(indexOfBrowser(browser), errorDisplayMetadata.at(0));
+            //tabBar->setTabToolTip(indexOfBrowser(browser), errorDisplayMetadata.at(0));
 
             QIcon icon = QIcon::fromTheme("dialog-error");
             tabBar->setTabIcon(indexOfBrowser(browser), QIcon(icon));

@@ -9,6 +9,7 @@
 #include <QX11Info>
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
+#include <QException>
 #include "cefheaders.h"
 #include <QProcess>
 #include <QVector>

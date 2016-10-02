@@ -33,7 +33,8 @@ SOURCES += main.cpp\
     oblivionrequestcontext.cpp \
     maindbus.cpp \
     animatedstackedwidget.cpp \
-    nativeeventfilter.cpp
+    nativeeventfilter.cpp \
+    hovertabbar.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -49,7 +50,8 @@ HEADERS  += \
     downloadimagecallback.h \
     oblivionrequestcontext.h \
     animatedstackedwidget.h \
-    nativeeventfilter.h
+    nativeeventfilter.h \
+    hovertabbar.h
 
 FORMS    += \
     mainwindow.ui

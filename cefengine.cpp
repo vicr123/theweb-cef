@@ -82,6 +82,9 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
         CefRefPtr<CefV8Value> notificationObject = CefV8Value::CreateFunction("NotificationConstructor", new V8Function([=](CefV8ValueList &arguments) {
             QVector<CefRefPtr<CefV8Value>> args = QVector<CefRefPtr<CefV8Value>>::fromStdVector(arguments);
 
+            if (args.count() < 1) {
+                throw new std::exception;
+            }
             CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotifications_post");
             message.get()->GetArgumentList().get()->SetString(0, QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host().toStdString());
             message.get()->GetArgumentList().get()->SetString(1, args.at(0).get()->GetStringValue());

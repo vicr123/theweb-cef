@@ -157,18 +157,23 @@ V8Function::V8Function(std::function<CefRefPtr<CefV8Value>()> function) {
 }
 
 bool V8Function::Execute(const CefString &name, CefRefPtr<CefV8Value> object, const CefV8ValueList &arguments, CefRefPtr<CefV8Value> &retval, CefString &exception) {
-    if (returnsValue) {
-        if (hasArguments) {
-            //TODO: Create handler for function that returns a value with arguments
+    try {
+        if (returnsValue) {
+            if (hasArguments) {
+                //TODO: Create handler for function that returns a value with arguments
+            } else {
+                retval = returnFunction();
+            }
         } else {
-            retval = returnFunction();
+            if (hasArguments) {
+                function(const_cast<CefV8ValueList&>(arguments));
+            } else {
+                noArgFunction();
+            }
         }
-    } else {
-        if (hasArguments) {
-            function(const_cast<CefV8ValueList&>(arguments));
-        } else {
-            noArgFunction();
-        }
+        return true;
+    } catch (...) {
+        exception = "Error";
+        return true;
     }
-    return true;
 }
