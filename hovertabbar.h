@@ -3,6 +3,7 @@
 
 #include <QTabBar>
 #include <QMouseEvent>
+#include <QSettings>
 
 class HoverTabBar : public QTabBar
 {
@@ -19,6 +20,9 @@ public slots:
 private:
     void mouseMoveEvent(QMouseEvent* event);
     void leaveEvent(QEvent* event);
+
+    int currentHoverTab;
+    QSettings settings;
 };
 
 #endif // HOVERTABBAR_H

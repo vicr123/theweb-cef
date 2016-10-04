@@ -6,15 +6,21 @@ HoverTabBar::HoverTabBar(QWidget *parent) : QTabBar(parent)
 }
 
 void HoverTabBar::mouseMoveEvent(QMouseEvent *event) {
-    int tabAtIndex = tabAt(event->pos());
-    if (tabAtIndex != this->currentIndex() && tabAtIndex != -1) {
-        emit previewTab(tabAtIndex);
-    } else if (tabAtIndex == this->currentIndex()) {
-        emit this->cancelPreview();
+    if (settings.value("behaviour/tabPreview", false).toBool()) {
+        int tabAtIndex = tabAt(event->pos());
+        if (currentHoverTab != tabAtIndex) {
+            if (tabAtIndex != this->currentIndex() && tabAtIndex != -1) {
+                emit previewTab(tabAtIndex);
+            } else if (tabAtIndex == this->currentIndex()) {
+                emit this->cancelPreview();
+            }
+            currentHoverTab = tabAtIndex;
+        }
     }
 }
 
 void HoverTabBar::leaveEvent(QEvent *event) {
+    //Don't check the setting here (just in case)
     emit this->cancelPreview();
+    currentHoverTab = -1;
 }
-

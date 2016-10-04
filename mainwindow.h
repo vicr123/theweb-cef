@@ -28,6 +28,7 @@
 #include <QMovie>
 #include <QX11Info>
 #include <QToolTip>
+#include "downloadframe.h"
 
 namespace Ui {
 class MainWindow;
@@ -68,6 +69,10 @@ public slots:
     void Tooltip(Browser browser, CefString& text);
     void ShowBrowser(Browser browser);
     void AskForNotification(Browser browser, CefString host);
+    void MprisStateChanged(Browser browser, bool isOn);
+    void MprisPlayingStateChanged(Browser browser, bool isPlaying);
+    void BeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString& suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback);
+    void NewDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item);
     void ReloadSettings();
 
     void createNewTab(Browser newBrowser = NULL, bool openInBackground = false);

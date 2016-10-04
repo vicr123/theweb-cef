@@ -16,6 +16,7 @@
     		document.getElementById("toolbar").checked = theWebSettingsObject.toolbar;
     		document.getElementById("tabText").checked = theWebSettingsObject.tabText;
     		document.getElementById("malwareProtect").checked = theWebSettingsObject.malwareProtect;
+    		document.getElementById("tabPreview").checked = theWebSettingsObject.tabPreview;
       }
       
       function setDoNotTrack() {
@@ -88,9 +89,8 @@
   <body onload="initPage();" id="body">
     <div class="navbar">
       <div class="navbarContent">
-        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg"
-            width="40" height="40">&nbsp; <span class="navbarHeader">theWeb</span>
-        </div>
+        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg" width="40"
+            height="40">&nbsp; <span class="navbarHeader">theWeb</span> </div>
         <ul class="navbarItems">
           <li> <a href="theweb://settings" class="selectedItem"> Settings </a>
           </li>
@@ -116,6 +116,11 @@
         <input id="toolbar" onchange="theWebSettingsObject.toolbar = document.getElementById('toolbar').checked"
           type="checkbox"><label for="toolbar">Put the toolbar on the bottom</label>
         <br>
+      </div>
+      <div class="sectionHeader">Behaviour</div>
+      <div class="pageContent"> <input id="tabPreview" onchange="theWebSettingsObject.tabPreview = document.getElementById('tabPreview').checked"
+          type="checkbox"><label for="tabPreview">Preview tabs by hovering over
+          them</label> <br>
       </div>
       <div class="sectionHeader">Data</div>
       <div class="pageContent"> <button onclick="toggleClearData();">Clear
@@ -147,8 +152,9 @@
         <input id="clearCache" checked="checked" type="checkbox"><label for="clearCache">Cached
           webpages (and other cached data)</label><br>
         <input id="clearCookie" checked="checked" type="checkbox"><label for="clearCookie">Cookies</label><br>
-      <button id="clearDataButton" onclick="doClearData()">Clear Data</button>
+        <button id="clearDataButton" onclick="doClearData()">Clear Data</button>
       </div>
     </div>
+    
   </body>
 </html>

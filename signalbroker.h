@@ -33,6 +33,11 @@ signals:
     void Tooltip(Browser browser, CefString& text);
     void ShowBrowser(Browser browser);
     void AskForNotification(Browser browser, CefString host);
+    void MprisStateChanged(Browser browser, bool isOn);
+    void MprisPlayingStateChanged(Browser browser, bool isPlaying);
+    void BeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString& suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback);
+    void NewDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item);
+    void DownloadUpdated(Browser browser, CefRefPtr<CefDownloadItem> download_item, CefRefPtr<CefDownloadItemCallback> callback);
     void ReloadSettings();
 
 public slots:

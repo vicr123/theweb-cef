@@ -6,12 +6,14 @@ AnimatedStackedWidget::AnimatedStackedWidget(QWidget *parent) : QStackedWidget(p
 }
 
 void AnimatedStackedWidget::setCurrentIndex(int index, bool isNew) {
+    //Do some checks before setting the current index.
     if (currentIndex() != index && !doingNewAnimation) {
-    doSetCurrentIndex(index, isNew);
+        doSetCurrentIndex(index, isNew);
     }
 }
 
 void AnimatedStackedWidget::doSetCurrentIndex(int index, bool isNew) {
+    //Forcibly set the current index.
     QWidget* currentWidget = widget(currentIndex());
     QWidget* nextWidget = widget(index);
     if (nextWidget == NULL) {
@@ -120,7 +122,11 @@ void AnimatedStackedWidget::previewTab(int tabToPreview) {
             if (currentPreview != -1) {
                 QPropertyAnimation* oldTabAnim = new QPropertyAnimation(currentPreviewWidget, "geometry");
                 oldTabAnim->setStartValue(currentPreviewWidget->geometry());
-                oldTabAnim->setEndValue(QRect(this->width(), 0, this->width(), this->height()));
+                if (currentPreview > this->currentIndex()) {
+                    oldTabAnim->setEndValue(QRect(this->width(), 0, this->width(), this->height()));
+                } else {
+                    oldTabAnim->setEndValue(QRect(-this->width(), 0, this->width(), this->height()));
+                }
                 oldTabAnim->setEasingCurve(QEasingCurve::OutCubic);
                 oldTabAnim->setDuration(250);
                 animationGroup->addAnimation(oldTabAnim);
@@ -128,8 +134,13 @@ void AnimatedStackedWidget::previewTab(int tabToPreview) {
 
                 //newWidgetAnim->setStartValue(QRect(50, this->height(), this->width(), this->height()));
             }
-            newWidgetAnim->setStartValue(QRect(this->width(), 0, this->width(), this->height()));
-            newWidgetAnim->setEndValue(QRect(50, 0, this->width(), this->height()));
+            if (tabToPreview > this->currentIndex()) {
+                newWidgetAnim->setStartValue(QRect(this->width(), 0, this->width(), this->height()));
+                newWidgetAnim->setEndValue(QRect(50, 0, this->width(), this->height()));
+            } else {
+                newWidgetAnim->setStartValue(QRect(-this->width(), 0, this->width(), this->height()));
+                newWidgetAnim->setEndValue(QRect(-50, 0, this->width(), this->height()));
+            }
             newWidgetAnim->setEasingCurve(QEasingCurve::OutCubic);
             newWidgetAnim->setDuration(250);
             animationGroup->addAnimation(newWidgetAnim);
@@ -168,7 +179,11 @@ void AnimatedStackedWidget::cancelPreview() {
         currentPreviewWidget->raise();
         QPropertyAnimation* oldTabAnim = new QPropertyAnimation(currentPreviewWidget, "geometry");
         oldTabAnim->setStartValue(currentPreviewWidget->geometry());
-        oldTabAnim->setEndValue(QRect(this->width(), 0, this->width(), this->height()));
+        if ((currentPreview != -1 && currentPreview > this->currentIndex()) || pendingPreview != -1 && pendingPreview > this->currentIndex()) {
+            oldTabAnim->setEndValue(QRect(this->width(), 0, this->width(), this->height()));
+        } else {
+            oldTabAnim->setEndValue(QRect(-this->width(), 0, this->width(), this->height()));
+        }
         oldTabAnim->setEasingCurve(QEasingCurve::OutCubic);
         oldTabAnim->setDuration(250);
 

@@ -38,6 +38,7 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
         JsObject.get()->SetValue("toolbar", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
         JsObject.get()->SetValue("tabText", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
         JsObject.get()->SetValue("malwareProtect", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+        JsObject.get()->SetValue("tabPreview", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
         JsObject.get()->SetValue("resetBrowser", CefV8Value::CreateFunction("resetBrowser", new V8Function([=]() {
             CefRefPtr<CefV8Value> returnVal;
             CefRefPtr<CefV8Exception> exception;
@@ -126,7 +127,7 @@ void CefEngine::OnContextReleased(Browser browser, CefRefPtr<CefFrame> frame, Ce
     if (this->videoFrame.get() != NULL) {
         //Stop MPRIS because the browser just closed
         if (this->videoFrame.get()->GetIdentifier() == frame.get()->GetIdentifier()) {
-            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisForceStop");
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisDoStop");
             browser.get()->SendProcessMessage(PID_BROWSER, message);
             this->videoFrame = NULL;
         }

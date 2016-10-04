@@ -59,6 +59,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     ui->badCertificateFrame->setVisible(false);
     ui->certMoreInfo->setVisible(false);
     ui->hoverUrlLabel->setVisible(false);
+    ui->downloadItemAreaWidget->setVisible(false);
 
     ui->hoverUrlLabel->setParent(this);
     ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);
@@ -139,6 +140,10 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(Tooltip(Browser,CefString&)), this, SLOT(Tooltip(Browser,CefString&)));
     connect(signalBroker, SIGNAL(ShowBrowser(Browser)), this, SLOT(ShowBrowser(Browser)));
     connect(signalBroker, SIGNAL(AskForNotification(Browser,CefString)), this, SLOT(AskForNotification(Browser,CefString)));
+    connect(signalBroker, SIGNAL(MprisStateChanged(Browser,bool)), this, SLOT(MprisStateChanged(Browser,bool)));
+    connect(signalBroker, SIGNAL(MprisPlayingStateChanged(Browser,bool)), this, SLOT(MprisPlayingStateChanged(Browser,bool)));
+    connect(signalBroker, SIGNAL(BeforeDownload(Browser,CefRefPtr<CefDownloadItem>,CefString,CefRefPtr<CefBeforeDownloadCallback>)), this, SLOT(BeforeDownload(Browser,CefRefPtr<CefDownloadItem>,CefString,CefRefPtr<CefBeforeDownloadCallback>)));
+    connect(signalBroker, SIGNAL(NewDownload(Browser,CefRefPtr<CefDownloadItem>)), this, SLOT(NewDownload(Browser,CefRefPtr<CefDownloadItem>)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -1597,5 +1602,79 @@ void MainWindow::AskForNotification(Browser browser, CefString host) {
         ui->warningOk->setText("Allow");
         ui->warningCancel->setText("Don't Allow");
         ui->warningFrame->setVisible(true);
+    }
+}
+
+void MainWindow::MprisStateChanged(Browser browser, bool isOn) {
+    if (indexOfBrowser(browser) != -1) {
+        if (isOn) {
+            QPushButton* button = new QPushButton;
+            button->setIcon(QIcon::fromTheme("media-playback-pause"));
+            button->setFlat(true);
+
+            connect(button, &QPushButton::clicked, [=]() {
+                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPlayPause");
+                browser.get()->SendProcessMessage(PID_RENDERER, message);
+            });
+
+            tabBar->setTabButton(indexOfBrowser(browser), QTabBar::LeftSide, button);
+        } else {
+            tabBar->setTabButton(indexOfBrowser(browser), QTabBar::LeftSide, NULL);
+        }
+    }
+}
+
+void MainWindow::MprisPlayingStateChanged(Browser browser, bool isPlaying) {
+    if (indexOfBrowser(browser) != -1) {
+        if (tabBar->tabButton(indexOfBrowser(browser), QTabBar::LeftSide) != NULL) {
+            QIcon icon;
+            if (isPlaying) {
+                icon = QIcon::fromTheme("media-playback-pause");
+            } else {
+                icon = QIcon::fromTheme("media-playback-start");
+            }
+            ((QPushButton*) tabBar->tabButton(indexOfBrowser(browser), QTabBar::LeftSide))->setIcon(icon);
+        }
+    }
+}
+
+void MainWindow::NewDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item) {
+    if (indexOfBrowser(browser) != -1) {
+        DownloadFrame* frame = new DownloadFrame(download_item);
+        connect(signalBroker, SIGNAL(DownloadUpdated(Browser,CefRefPtr<CefDownloadItem>,CefRefPtr<CefDownloadItemCallback>)), frame, SLOT(DownloadUpdated(Browser,CefRefPtr<CefDownloadItem>,CefRefPtr<CefDownloadItemCallback>)));
+        ui->downloadItemArea->layout()->addWidget(frame);
+
+        if (ui->downloadItemAreaWidget->isVisible() == false) {
+            ui->downloadItemAreaWidget->setFixedHeight(0);
+            ui->downloadItemAreaWidget->setVisible(true);
+
+            QVariantAnimation* animation = new QVariantAnimation;
+            animation->setStartValue(0);
+            animation->setEndValue(ui->downloadItemAreaWidget->sizeHint().height());
+            animation->setDuration(500);
+            animation->setEasingCurve(QEasingCurve::OutCubic);
+            connect(animation, &QVariantAnimation::valueChanged, [=](QVariant value) {
+                ui->downloadItemAreaWidget->setFixedHeight(value.toInt());
+            });
+            connect(animation, SIGNAL(finished()), animation, SLOT(deleteLater()));
+            animation->start();
+        }
+    }
+}
+
+void MainWindow::BeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString &suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) {
+    if (indexOfBrowser(browser) != -1) {
+        QFileDialog* dialog = new QFileDialog;
+        dialog->setAcceptMode(QFileDialog::AcceptSave);
+        dialog->selectFile(QString::fromStdString(suggested_name.ToString()));
+
+        QStringList mimeTypeFilters;
+        mimeTypeFilters.append(QString::fromStdString(download_item.get()->GetMimeType().ToString()));
+        dialog->setMimeTypeFilters(mimeTypeFilters);
+
+        if (dialog->exec() == QFileDialog::Accepted) {
+            emit signalBroker->NewDownload(browser, download_item);
+            callback.get()->Continue(dialog->selectedFiles().first().toStdString(), false);
+        }
     }
 }

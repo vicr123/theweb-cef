@@ -39,6 +39,11 @@ CefHandler::CefHandler(QObject* parent) : QObject(parent)
         signal.setArguments(args);
 
         QDBusConnection::sessionBus().send(signal);
+
+        //Update browser tabs' media controls
+        for (Browser browser : mprisAvailableBrowsers.keys()) {
+            emit signalBroker->MprisPlayingStateChanged(browser, mprisAvailableBrowsers.value(browser));
+        }
     });
     mprisDetectTimer->start();
 
@@ -121,6 +126,28 @@ bool CefHandler::DoClose(Browser browser) {
 }
 
 void CefHandler::OnBeforeClose(Browser browser) {
+    if (currentMprisBrowser != NULL) {
+        if (currentMprisBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+            //Stop MPRIS interfaces
+            QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theWeb");
+            currentMprisBrowser = NULL;
+
+            XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, QX11Info::appRootWindow());
+            XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, QX11Info::appRootWindow());
+            XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, QX11Info::appRootWindow());
+
+            //Send signal to window to hide player controls
+            bool isFound = false;
+            for (Browser checkBrowser : mprisAvailableBrowsers.keys()) {
+                if (checkBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+                    isFound = true;
+                }
+            }
+            if (!isFound) {
+                emit signalBroker->MprisStateChanged(browser, false);
+            }
+        }
+    }
     emit signalBroker->BeforeClose(browser);
     currentBrowsers.removeAll(browser);
     browser = NULL;
@@ -218,26 +245,73 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
             XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
             XGrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, RootWindow(QX11Info::display(), 0), true, GrabModeAsync, GrabModeAsync);
+
+        } else if (currentMprisBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+            //Cancel MPRIS stopping
+            mprisStopTimer.stop();
+            for (QTimer* timer : mprisStopTimers) {
+                timer->stop();
+                timer->deleteLater();
+            }
+            mprisStopTimers.clear();
         }
 
-        //Cancel MPRIS stopping
-        mprisStopTimer.stop();
-    } else if (message.get()->GetName() == "mprisStop") {
-        if (currentMprisBrowser.get() != NULL) {
-            //Stop MPRIS after a delay. If the Start signal is sent, cancel stopping.
-            if (!mprisStopTimer.isActive()) {
-                mprisStopTimer.start();
+        //Send signal to window to show player controls
+        bool isFound = false;
+        for (Browser checkBrowser : mprisAvailableBrowsers.keys()) {
+            if (checkBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+                isFound = true;
             }
         }
-    } else if (message.get()->GetName() == "mprisForceStop") {
-        if (currentMprisBrowser.get() != NULL) {
-            //Stop MPRIS interfaces
-            QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theWeb");
-            currentMprisBrowser = NULL;
+        if (!isFound) {
+            emit signalBroker->MprisStateChanged(browser, true);
+            mprisAvailableBrowsers.insert(browser, false);
+        }
 
-            XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, QX11Info::appRootWindow());
-            XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, QX11Info::appRootWindow());
-            XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, QX11Info::appRootWindow());
+    } else if (message.get()->GetName() == "mprisStop") {
+        if (mprisAvailableBrowsers.keys().contains(browser)) {
+            QTimer* timer = new QTimer;
+            int indexOfTimer = mprisStopTimers.count();
+            timer->setInterval(3000);
+            timer->setSingleShot(true);
+            connect(timer, &QTimer::timeout, [=]() {
+                mprisStopTimers.removeAt(indexOfTimer);
+                timer->deleteLater();
+            });
+            timer->start();
+            mprisStopTimers.append(timer);
+        }
+
+        if (currentMprisBrowser.get() != NULL) {
+            if (currentMprisBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+                //Stop MPRIS after a delay. If the Start signal is sent, cancel stopping.
+                if (!mprisStopTimer.isActive()) {
+                    mprisStopTimer.start();
+                }
+            }
+        }
+    } else if (message.get()->GetName() == "mprisDoStop") {
+        if (currentMprisBrowser.get() != NULL) {
+            if (currentMprisBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+                //Stop MPRIS interfaces
+                QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.theWeb");
+                currentMprisBrowser = NULL;
+
+                XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPlay), AnyModifier, QX11Info::appRootWindow());
+                XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, QX11Info::appRootWindow());
+                XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, QX11Info::appRootWindow());
+            }
+        }
+
+        //Send signal to window to hide player controls
+        bool isFound = false;
+        for (Browser checkBrowser : mprisAvailableBrowsers.keys()) {
+            if (checkBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+                isFound = true;
+            }
+        }
+        if (!isFound) {
+            emit signalBroker->MprisStateChanged(browser, false);
         }
     } else if (message.get()->GetName() == "mprisData") {
         if (browser.get()->GetIdentifier() == currentMprisBrowser.get()->GetIdentifier()) {
@@ -245,6 +319,12 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             this->mprisTitle = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(1).ToString());
             this->mprisArtist = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(2));
             this->mprisAlbum = QString::fromStdString(message.get()->GetArgumentList().get()->GetString(3));
+
+            for (Browser checkBrowser : mprisAvailableBrowsers.keys()) {
+                if (checkBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+                    mprisAvailableBrowsers.insert(checkBrowser, message.get()->GetArgumentList().get()->GetBool(0));
+                }
+            }
         }
     } else if (message.get()->GetName() == "jsNotificationRequest") {
         emit signalBroker->AskForNotification(browser, message.get()->GetArgumentList().get()->GetString(0));
@@ -306,7 +386,11 @@ bool CefHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent 
 }
 
 void CefHandler::OnBeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString &suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) {
-    browser.get()->GetMainFrame().get()->ExecuteJavaScript("alert(\"Downloads aren't supported in theWeb yet. Sorry for the inconvenience... :(\")", "", 0);
+    emit signalBroker->BeforeDownload(browser, download_item, suggested_name, callback);
+}
+
+void CefHandler::OnDownloadUpdated(Browser browser, CefRefPtr<CefDownloadItem> download_item, CefRefPtr<CefDownloadItemCallback> callback) {
+    emit signalBroker->DownloadUpdated(browser, download_item, callback);
 }
 
 bool CefHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event) {
@@ -542,7 +626,9 @@ QVariantMap CefHandler::Metadata() {
         retval.insert("xesam:url", QString::fromStdString(currentMprisBrowser.get()->GetMainFrame().get()->GetURL().ToString()));
 
         if (mprisTitle == "") {
-            retval.insert("xesam:title", browserUrl.host());
+            if (browserUrl.host() != "") {
+                retval.insert("xesam:title", browserUrl.host());
+            }
         } else {
             retval.insert("xesam:title", mprisTitle);
         }
