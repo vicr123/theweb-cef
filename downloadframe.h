@@ -8,6 +8,8 @@
 #include <QBoxLayout>
 #include <QFileInfo>
 #include <QPushButton>
+#include <QMouseEvent>
+#include <QProcess>
 
 class DownloadFrame : public QFrame
 {
@@ -28,7 +30,10 @@ private:
     uint32 downloadId;
     CefRefPtr<CefDownloadItemCallback> cancelCallback;
 
-    bool done = false, paused = false;;
+    bool done = false, paused = false;
+    QString file;
+
+    void mouseReleaseEvent(QMouseEvent* event);
 };
 
 #endif // DOWNLOADFRAME_H

@@ -144,6 +144,20 @@ private slots:
 
     void on_actionNew_Oblivion_Window_triggered();
 
+    void on_findText_returnPressed();
+
+    void on_actionFind_triggered();
+
+    void on_findNext_clicked();
+
+    void on_findClose_clicked();
+
+    void on_findBack_clicked();
+
+    void on_findText_textChanged(const QString &arg1);
+
+    void on_actionHistory_triggered();
+
 private:
     Ui::MainWindow *ui;
 

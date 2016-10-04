@@ -422,6 +422,40 @@ div.clearDataSettings {
     overflow: hidden;
 }
 
+table.historyTable {
+    border: 0px solid transparent;
+    border-collapse: collapse;
+}
+
+table.historyTable td {
+    border: 0px solid transparent;
+    padding: 5px;
+}
+
+td.historyTitle {
+    width: 70%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width:1px;
+}
+
+td.historyUrl {
+    width: 30%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width:1px;
+}
+
+tr.historyRow:hover {
+    background-color: #DDD;
+}
+
+tr.historyRow:active {
+    background-color: #999;
+}
+
 @media (max-width: 600px) {
     div.blockTitle {
         height: 500px;

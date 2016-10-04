@@ -19,6 +19,8 @@ QVariantMap settingsData;
 QVariantMap notificationsData;
 QStringList certErrorUrls;
 QTimer batteryCheckTimer;
+QFile historyFile(QDir::homePath() + "/.theweb/history"); //File used for reading/writing
+CefString historyData; //Used in settings accessor
 
 int main(int argc, char *argv[])
 {
@@ -98,6 +100,9 @@ int main(int argc, char *argv[])
     }
 
     //Initialize Windows
+    //historyFile = QFile(QDir::homePath() + "/.theweb/history");
+    historyFile.open(QFile::ReadWrite | QFile::Append);
+
     bool windowOpened = false;
     qDebug() << a.arguments();
     for (QString arg : a.arguments().first().split(" ")) {

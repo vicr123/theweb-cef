@@ -49,6 +49,67 @@
      </widget>
     </item>
     <item>
+     <widget class="QFrame" name="findPanel">
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <item>
+        <widget class="QLineEdit" name="findText">
+         <property name="placeholderText">
+          <string>Find...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="findBack">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset theme="go-previous">
+           <normaloff>.</normaloff>.</iconset>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="findNext">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset theme="go-next">
+           <normaloff>.</normaloff>.</iconset>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="findClose">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset theme="window-close">
+           <normaloff>.</normaloff>.</iconset>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <widget class="QFrame" name="securityInfoFrame">
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
@@ -813,6 +874,9 @@
     </item>
     <item>
      <widget class="QFrame" name="badCertificateFrame">
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
       </property>
@@ -860,7 +924,10 @@
         </spacer>
        </item>
        <item row="1" column="1">
-        <widget class="QFrame" name="frame_4">
+        <widget class="QFrame" name="badCertificateFrameContent">
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -1070,7 +1137,15 @@
     </property>
     <addaction name="actionAbout_theWeb"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+    <addaction name="actionFind"/>
+    <addaction name="actionHistory"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -1252,6 +1327,29 @@
    </property>
    <property name="text">
     <string>New &amp;Oblivion Window</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+N</string>
+   </property>
+  </action>
+  <action name="actionFind">
+   <property name="icon">
+    <iconset theme="edit-find">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Find...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionHistory">
+   <property name="text">
+    <string>History</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
    </property>
   </action>
  </widget>

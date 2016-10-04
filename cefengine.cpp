@@ -2,6 +2,7 @@
 
 extern QVariantMap settingsData;
 extern QVariantMap notificationsData;
+extern CefString historyData;
 
 CefEngine::CefEngine() : CefApp()
 {
@@ -39,6 +40,7 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
         JsObject.get()->SetValue("tabText", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
         JsObject.get()->SetValue("malwareProtect", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
         JsObject.get()->SetValue("tabPreview", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+        JsObject.get()->SetValue("history", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
         JsObject.get()->SetValue("resetBrowser", CefV8Value::CreateFunction("resetBrowser", new V8Function([=]() {
             CefRefPtr<CefV8Value> returnVal;
             CefRefPtr<CefV8Exception> exception;
@@ -149,6 +151,8 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
                     settingsData.insert(QString::fromStdString(key.ToString()), QString::fromStdString(settingsDictionary.get()->GetString(key).ToString()));
                 }
             }
+
+            historyData = args.get()->GetString(2);
         }
 
         {

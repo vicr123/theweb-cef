@@ -4,6 +4,7 @@
 extern SignalBroker* signalBroker;
 extern void QuitApp(int exitCode = 0);
 extern QVariantMap settingsData;
+extern QFile historyFile;
 
 CefHandler::CefHandler(QObject* parent) : QObject(parent)
 {
@@ -203,6 +204,12 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             }
         }
         args.get()->SetDictionary(0, settingsDictionary);
+
+        historyFile.seek(0);
+        QString historyData = historyFile.readAll();
+        QStringList historyDataItems = historyData.split("\n");
+        std::reverse(historyDataItems.begin(), historyDataItems.end());
+        args.get()->SetString(2, historyDataItems.join("\n").toStdString());
 
         settings.beginGroup("notifications");
         CefRefPtr<CefDictionaryValue> notificationsDictionary = CefDictionaryValue::Create();

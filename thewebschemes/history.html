@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>History</title>
+    <link rel="stylesheet" href="theweb://css.css">
+    <link rel="stylesheet" href="css.css">
+    <meta content="Victor Tran" name="author">
+    <meta name="viewport" content="width=device-width">
+    <meta content="BlueGriffon wysiwyg editor" name="generator">
+    <link rel="icon" href="theweb://icon.png">
+    <script>
+    </script>
+  </head>
+  <body id="body">
+    <div class="navbar">
+      <div class="navbarContent">
+        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg" width="40"
+            height="40">&nbsp; <span class="navbarHeader">theWeb</span> </div>
+        <ul class="navbarItems">
+          <li> <a href="theweb://history" class="selectedItem"> History </a> </li>
+          <li> <a href="theweb://settings"> Settings </a> </li>
+          <li> <a href="theweb://theweb"> About </a> </li>
+        </ul>
+      </div>
+    </div>
+    <div class="blockLanding" id="theshell">
+      <div class="navbarPadding">&nbsp;</div>
+      <h1>History</h1>
+      See the websites that you've visited </div>
+    <div class="mainSettings">
+      <div class="sectionHeader">Actions</div>
+      <div class="pageContent"> <button onclick="document.location = 'theweb://settings#clearData'">Clear
+          Data...</button> </div>
+      <script>
+          //Read in history info and write into page.
+
+          historyString = theWebSettingsObject.history;
+					historyEntries = historyString.split("\n");
+          
+        	if (historyEntries.length == 1) {
+            //There will always be one element (a blank element.)
+            document.write("<div class=\"sectionHeader\">History</div>");
+            document.write("<div class=\"pageContent\">There doesn't seem to be any history here. You could try reloading the page.</div>");
+          } else {
+            isFirstSectionHeader = true;
+            currentDate = new Date(0);
+            for (entry of historyEntries) {
+              if (entry != "") {
+                entryItems = entry.split(" ");
+                entryDate = new Date(parseInt(entryItems[2]));
+                if (entryDate.toDateString() != currentDate.toDateString()) {
+                  //Close trailing pageContent div if this is not the first section header
+                  if (!isFirstSectionHeader) {
+                    document.write("</table>");
+                    document.write("</div>");
+                  } else {
+                    isFirstSectionHeader = false;
+                  }
+
+                  //A new header is required.
+                  document.write("<div class=\"sectionHeader\">");
+                  document.write(entryDate.toDateString());
+                  document.write("</div>");
+
+                  //Open a new pageContent div
+                  document.write("<div class=\"pageContent\">");
+                  document.write("<table class=\"historyTable\">");
+                  currentDate = entryDate;
+                }
+
+                //Populate a table row with items
+                document.write("<tr class=\"historyRow\" onclick=\"document.location = '" + entryItems[0] + "';\"><td class=\"historyTitle\">");
+                document.write(entryItems[1].replace(/%20/g, " "));
+                document.write("</td><td class=\"historyUrl\">");
+                document.write(entryItems[0]);
+                document.write("</td><td>");
+                document.write(entryDate.toLocaleTimeString());
+                document.write("</td></tr>");
+              }
+            }
+          }
+      </script> </div>
+    
+  </body>
+</html>

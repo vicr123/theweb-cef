@@ -7,6 +7,7 @@ extern void QuitApp(int exitCode = 0);
 extern QTimer cefEventLoopTimer;
 extern QStringList certErrorUrls;
 extern QTimer batteryCheckTimer;
+extern QFile historyFile;
 
 MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     QMainWindow(parent),
@@ -60,6 +61,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     ui->certMoreInfo->setVisible(false);
     ui->hoverUrlLabel->setVisible(false);
     ui->downloadItemAreaWidget->setVisible(false);
+    ui->findPanel->setVisible(false);
 
     ui->hoverUrlLabel->setParent(this);
     ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);
@@ -69,7 +71,9 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     QPalette oldFraudPalette = ui->fraudFrame->palette();
     oldFraudPalette.setColor(QPalette::Window, QColor::fromRgb(100, 0, 0));
     ui->fraudFrame->setPalette(oldFraudPalette);
+    ui->badCertificateFrame->setPalette(oldFraudPalette);
     ui->fraudContent->setPalette(oldFraudContentPalette);
+    ui->badCertificateFrameContent->setPalette(oldFraudContentPalette);
 
     ui->securityPadlock->setPixmap(QIcon::fromTheme("text-html").pixmap(16, 16));
 
@@ -83,6 +87,9 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     menu->addAction(ui->actionNew_Window);
     menu->addAction(ui->actionNew_Oblivion_Window);
     menu->addSeparator();
+    menu->addAction(ui->actionFind);
+    menu->addSeparator();
+    menu->addAction(ui->actionHistory);
     menu->addAction(ui->actionSettings);
     menu->addAction(ui->actionAbout_theWeb);
     menu->addSeparator();
@@ -307,6 +314,20 @@ void MainWindow::TitleChanged(Browser browser, const CefString& title) {
         if (IsCorrectBrowser(browser)) {
             this->setWindowTitle(QString::fromStdString(title.ToString()).append(" - theWeb"));
         }
+
+        if (browserMetadata.at(indexOfBrowser(browser)).value("addToHistory", false) == true) {
+            //Reset flags
+            insertIntoMetadata(browser, "addToHistory", false);
+
+            //Append item to history
+            //Space is used as the delimiter.
+            QString historyLine = QString::fromStdString(browser.get()->GetMainFrame().get()->GetURL().ToString());
+            historyLine.append(" " + QString::fromStdString(title).replace(" ", "%20"));
+            historyLine.append(" " + QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()));
+
+            historyFile.write(historyLine.toUtf8() + "\n");
+            historyFile.flush();
+        }
     }
 }
 
@@ -526,6 +547,13 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
         if (CefCookieManager::GetGlobalManager(NULL).get() != NULL) {
             CefCookieManager::GetGlobalManager(NULL).get()->FlushStore(NULL);
         }
+
+        //Check if this is an oblivion window
+        if (!isOblivion) {
+            //Insert a flag into metadata of browser.
+            //History item will be added during the TitleChanged event.
+            insertIntoMetadata(browser, "addToHistory", true);
+        }
     }
 }
 
@@ -744,6 +772,13 @@ void MainWindow::LoadError(Browser browser, CefRefPtr<CefFrame> frame, CefHandle
             case -21: //Network change detected
                 errorDisplayMetadata.append("The internet connection changed while we were trying to connect to the page.");
                 break;
+            //SSL loading errors:
+            case ERR_SSL_PROTOCOL_ERROR:
+                errorDisplayMetadata.replace(0, "This webpage is having trouble providing a secure connection");
+                errorDisplayMetadata.append("This website sent us something that theWeb didn't understand.");
+            case ERR_SSL_CLIENT_AUTH_CERT_NEEDED:
+                errorDisplayMetadata.replace(0, "theWeb doesn't support this website");
+                errorDisplayMetadata.append("This website is asking for a client certificate, which theWeb doesn't support (yet.)");
             default:
                 errorDisplayMetadata.append(QString::fromStdString(failedUrl.ToString()) + " may be down or it may have moved somewhere else. " );
             }
@@ -1432,6 +1467,14 @@ void MainWindow::KeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &even
                     ui->actionClose_Tab->trigger();
                 } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_comma)) { //Settings
                     ui->actionSettings->trigger();
+                } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_F)) { //Find
+                    ui->actionFind->trigger();
+                } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_H)) { //History
+                    ui->actionHistory->trigger();
+                }
+            } else if (os_event->xkey.state == ControlMask | ShiftMask) {
+                if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_N)) { //New Oblivion Window
+                    ui->actionNew_Oblivion_Window->trigger();
                 }
             }
         }
@@ -1671,10 +1714,63 @@ void MainWindow::BeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> down
         QStringList mimeTypeFilters;
         mimeTypeFilters.append(QString::fromStdString(download_item.get()->GetMimeType().ToString()));
         dialog->setMimeTypeFilters(mimeTypeFilters);
+        dialog->setWindowModality(Qt::NonModal);
 
         if (dialog->exec() == QFileDialog::Accepted) {
+            dialog->show();
+            dialog->reject();
             emit signalBroker->NewDownload(browser, download_item);
             callback.get()->Continue(dialog->selectedFiles().first().toStdString(), false);
         }
+    }
+}
+
+void MainWindow::on_findText_returnPressed()
+{
+    ui->findNext->click();
+}
+
+void MainWindow::on_actionFind_triggered()
+{
+    if (ui->findPanel->isVisible()) {
+        ui->findClose->click();
+    } else {
+        ui->findPanel->setVisible(true);
+        ui->findText->setFocus();
+    }
+}
+
+void MainWindow::on_findNext_clicked()
+{
+    browser().get()->GetHost().get()->Find(0, ui->findText->text().toStdString(), true, false, false);
+}
+
+void MainWindow::on_findClose_clicked()
+{
+    browser().get()->GetHost().get()->StopFinding(true);
+    ui->findPanel->setVisible(false);
+}
+
+void MainWindow::on_findBack_clicked()
+{
+    browser().get()->GetHost().get()->Find(0, ui->findText->text().toStdString(), false, false, false);
+}
+
+void MainWindow::on_findText_textChanged(const QString &arg1)
+{
+    ui->findNext->click();
+}
+
+void MainWindow::on_actionHistory_triggered()
+{
+    if (QString::fromStdString(browser().get()->GetMainFrame().get()->GetURL().ToString()) == settings.value("browser/home", "theweb://newtab").toString()) {
+        browser().get()->GetMainFrame().get()->LoadURL("theweb://history");
+    } else {
+        CefWindowInfo windowInfo;
+        CefBrowserSettings settings;
+
+        Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, handler, "theweb://history", settings, CefRefPtr<CefRequestContext>());
+
+        createNewTab(browser);
     }
 }

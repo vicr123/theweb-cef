@@ -92,6 +92,7 @@
         <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg" width="40"
             height="40">&nbsp; <span class="navbarHeader">theWeb</span> </div>
         <ul class="navbarItems">
+          <li> <a href="theweb://history"> History </a> </li>
           <li> <a href="theweb://settings" class="selectedItem"> Settings </a>
           </li>
           <li> <a href="theweb://theweb"> About </a> </li>
@@ -155,6 +156,11 @@
         <button id="clearDataButton" onclick="doClearData()">Clear Data</button>
       </div>
     </div>
-    
+    <script>
+      //Go straight to the clearing data
+      if (window.location.hash == "#clearData") {
+        toggleClearData();
+      }
+    </script>
   </body>
 </html>

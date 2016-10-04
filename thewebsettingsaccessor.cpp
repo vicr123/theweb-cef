@@ -1,6 +1,7 @@
 #include "thewebsettingsaccessor.h"
 
 extern QVariantMap settingsData;
+extern CefString historyData;
 
 theWebSettingsAccessor::theWebSettingsAccessor(Browser browser)
 {
@@ -135,6 +136,9 @@ bool theWebSettingsAccessor::Get(const CefString &name, const CefRefPtr<CefV8Val
         return true;
     } else if (name == "tabPreview") {
         retval = CefV8Value::CreateBool(settingsData.value("behaviour/tabPreview", false).toBool());
+        return true;
+    } else if (name == "history") {
+        retval = CefV8Value::CreateString(historyData);
         return true;
     }
     return false;

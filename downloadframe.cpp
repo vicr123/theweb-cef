@@ -56,40 +56,48 @@ DownloadFrame::DownloadFrame(CefRefPtr<CefDownloadItem> download_item, QWidget *
 
 void DownloadFrame::DownloadUpdated(Browser browser, CefRefPtr<CefDownloadItem> download_item, CefRefPtr<CefDownloadItemCallback> callback) {
     if (download_item.get()->GetId() == this->downloadId) {
-        fileNameLabel->setText(QFileInfo(QString::fromStdString(download_item.get()->GetFullPath().ToString())).fileName());
-        paused = !download_item.get()->IsInProgress();
-        if (download_item.get()->IsInProgress()) {
-            pauseButton->setIcon(QIcon::fromTheme("media-playback-pause"));
-        } else {
-            pauseButton->setIcon(QIcon::fromTheme("media-playback-start"));
-        }
-
-        if (download_item.get()->IsComplete()) {
-            if (!done) {
-                done = true;
-                infoLabel->setText("Download Complete.");
-                progressBar->setMaximum(download_item.get()->GetTotalBytes());
-                progressBar->setValue(download_item.get()->GetReceivedBytes());
-                progressBar->setVisible(false);
-                cancelButton->setVisible(false);
-                pauseButton->setVisible(false);
-            }
-        } else if (download_item.get()->IsCanceled()) {
+        file = QString::fromStdString(download_item.get()->GetFullPath().ToString());
+        if (download_item.get()->IsCanceled()) {
             infoLabel->setText("Cancelled");
             progressBar->setVisible(false);
-        } else if (!download_item.get()->IsInProgress()) {
-            infoLabel->setText("Paused");
+            cancelButton->setVisible(false);
+            pauseButton->setVisible(false);
         } else {
-            if (download_item.get()->GetPercentComplete() != -1) {
-                infoLabel->setText(calculateSize(download_item.get()->GetReceivedBytes()) + "/" + calculateSize(download_item.get()->GetTotalBytes()) + " (" + calculateSize(download_item.get()->GetCurrentSpeed()) + "/s)");
-                progressBar->setMaximum(download_item.get()->GetTotalBytes());
-                progressBar->setValue(download_item.get()->GetReceivedBytes());
+            fileNameLabel->setText(QFileInfo(QString::fromStdString(download_item.get()->GetFullPath().ToString())).fileName());
+            if (paused) {
+                pauseButton->setIcon(QIcon::fromTheme("media-playback-start"));
+                infoLabel->setText("Paused");
             } else {
-                infoLabel->setText("Downloading...");
-                progressBar->setMaximum(0);
-                progressBar->setValue(0);
+                pauseButton->setIcon(QIcon::fromTheme("media-playback-pause"));
+                if (download_item.get()->IsComplete()) {
+                    if (!done) {
+                        done = true;
+                        infoLabel->setText("Download Complete.");
+                        progressBar->setMaximum(download_item.get()->GetTotalBytes());
+                        progressBar->setValue(download_item.get()->GetReceivedBytes());
+                        progressBar->setVisible(false);
+                        cancelButton->setVisible(false);
+                        pauseButton->setVisible(false);
+                    }
+                } else {
+                    if (download_item.get()->GetPercentComplete() != -1) {
+                        infoLabel->setText(calculateSize(download_item.get()->GetReceivedBytes()) + "/" + calculateSize(download_item.get()->GetTotalBytes()) + " (" + calculateSize(download_item.get()->GetCurrentSpeed()) + "/s)");
+                        progressBar->setMaximum(download_item.get()->GetTotalBytes());
+                        progressBar->setValue(download_item.get()->GetReceivedBytes());
+                    } else {
+                        infoLabel->setText("Downloading...");
+                        progressBar->setMaximum(0);
+                        progressBar->setValue(0);
+                    }
+                }
             }
+            cancelCallback = callback;
         }
-        cancelCallback = callback;
+    }
+}
+
+void DownloadFrame::mouseReleaseEvent(QMouseEvent *event) {
+    if (done) {
+        QProcess::startDetached("xdg-open \"" + file + "\"");
     }
 }
