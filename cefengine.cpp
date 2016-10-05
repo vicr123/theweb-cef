@@ -64,7 +64,8 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
             if (args.size() == 3) {
                 //Erase History
                 if (args[0].get()->GetBoolValue()) {
-                    qDebug() << "Erase History";
+                    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("clearData_History");
+                    browser.get()->SendProcessMessage(PID_BROWSER, message);
                 }
                 //Erase Cache
                 if (args[1].get()->GetBoolValue()) {

@@ -550,9 +550,12 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
 
         //Check if this is an oblivion window
         if (!isOblivion) {
-            //Insert a flag into metadata of browser.
-            //History item will be added during the TitleChanged event.
-            insertIntoMetadata(browser, "addToHistory", true);
+            //Check if this is a theweb:// internal webpage
+            if (currentUrl.scheme() != "theweb") {
+                //Insert a flag into metadata of browser.
+                //History item will be added during the TitleChanged event.
+                insertIntoMetadata(browser, "addToHistory", true);
+            }
         }
     }
 }
@@ -1472,7 +1475,7 @@ void MainWindow::KeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &even
                 } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_H)) { //History
                     ui->actionHistory->trigger();
                 }
-            } else if (os_event->xkey.state == ControlMask | ShiftMask) {
+            } else if (os_event->xkey.state == (ControlMask | ShiftMask)) {
                 if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_N)) { //New Oblivion Window
                     ui->actionNew_Oblivion_Window->trigger();
                 }

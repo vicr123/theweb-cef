@@ -15,8 +15,9 @@
   <body id="body">
     <div class="navbar">
       <div class="navbarContent">
-        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg" width="40"
-            height="40">&nbsp; <span class="navbarHeader">theWeb</span> </div>
+        <div class="navbarImage"><img alt="theWeb" src="theweb://icon.svg"
+            width="40" height="40">&nbsp; <span class="navbarHeader">theWeb</span>
+        </div>
         <ul class="navbarItems">
           <li> <a href="theweb://history" class="selectedItem"> History </a> </li>
           <li> <a href="theweb://settings"> Settings </a> </li>
@@ -70,17 +71,16 @@
                 }
 
                 //Populate a table row with items
-                document.write("<tr class=\"historyRow\" onclick=\"document.location = '" + entryItems[0] + "';\"><td class=\"historyTitle\">");
+                document.write("<tr class=\"historyRow\"><td class=\"historyTitle\"><a href=\"" + entryItems[0] + "\">");
                 document.write(entryItems[1].replace(/%20/g, " "));
-                document.write("</td><td class=\"historyUrl\">");
+                document.write("</a></td><td class=\"historyUrl\"><a href=\"" + entryItems[0] + "\">");
                 document.write(entryItems[0]);
-                document.write("</td><td>");
+                document.write("</td><td><a href=\"" + entryItems[0] + "\">");
                 document.write(entryDate.toLocaleTimeString());
                 document.write("</td></tr>");
               }
             }
           }
       </script> </div>
-    
   </body>
 </html>

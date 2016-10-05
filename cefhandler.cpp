@@ -357,6 +357,10 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
 
         //Send the message to the notification server
         QDBusConnection::sessionBus().call(dbusMessage, QDBus::NoBlock);
+    } else if (message.get()->GetName() == "clearData_History") {
+        //Clear History Data
+        historyFile.resize(0);
+        historyFile.flush();
     }
     return true;
 }
