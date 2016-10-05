@@ -17,6 +17,7 @@ void HoverTabBar::mouseMoveEvent(QMouseEvent *event) {
             currentHoverTab = tabAtIndex;
         }
     }
+    event->accept();
 }
 
 void HoverTabBar::leaveEvent(QEvent *event) {

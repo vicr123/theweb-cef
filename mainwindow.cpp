@@ -20,8 +20,9 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     tabBar = new HoverTabBar();
     tabBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     tabBar->setTabsClosable(true);
-    tabBar->setShape(QTabBar::TriangularNorth);
+    tabBar->setShape(QTabBar::RoundedNorth);
     tabBar->setExpanding(false);
+    tabBar->setMovable(true);
     ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->errorFrame), tabBar);
     connect(tabBar, SIGNAL(previewTab(int)), ui->browserStack, SLOT(previewTab(int)));
     connect(tabBar, SIGNAL(cancelPreview()), ui->browserStack, SLOT(cancelPreview()));
@@ -167,6 +168,12 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     });
     connect(tabBar, &HoverTabBar::tabCloseRequested, [=](int closeIndex) {
         browserList.at(closeIndex).get()->GetHost().get()->CloseBrowser(false);
+    });
+    connect(tabBar, &HoverTabBar::tabMoved, [=](int from, int to) {
+        //Update all required lists
+        browserList.move(from, to);
+        browserMetadata.move(from, to);
+        updateCurrentBrowserDisplay();
     });
     ui->browserStack->lower();
     ReloadSettings();

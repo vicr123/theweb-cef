@@ -33,54 +33,92 @@
       <div class="sectionHeader">Actions</div>
       <div class="pageContent"> <button onclick="document.location = 'theweb://settings#clearData'">Clear
           Data...</button> </div>
+      <div id="historyData">
+      </div>
       <script>
-          //Read in history info and write into page.
-
+        	allHistoryRead = false;
+        	currentDate = new Date(0);
+       	  isFirstSectionHeader = true;
           historyString = theWebSettingsObject.history;
-					historyEntries = historyString.split("\n");
+          historyEntries = historyString.split("\n");
           
-        	if (historyEntries.length == 1) {
-            //There will always be one element (a blank element.)
-            document.write("<div class=\"sectionHeader\">History</div>");
-            document.write("<div class=\"pageContent\">There doesn't seem to be any history here. You could try reloading the page.</div>");
-          } else {
-            isFirstSectionHeader = true;
-            currentDate = new Date(0);
-            for (entry of historyEntries) {
-              if (entry != "") {
-                entryItems = entry.split(" ");
-                entryDate = new Date(parseInt(entryItems[2]));
-                if (entryDate.toDateString() != currentDate.toDateString()) {
-                  //Close trailing pageContent div if this is not the first section header
-                  if (!isFirstSectionHeader) {
-                    document.write("</table>");
-                    document.write("</div>");
+        	function loadHistory(from, to) {
+          	//Read in history info and write into page.
+            var htmlToAppend = "";
+            var openNewHeader = false;
+            console.log("Loading History from " + parseInt(from) + " to " + parseInt(to));
+            
+            if (to > historyEntries.length) {
+						  to = historyEntries.length;
+              allHistoryRead = true;
+            }
+            
+            /*if (from => to) {
+              return;
+            }*/
+            
+            if (historyEntries.length == 1) {
+              //There will always be one element (a blank element.)
+              htmlToAppend += "<div class=\"sectionHeader\">History</div>";
+              htmlToAppend += "<div class=\"pageContent\">There doesn't seem to be any history here. You could try reloading the page.</div>";
+            } else {
+              for (i = from; i < to; i++) { //entry of historyEntries) {
+                entry = historyEntries[i];
+                if (entry != "") {
+                  entryItems = entry.split(" ");
+                  entryDate = new Date(parseInt(entryItems[2]));
+                  if (entryDate.toDateString() != currentDate.toDateString()) {
+                    //Close trailing pageContent div if this is not the first section header
+                    if (!isFirstSectionHeader) {
+                      htmlToAppend += "</table>";
+                      htmlToAppend += "</div>";
+                    } else {
+                      isFirstSectionHeader = false;
+                    }
+                    
+                    //A new header is required.
+                    htmlToAppend += "<div class=\"sectionHeader\">";
+                    htmlToAppend += entryDate.toDateString();
+                    htmlToAppend += "</div>";
+
+                    //Open a new pageContent div
+                    htmlToAppend += "<div class=\"pageContent\">";
+                    htmlToAppend += "<table class=\"historyTable\">";
+                    currentDate = entryDate;
                   } else {
-                    isFirstSectionHeader = false;
+                    if (!openNewHeader && from != 0){
+                    	//Open a new pageContent div
+                    	htmlToAppend += "<div class=\"pageContent\">";
+                    	htmlToAppend += "<table class=\"historyTable\">";
+                    }
                   }
+                  openNewHeader = true;
 
-                  //A new header is required.
-                  document.write("<div class=\"sectionHeader\">");
-                  document.write(entryDate.toDateString());
-                  document.write("</div>");
-
-                  //Open a new pageContent div
-                  document.write("<div class=\"pageContent\">");
-                  document.write("<table class=\"historyTable\">");
-                  currentDate = entryDate;
+                  //Populate a table row with items
+                  htmlToAppend += "<tr class=\"historyRow\"><td class=\"historyTitle\"><a href=\"" + entryItems[0] + "\">";
+                  htmlToAppend += entryItems[1].replace(/%20/g, " ").replace(/</g, "&lt").replace(/>/g, "&gt;");
+                  htmlToAppend += "</a></td><td class=\"historyUrl\"><a href=\"" + entryItems[0] + "\">";
+                  htmlToAppend += entryItems[0].replace(/</g, "&lt").replace(/>/g, "&gt;");
+                  htmlToAppend += "</td><td><a href=\"" + entryItems[0].replace(/</g, "&lt").replace(/>/g, "&gt;") + "\">";
+                  htmlToAppend += entryDate.toLocaleTimeString();
+                  htmlToAppend += "</td></tr>";
                 }
-
-                //Populate a table row with items
-                document.write("<tr class=\"historyRow\"><td class=\"historyTitle\"><a href=\"" + entryItems[0] + "\">");
-                document.write(entryItems[1].replace(/%20/g, " "));
-                document.write("</a></td><td class=\"historyUrl\"><a href=\"" + entryItems[0] + "\">");
-                document.write(entryItems[0]);
-                document.write("</td><td><a href=\"" + entryItems[0] + "\">");
-                document.write(entryDate.toLocaleTimeString());
-                document.write("</td></tr>");
               }
             }
+            document.getElementById("historyData").innerHTML += htmlToAppend;
           }
-      </script> </div>
+        
+        	lastNumber = 200;
+        	loadHistory(0, 200);
+        	
+        	window.onscroll = function(event) {
+            if (((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) && !allHistoryRead) {
+              //Load next bunch of history if closer than 200 pixels to the end of the page
+              loadHistory(lastNumber, lastNumber + 200);
+              lastNumber += 200;
+            }
+          }
+      </script>
+    </div>
   </body>
 </html>

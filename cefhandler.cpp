@@ -95,7 +95,7 @@ void CefHandler::OnAddressChange(Browser browser, CefRefPtr<CefFrame> frame, con
 }
 
 bool CefHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source, int line) {
-    qDebug() << QString::fromStdString(message.ToString());
+    //qDebug() << QString::fromStdString(message.ToString());
     return false;
 }
 

@@ -441,6 +441,15 @@ table.historyTable td a {
     
 }
 
+table.historyTable td:first-child {
+    border-radius: 5px 0 0 5px;
+}
+
+table.historyTable td:last-child {
+    /* border-radius: 5px; */
+    border-radius: 0 5px 5px 0;
+}
+
 td.historyTitle {
     width: 70%;
     white-space: nowrap;
