@@ -103,7 +103,7 @@ public:
         MisspelledWordSubmenu,
         TextSubmenu,
         EditableSubmenu,
-        Generic
+        Generic, DevTools
     };
 
     void AddRef() const;
@@ -172,6 +172,7 @@ public:
     bool RunContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback) override;
     bool OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) override;
     bool OnTooltip(Browser browser, CefString& text) override;
+    bool OnOpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture) override;
 
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 
@@ -224,6 +225,10 @@ private:
     //Private Variables
     int numberOfBrowsers = 0;
 
+    bool newWindowIsDevToolsWindow = false;
+    bool newWindowIsPopupWindow = false;
+    CefPopupFeatures newWindowPopupFeatures;
+
     Browser currentMprisBrowser = NULL;
     QList<Browser> currentBrowsers;
     QMap<Browser, bool> mprisAvailableBrowsers;
@@ -231,6 +236,8 @@ private:
     bool mprisIsPlaying;
     QString mprisTitle, mprisArtist, mprisAlbum;
     QTimer mprisStopTimer;
+    QTimer browserMediaStopTimer;
+    QList<Browser> browsersToStopMedia;
 
     QSettings settings;
 };

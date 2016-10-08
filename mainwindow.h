@@ -73,7 +73,10 @@ public slots:
     void MprisPlayingStateChanged(Browser browser, bool isPlaying);
     void BeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString& suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback);
     void NewDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item);
+    void OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture);
     void ReloadSettings();
+
+    void setPopup(CefPopupFeatures features = CefPopupFeatures());
 
     void createNewTab(Browser newBrowser = NULL, bool openInBackground = false);
 
@@ -170,12 +173,13 @@ private:
     void insertIntoMetadata(Browser browser, QString key, QVariant value);
     void removeFromMetadata(Browser browser, QString key);
 
-    //QWidget* browserWidget;
     HoverTabBar* tabBar;
     bool IsCorrectBrowser(Browser browser);
     Browser getBrowserFor(Browser browser);
     int indexOfBrowser(Browser browser);
     bool isOblivion = false;
+    QToolButton* menuButton;
+    QAction* menuButtonAction;
 
     QMovie* tabLoading;
 

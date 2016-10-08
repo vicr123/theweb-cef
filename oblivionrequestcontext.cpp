@@ -1,7 +1,9 @@
 #include "oblivionrequestcontext.h"
 
 OblivionRequestContextHandler::OblivionRequestContextHandler() {
-    cookieManager = CefCookieManager::CreateManager("", false, NULL);
+    //while (cookieManager == NULL) {
+        cookieManager = CefCookieManager::CreateManager("", false, NULL);
+    //}
 }
 
 void OblivionRequestContextHandler::AddRef() const {

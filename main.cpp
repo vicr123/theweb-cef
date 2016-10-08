@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
     a.setOrganizationDomain("");
     a.setApplicationName("theWeb");
 
+    QSettings appSettings;
+
     NativeEventFilter* nativeFilter = new NativeEventFilter;
     a.installNativeEventFilter(nativeFilter);
 
@@ -151,6 +153,7 @@ int main(int argc, char *argv[])
 
     CefCookieManager::GetGlobalManager(NULL).get()->FlushStore(NULL);
     CefShutdown();
+    appSettings.remove("browser/lastPages");
     return ret;
 }
 

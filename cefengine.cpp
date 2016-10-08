@@ -248,7 +248,7 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
                     }
                 } else {
                     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisStop");
-                    message.get()->GetArgumentList().get()->SetBool(0, browser.get()->GetFrame(frameIdentifiers[i]).get()->IsMain());
+                    //message.get()->GetArgumentList().get()->SetBool(0, browser.get()->GetFrame(frameIdentifiers[i]).get()->IsMain());
                     browser.get()->SendProcessMessage(PID_BROWSER, message);
                     this->videoFrame = NULL;
                 }

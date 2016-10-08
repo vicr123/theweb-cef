@@ -23,9 +23,24 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     tabBar->setShape(QTabBar::RoundedNorth);
     tabBar->setExpanding(false);
     tabBar->setMovable(true);
+    tabBar->setContextMenuPolicy(Qt::CustomContextMenu);
     ((QBoxLayout*) ui->centralwidget->layout())->insertWidget(ui->centralwidget->layout()->indexOf(ui->errorFrame), tabBar);
     connect(tabBar, SIGNAL(previewTab(int)), ui->browserStack, SLOT(previewTab(int)));
     connect(tabBar, SIGNAL(cancelPreview()), ui->browserStack, SLOT(cancelPreview()));
+    connect(tabBar, &QTabBar::customContextMenuRequested, [=](QPoint pos) {
+        int tab = tabBar->tabAt(pos);
+        QMenu* menu = new QMenu;
+        menu->addSection("For tab \"" + tabBar->tabData(tab).toString() + "\"");
+        menu->addAction(QIcon::fromTheme("tab-close"), "Close Tab", [=]() {
+            browserList.at(tab).get()->GetHost().get()->CloseBrowser(false);
+        });
+        menu->addSection("General");
+        menu->addAction(QIcon::fromTheme("tab-new"), "New Tab", [=]() {
+            createNewTab();
+        });
+        menu->exec(tabBar->mapToGlobal(pos));
+        menu->deleteLater();
+    });
 
     QString resourceName;
     QColor panelColor = ui->securityFrame->palette().color(QPalette::Window);
@@ -97,7 +112,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     menu->addAction(ui->actionClose_Tab);
     menu->addAction(ui->actionExit);
 
-    QToolButton* menuButton = new QToolButton();
+    menuButton = new QToolButton();
     menuButton->setPopupMode(QToolButton::InstantPopup);
     if (isOblivion) {
         menuButton->setIcon(QIcon(":/icons/oblivionIcon"));
@@ -111,7 +126,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
         menuButton->setIcon(QIcon(":/icons/icon"));
     }
     menuButton->setMenu(menu);
-    ui->toolBar->insertWidget(ui->actionGo_Back, menuButton);
+    menuButtonAction = ui->toolBar->insertWidget(ui->actionGo_Back, menuButton);
 
     QMenu* powerMenu = new QMenu();
     powerMenu->addSection("Framerate limiting");
@@ -152,6 +167,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(MprisPlayingStateChanged(Browser,bool)), this, SLOT(MprisPlayingStateChanged(Browser,bool)));
     connect(signalBroker, SIGNAL(BeforeDownload(Browser,CefRefPtr<CefDownloadItem>,CefString,CefRefPtr<CefBeforeDownloadCallback>)), this, SLOT(BeforeDownload(Browser,CefRefPtr<CefDownloadItem>,CefString,CefRefPtr<CefBeforeDownloadCallback>)));
     connect(signalBroker, SIGNAL(NewDownload(Browser,CefRefPtr<CefDownloadItem>)), this, SLOT(NewDownload(Browser,CefRefPtr<CefDownloadItem>)));
+    connect(signalBroker, SIGNAL(OpenURLFromTab(Browser,CefRefPtr<CefFrame>,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool)), this, SLOT(OpenURLFromTab(Browser,CefRefPtr<CefFrame>,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -1470,7 +1486,7 @@ void MainWindow::KeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &even
         if (os_event->xkey.type == KeyPress) {
             if (os_event->xkey.state == ControlMask) {
                 if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_T)) { //New Tab
-                    ui->actionNew_Tab->trigger();
+                    if (tabBar->isVisible()) ui->actionNew_Tab->trigger();
                 } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_N)) { //New Window
                     ui->actionNew_Window->trigger();
                 } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_W)) { //Close Tab
@@ -1615,7 +1631,13 @@ void MainWindow::ContextMenuCommand(Browser browser, int command_id, CefRefPtr<C
             createNewTab(newBrowser);
         }
             break;
+        case CefHandler::DevTools:
+        {
+            browser.get()->GetHost().get()->ShowDevTools(CefWindowInfo(), handler, CefBrowserSettings(), CefPoint(params.get()->GetXCoord(), params.get()->GetYCoord()));
         }
+            break;
+        }
+
     }
 }
 
@@ -1782,5 +1804,87 @@ void MainWindow::on_actionHistory_triggered()
         Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, handler, "theweb://history", settings, CefRefPtr<CefRequestContext>());
 
         createNewTab(browser);
+    }
+}
+
+void MainWindow::setPopup(CefPopupFeatures features) {
+    tabBar->setVisible(false);
+    ui->actionGo_Back->setVisible(false);
+    ui->actionGo_Forward->setVisible(false);
+    ui->actionReload->setVisible(false);
+    ui->actionNew_Tab->setVisible(false);
+    menuButtonAction->setVisible(false);
+    ui->spaceSearch->setReadOnly(true);
+
+    QSize size(features.width, features.width);
+    if (size.height() != 0 && size.width() != 0) {
+        if (size.height() < 100) size.setHeight(100);
+        if (size.width() < 100) size.setWidth(100);
+
+        if (features.resizable) {
+            this->resize(size);
+        } else {
+            this->setFixedSize(size);
+        }
+    }
+}
+
+void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture) {
+    if (indexOfBrowser(browser) != -1) {
+        switch (target_disposition) {
+        case WOD_NEW_FOREGROUND_TAB:
+        {
+            Browser newBrowser;
+            if (isOblivion) {
+                CefBrowserSettings settings;
+                settings.application_cache = STATE_DISABLED;
+
+                CefRequestContextSettings contextSettings;
+                CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+                context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, settings, context);
+            } else {
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+            }
+            createNewTab(newBrowser);
+        }
+            break;
+        case WOD_NEW_BACKGROUND_TAB:
+        {
+            Browser newBrowser;
+            if (isOblivion) {
+                CefBrowserSettings settings;
+                settings.application_cache = STATE_DISABLED;
+
+                CefRequestContextSettings contextSettings;
+                CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+                context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, settings, context);
+            } else {
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+            }
+            createNewTab(newBrowser, true);
+        }
+            break;
+        case WOD_NEW_WINDOW:
+        {
+            Browser newBrowser;
+            if (isOblivion) {
+                CefBrowserSettings settings;
+                settings.application_cache = STATE_DISABLED;
+
+                CefRequestContextSettings contextSettings;
+                CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+                context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, settings, context);
+            } else {
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+            }
+
+            MainWindow* window = new MainWindow(newBrowser, isOblivion);
+            window->show();
+        }
+            break;
+        }
     }
 }

@@ -59,6 +59,22 @@ CefHandler::CefHandler(QObject* parent) : QObject(parent)
         XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioPrev), AnyModifier, QX11Info::appRootWindow());
         XUngrabKey(QX11Info::display(), XKeysymToKeycode(QX11Info::display(), XF86XK_AudioStop), AnyModifier, QX11Info::appRootWindow());
     });
+
+    browserMediaStopTimer.setInterval(3000);
+    connect(&browserMediaStopTimer, &QTimer::timeout, [=]() {
+        //Send signal to window to hide player controls
+        //bool isFound = false;
+        for (Browser checkBrowser : browsersToStopMedia) {
+            emit signalBroker->MprisStateChanged(checkBrowser, false);
+            /*if (checkBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+                isFound = true;
+            }*/
+        }
+        browsersToStopMedia.clear();
+        /*if (!isFound) {
+        }*/
+    });
+    browserMediaStopTimer.start();
 }
 
 void CefHandler::AddRef() const {
@@ -77,9 +93,21 @@ void CefHandler::OnAfterCreated(Browser browser) {
     numberOfBrowsers++;
     currentBrowsers.append(browser);
     if (newBrowserTabWindow != NULL) {
-        newBrowserTabWindow->createNewTab(browser);
+        if (newWindowIsPopupWindow) {
+            MainWindow* window = new MainWindow(browser);
+            window->setPopup(newWindowPopupFeatures);
+            window->show();
+        } else {
+            newBrowserTabWindow->createNewTab(browser);
+        }
+    } else if (newWindowIsDevToolsWindow) {
+        MainWindow* window = new MainWindow(browser);
+        window->setPopup();
+        window->show();
     }
     this->newBrowserTabWindow = NULL;
+    newWindowIsDevToolsWindow = false;
+    newWindowIsPopupWindow = false;
 }
 
 void CefHandler::OnRenderProcessTerminated(Browser browser, CefRequestHandler::TerminationStatus status) {
@@ -173,7 +201,10 @@ bool CefHandler::OnBeforeUnloadDialog(Browser browser, const CefString &message_
 }
 
 bool CefHandler::OnBeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, const CefString &target_frame_name, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures &popupFeatures, CefWindowInfo &windowInfo, CefRefPtr<CefClient> &client, CefBrowserSettings &settings, bool *no_javascript_access) {
-
+    newWindowPopupFeatures = popupFeatures;
+    if (target_disposition == WOD_NEW_POPUP) {
+        newWindowIsPopupWindow = true;
+    }
     emit signalBroker->BeforePopup(browser, frame, target_url, target_frame_name, target_disposition, user_gesture, popupFeatures, &windowInfo, settings, no_javascript_access);
     return false;
     //return true;
@@ -271,10 +302,10 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
             }
         }
         if (!isFound) {
-            emit signalBroker->MprisStateChanged(browser, true);
             mprisAvailableBrowsers.insert(browser, false);
+            browsersToStopMedia.removeOne(browser);
         }
-
+        emit signalBroker->MprisStateChanged(browser, true);
     } else if (message.get()->GetName() == "mprisStop") {
         if (mprisAvailableBrowsers.keys().contains(browser)) {
             QTimer* timer = new QTimer;
@@ -296,6 +327,17 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
                     mprisStopTimer.start();
                 }
             }
+        }
+
+        bool isFound = false;
+        for (Browser stopBrowser : browsersToStopMedia) {
+            if (stopBrowser.get()->GetIdentifier() == browser.get()->GetIdentifier()) {
+                isFound = true;
+            }
+        }
+
+        if (!isFound) {
+            browsersToStopMedia.append(browser);
         }
     } else if (message.get()->GetName() == "mprisDoStop") {
         if (currentMprisBrowser.get() != NULL) {
@@ -550,12 +592,17 @@ void CefHandler::OnBeforeContextMenu(Browser browser, CefRefPtr<CefFrame> frame,
         model.get()->AddItem(MENU_ID_FORWARD, "Go Forward");
         model.get()->AddItem(MENU_ID_RELOAD_NOCACHE, "Reload");
         model.get()->AddItem(MENU_ID_VIEW_SOURCE, "View Page Source");
+        model.get()->AddItem(DevTools, "Open Developer Tools Here");
     }
 }
 
 bool CefHandler::OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) {
     switch (command_id) {
     case OpenLinkInNewTab:
+        emit signalBroker->ContextMenuCommand(browser, command_id, params);
+        break;
+    case DevTools:
+        newWindowIsDevToolsWindow = true;
         emit signalBroker->ContextMenuCommand(browser, command_id, params);
         break;
     case CopyLink:
@@ -625,6 +672,20 @@ void CefHandler::Previous() {
 
 void CefHandler::Raise() {
     emit signalBroker->ShowBrowser(currentMprisBrowser);
+}
+
+bool CefHandler::OnOpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture) {
+    switch (target_disposition) {
+    case WOD_CURRENT_TAB:
+        return false;
+    case WOD_NEW_BACKGROUND_TAB:
+    case WOD_NEW_FOREGROUND_TAB:
+    case WOD_NEW_WINDOW: //Send new windows to the window because oblivion windows should open a new oblivion window
+        emit signalBroker->OpenURLFromTab(browser, frame, target_url, target_disposition, user_gesture);
+        return true;
+    default:
+        return false;
+    }
 }
 
 QVariantMap CefHandler::Metadata() {

@@ -16,7 +16,7 @@ public:
         return cookieManager;
     }
 
-    CefCookieManager* cookieManager;
+    CefRefPtr<CefCookieManager> cookieManager;
 };
 
 #endif // OBLIVIONREQUESTCONTEXT_H
