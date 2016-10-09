@@ -1204,6 +1204,12 @@ void MainWindow::ReloadSettings() {
         }
     }
 
+    if (settings.value("browser/tabText", false).toBool()) {
+        tabBar->setStyleSheet("QTabBar::tab { height: 32px; width: 260px; }");
+    } else {
+        tabBar->setStyleSheet("QTabBar::tab { height: 32px; }"); //Automatic width
+    }
+
     {
         //Update the FPS limit checkbox
         ui->actionDon_t_Limit->setChecked(false);
@@ -1683,16 +1689,19 @@ void MainWindow::AskForNotification(Browser browser, CefString host) {
 void MainWindow::MprisStateChanged(Browser browser, bool isOn) {
     if (indexOfBrowser(browser) != -1) {
         if (isOn) {
-            QPushButton* button = new QPushButton;
-            button->setIcon(QIcon::fromTheme("media-playback-pause"));
-            button->setFlat(true);
+            if (tabBar->tabButton(indexOfBrowser(browser), QTabBar::LeftSide) == NULL) {
+                QPushButton* button = new QPushButton;
+                button->setIcon(QIcon::fromTheme("media-playback-pause"));
+                button->setStyleSheet("padding: 0px; border: none;");
+                button->setFlat(true);
 
-            connect(button, &QPushButton::clicked, [=]() {
-                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPlayPause");
-                browser.get()->SendProcessMessage(PID_RENDERER, message);
-            });
+                connect(button, &QPushButton::clicked, [=]() {
+                    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("mprisPlayPause");
+                    browser.get()->SendProcessMessage(PID_RENDERER, message);
+                });
 
-            tabBar->setTabButton(indexOfBrowser(browser), QTabBar::LeftSide, button);
+                tabBar->setTabButton(indexOfBrowser(browser), QTabBar::LeftSide, button);
+            }
         } else {
             tabBar->setTabButton(indexOfBrowser(browser), QTabBar::LeftSide, NULL);
         }
