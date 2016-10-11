@@ -4,6 +4,9 @@
     <property name="processID" type="u" access="read"/>
     <method name="newWindow">
     </method>
+    <method name="newWindow">
+      <arg name="url" type="s" direction="in"/>
+    </method>
   </interface>
   <interface name="org.mpris.MediaPlayer2">
     <property name="CanQuit" type="b" access="read"/>

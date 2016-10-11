@@ -17,6 +17,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
 
     this->isOblivion = isOblivion;
 
+    //Set up tab bar
     tabBar = new HoverTabBar();
     tabBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     tabBar->setTabsClosable(true);
@@ -42,6 +43,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
         menu->deleteLater();
     });
 
+    //Set up loading animation
     QString resourceName;
     QColor panelColor = ui->securityFrame->palette().color(QPalette::Window);
     if (((qreal) panelColor.red() + (qreal) panelColor.green() + (qreal) panelColor.red()) / (qreal) 3 < 127) {
@@ -1108,7 +1110,6 @@ void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, c
     if (IsCorrectBrowser(browser)) {
         QVariantList certErrorMetadata;
 
-
         switch (cert_error) {
         case ERR_CERT_COMMON_NAME_INVALID:
             certErrorMetadata.append("You're trying to connect to <b>" + QUrl(QString::fromStdString(request_url.ToString())).host() + "</b> but the server presented itself as <b>" +
@@ -1141,8 +1142,32 @@ void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, c
             break;
         }
 
+        QUrl url(QString::fromStdString(request_url.ToString()));
+        bool isHsts = false;
+        //Check if this is a HSTS website
+        QSettings hstsSettings(QApplication::organizationName(), "theWeb.hsts");
+        for (QString group : hstsSettings.childGroups()) {
+            hstsSettings.beginGroup(group);
+            if (hstsSettings.value("Expiry").toLongLong() < QDateTime::currentMSecsSinceEpoch()) {
+                //This one has expired. Remove it.
+                hstsSettings.remove("");
+            } else {
+                if (hstsSettings.value("includeSubDomains").toBool()) {
+                    if (url.topLevelDomain() == group) {
+                        isHsts = true;
+                    }
+                } else {
+                    if (group == url.host()) {
+                        isHsts = true;
+                    }
+                }
+            }
+            hstsSettings.endGroup();
+        }
+
         //certCallback = callback;
         certErrorMetadata.append(QVariant::fromValue(callback));
+        certErrorMetadata.append(isHsts);
 
         certErrorUrls.append(QString::fromStdString(request_url.ToString()));
 
@@ -1170,7 +1195,13 @@ void MainWindow::on_certIgnore_clicked()
         removeFromMetadata(browser(), "certificate");
     } else {
         ui->certMoreInfo->setVisible(true);
-        ui->certIgnore->setText("Continue Anyway");
+        if (browserMetadata.at(indexOfBrowser(browser())).value("certificate").toList().at(2).toBool()) {
+            //This is a HSTS website, and the user is not allowed to continue to it.
+            ui->certIgnore->setVisible(false);
+        } else {
+
+            ui->certIgnore->setText("Continue Anyway");
+        }
     }
 }
 
@@ -1428,6 +1459,10 @@ void MainWindow::updateCurrentBrowserDisplay() {
         if (metadata.keys().contains("certificate")) {
             QVariantList certErrorMetadata = metadata.value("certificate").toList();
             ui->certMoreText->setText(certErrorMetadata.at(0).toString());
+            if (!certErrorMetadata.at(2).toBool()) {
+                //There is no HSTS. Show the ignore button.
+                ui->certIgnore->setVisible(true);
+            }
 
             ui->badCertificateFrame->setVisible(true);
             showBrowserStack = false;
@@ -1435,6 +1470,7 @@ void MainWindow::updateCurrentBrowserDisplay() {
             ui->badCertificateFrame->setVisible(false);
             ui->certMoreInfo->setVisible(false);
             ui->certIgnore->setText("More Info");
+            ui->certIgnore->setVisible(true);
         }
 
         if (metadata.keys().contains("auth")) {

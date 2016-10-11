@@ -1,6 +1,8 @@
 #include "cefhandler.h"
 #include "theweb_adaptor.h"
 
+extern CefHandler* handler;
+
 MainDBus::MainDBus(QObject *parent) : QObject(parent)
 {
     new ThewebAdaptor(this);
@@ -10,6 +12,12 @@ MainDBus::MainDBus(QObject *parent) : QObject(parent)
 
 void MainDBus::newWindow() {
     MainWindow* window = new MainWindow();
+    window->show();
+}
+
+void MainDBus::newWindow(QString url) {
+    Browser browser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, url.toStdString(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+    MainWindow* window = new MainWindow(browser);
     window->show();
 }
 

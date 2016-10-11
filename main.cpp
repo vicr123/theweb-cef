@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     CefString(&settings.user_agent) = userAgent.toStdString();*/
     CefString(&settings.cache_path) = QDir::homePath().append("/.theweb/cache").toStdString();
     CefString(&settings.locale) = "en-US";
-    settings.remote_debugging_port = 26154;
+    //settings.remote_debugging_port = 26154;
     //settings.single_process = true;
 
     CefRefPtr<CefEngine> app(new CefEngine);
@@ -78,6 +78,15 @@ int main(int argc, char *argv[])
     QObject::connect(nativeFilter, SIGNAL(PlayPause()), handler, SLOT(PlayPause()));
     QObject::connect(nativeFilter, SIGNAL(Previous()), handler, SLOT(Previous()));
 
+    //Read command line arguments
+    //qDebug() << a.arguments();
+    QStringList urlsToOpen;
+    for (QString arg : a.arguments().first().split(" ")) {
+        if (arg != a.applicationFilePath() && arg != "" && !arg.startsWith("-")) {
+            urlsToOpen.append(arg);
+        }
+    }
+
     //Check if theWeb is already running. We do this after CEF initializes because CEF can block things.
     bool isRunning;
     isRunning = QDBusConnection::sessionBus().interface()->registeredServiceNames().value().contains("org.thesuite.theweb");
@@ -90,6 +99,11 @@ int main(int argc, char *argv[])
 
             //Send message via DBus to other theWeb process
             QDBusMessage message = QDBusMessage::createMethodCall("org.thesuite.theweb", "/org/thesuite/theweb", "org.thesuite.theweb", "newWindow");
+            if (urlsToOpen.count() > 0) {
+                QVariantList arguments;
+                arguments.append(urlsToOpen.first());
+                message.setArguments(arguments);
+            }
             QDBusConnection::sessionBus().call(message, QDBus::NoBlock);
 
             //Exit theWeb
@@ -106,16 +120,14 @@ int main(int argc, char *argv[])
     historyFile.open(QFile::ReadWrite | QFile::Append);
 
     bool windowOpened = false;
-    qDebug() << a.arguments();
-    for (QString arg : a.arguments().first().split(" ")) {
-        if (arg != a.applicationFilePath() && arg != "" && !arg.startsWith("-")) {
-            windowOpened = true;
+    for (QString url : urlsToOpen) {
 
-            CefWindowInfo windowInfo;
-            CefBrowserSettings settings;
-            MainWindow* w = new MainWindow(CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), arg.toStdString(), settings, CefRefPtr<CefRequestContext>()));
-            w->show();
-        }
+        windowOpened = true;
+
+        CefWindowInfo windowInfo;
+        CefBrowserSettings settings;
+        MainWindow* w = new MainWindow(CefBrowserHost::CreateBrowserSync(windowInfo, CefRefPtr<CefHandler>(handler), url.toStdString(), settings, CefRefPtr<CefRequestContext>()));
+        w->show();
     }
 
     if (!windowOpened) {

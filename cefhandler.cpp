@@ -408,6 +408,38 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
 }
 
 CefHandler::ReturnValue CefHandler::OnBeforeResourceLoad(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefRequestCallback> callback) {
+    QUrl url(QString::fromStdString(request.get()->GetURL().ToString()));
+    if (url.scheme() == "http") {
+        bool changeToHttps = false;
+
+        //Check if this is a HSTS website
+        QSettings hstsSettings(QApplication::organizationName(), "theWeb.hsts");
+        for (QString group : hstsSettings.childGroups()) {
+            hstsSettings.beginGroup(group);
+            if (hstsSettings.value("Expiry").toLongLong() < QDateTime::currentMSecsSinceEpoch()) {
+                //This one has expired. Remove it.
+                hstsSettings.remove("");
+            } else {
+                if (hstsSettings.value("includeSubDomains").toBool()) {
+                    if (url.topLevelDomain() == group || url.host() == group) {
+                        changeToHttps = true;
+                    }
+                } else {
+                    if (group == url.host()) {
+                        changeToHttps = true;
+                    }
+                }
+            }
+            hstsSettings.endGroup();
+        }
+
+        if (changeToHttps) {
+            //Change the scheme to HTTPS.
+            url.setScheme("https");
+            request.get()->SetURL(url.toString().toStdString());
+        }
+    }
+
     if (settings.value("data/dnt", false).toBool()) {
         std::multimap<CefString, CefString> headers;
         request.get()->GetHeaderMap(headers);
@@ -415,6 +447,41 @@ CefHandler::ReturnValue CefHandler::OnBeforeResourceLoad(Browser browser, CefRef
         request.get()->SetHeaderMap(headers);
     }
     return RV_CONTINUE;
+}
+
+bool CefHandler::OnResourceResponse(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response) {
+    //Check for HSTS
+    CefResponse::HeaderMap headerMap;
+    response.get()->GetHeaderMap(headerMap);
+
+    for (CefResponse::HeaderMap::iterator iterator = headerMap.begin(); iterator != headerMap.end(); iterator++) {
+        if (iterator->first == "strict-transport-security") {
+            QString hstsHeader = QString::fromStdString(iterator->second.ToString());
+
+            QString maxAge = "";
+            bool includeSubdomains = false;
+            for (QString part : hstsHeader.split(";")) {
+                if (part.contains("max-age")) {
+                    maxAge = part.split("=")[1];
+                } else if (part.contains("includeSubDomains")) {
+                    includeSubdomains = true;
+                }
+            }
+
+            bool castOk;
+            QDateTime hstsExpiry = QDateTime::currentDateTime();
+            hstsExpiry = hstsExpiry.addSecs(maxAge.toInt(&castOk));
+            if (castOk) {
+                QSettings hstsSettings(QApplication::organizationName(), "theWeb.hsts");
+                QUrl currentUrl = QString::fromStdString(request.get()->GetURL().ToString());
+                hstsSettings.beginGroup(currentUrl.host());
+                hstsSettings.setValue("Expiry", hstsExpiry.toMSecsSinceEpoch());
+                hstsSettings.setValue("includeSubDomains", includeSubdomains);
+                hstsSettings.endGroup();
+            }
+        }
+    }
+    return false;
 }
 
 bool CefHandler::OnCertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) {
