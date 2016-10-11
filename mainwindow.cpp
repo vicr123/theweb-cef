@@ -1153,7 +1153,7 @@ void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, c
                 hstsSettings.remove("");
             } else {
                 if (hstsSettings.value("includeSubDomains").toBool()) {
-                    if (url.topLevelDomain() == group) {
+                    if (url.topLevelDomain() == group || url.host() == group) {
                         isHsts = true;
                     }
                 } else {
@@ -1199,7 +1199,6 @@ void MainWindow::on_certIgnore_clicked()
             //This is a HSTS website, and the user is not allowed to continue to it.
             ui->certIgnore->setVisible(false);
         } else {
-
             ui->certIgnore->setText("Continue Anyway");
         }
     }
