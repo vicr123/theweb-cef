@@ -587,9 +587,11 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
 
 void MainWindow::insertIntoMetadata(Browser browser, QString key, QVariant value) {
     //Add a value into a browser's metadata
-    QVariantMap currentBrowserMap = browserMetadata.at(indexOfBrowser(browser));
-    currentBrowserMap.insert(key, value);
-    browserMetadata.replace(indexOfBrowser(browser), currentBrowserMap);
+    if (indexOfBrowser(browser) != -1) {
+        QVariantMap currentBrowserMap = browserMetadata.at(indexOfBrowser(browser));
+        currentBrowserMap.insert(key, value);
+        browserMetadata.replace(indexOfBrowser(browser), currentBrowserMap);
+    }
 }
 
 void MainWindow::removeFromMetadata(Browser browser, QString key) {

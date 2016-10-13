@@ -10,6 +10,7 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QDBusInterface>
+#include <QNetworkProxyFactory>
 #include <nativeeventfilter.h>
 
 CefHandler* handler;
@@ -44,6 +45,9 @@ int main(int argc, char *argv[])
     qRegisterMetaType<CefPopupFeatures>();
     qRegisterMetaType<CefWindowInfo>();
     qRegisterMetaType<CefBrowserSettings>();
+
+    //Use the system proxy settings in Qt
+    QNetworkProxyFactory::setUseSystemConfiguration(true);
 
     signalBroker = new SignalBroker();
 
