@@ -78,6 +78,10 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
                 }
             }
         })), V8_PROPERTY_ATTRIBUTE_NONE);
+        JsObject.get()->SetValue("goToCredits", CefV8Value::CreateFunction("goToCredits", new V8Function([=]() {
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("goToCredits");
+            browser.get()->SendProcessMessage(PID_BROWSER, message);
+        })), V8_PROPERTY_ATTRIBUTE_NONE);
 
         context.get()->GetGlobal()->SetValue("theWebSettingsObject", JsObject, V8_PROPERTY_ATTRIBUTE_NONE);
     }

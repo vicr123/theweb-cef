@@ -83,7 +83,6 @@ int main(int argc, char *argv[])
     QObject::connect(nativeFilter, SIGNAL(Previous()), handler, SLOT(Previous()));
 
     //Read command line arguments
-    //qDebug() << a.arguments();
     QStringList urlsToOpen;
     for (QString arg : a.arguments().first().split(" ")) {
         if (arg != a.applicationFilePath() && arg != "" && !arg.startsWith("-")) {
@@ -120,7 +119,6 @@ int main(int argc, char *argv[])
     }
 
     //Initialize Windows
-    //historyFile = QFile(QDir::homePath() + "/.theweb/history");
     historyFile.open(QFile::ReadWrite | QFile::Append);
 
     bool windowOpened = false;

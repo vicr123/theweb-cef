@@ -403,6 +403,8 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         //Clear History Data
         historyFile.resize(0);
         historyFile.flush();
+    } else if (message.get()->GetName() == "goToCredits") {
+        browser.get()->GetMainFrame().get()->LoadURL("chrome://credits/");
     }
     return true;
 }

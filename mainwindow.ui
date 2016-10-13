@@ -1039,7 +1039,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_8">
+              <widget class="QLabel" name="certContinueWarning">
                <property name="font">
                 <font>
                  <weight>75</weight>
@@ -1346,7 +1346,7 @@
   </action>
   <action name="actionHistory">
    <property name="text">
-    <string>History</string>
+    <string>&amp;History</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+H</string>

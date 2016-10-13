@@ -194,6 +194,7 @@ public:
 
     MainWindow* newBrowserTabWindow = NULL;
     MprisDBusMain* mainMprisDbus;
+    bool newWindowIsDevToolsWindow = false;
 
 public Q_SLOTS:
     //org.mpris.MediaPlayer2.Player methods
@@ -227,7 +228,6 @@ private:
     //Private Variables
     int numberOfBrowsers = 0;
 
-    bool newWindowIsDevToolsWindow = false;
     bool newWindowIsPopupWindow = false;
     CefPopupFeatures newWindowPopupFeatures;
 

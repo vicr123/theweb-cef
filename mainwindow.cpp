@@ -1170,6 +1170,11 @@ void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, c
         //certCallback = callback;
         certErrorMetadata.append(QVariant::fromValue(callback));
         certErrorMetadata.append(isHsts);
+        if (isHsts) {
+            certErrorMetadata.append("This website has requested theWeb to not connect to it over an insecure connection.");
+        } else {
+            certErrorMetadata.append("If you want to continue despite this warning, click the \"Continue Anyway\" button above. Legitamate banks and businesses won't tell you to do this.");
+        }
 
         certErrorUrls.append(QString::fromStdString(request_url.ToString()));
 
@@ -1460,6 +1465,7 @@ void MainWindow::updateCurrentBrowserDisplay() {
         if (metadata.keys().contains("certificate")) {
             QVariantList certErrorMetadata = metadata.value("certificate").toList();
             ui->certMoreText->setText(certErrorMetadata.at(0).toString());
+            ui->certContinueWarning->setText(certErrorMetadata.at(3).toString());
             if (!certErrorMetadata.at(2).toBool()) {
                 //There is no HSTS. Show the ignore button.
                 ui->certIgnore->setVisible(true);
@@ -1677,6 +1683,7 @@ void MainWindow::ContextMenuCommand(Browser browser, int command_id, CefRefPtr<C
         case CefHandler::DevTools:
         {
             browser.get()->GetHost().get()->ShowDevTools(CefWindowInfo(), handler, CefBrowserSettings(), CefPoint(params.get()->GetXCoord(), params.get()->GetYCoord()));
+            handler->newWindowIsDevToolsWindow = false;
         }
             break;
         }
