@@ -28,7 +28,10 @@
 #include <QMovie>
 #include <QX11Info>
 #include <QToolTip>
+#include <QNetworkProxy>
 #include "downloadframe.h"
+#include <unistd.h>
+#include <sys/types.h>
 
 namespace Ui {
 class MainWindow;
@@ -45,7 +48,8 @@ public:
     enum warningType {
         none,
         fullscreen,
-        notification
+        notification,
+        warning
     };
 
 public slots:

@@ -12,6 +12,8 @@
 #include <QDBusInterface>
 #include <QNetworkProxyFactory>
 #include <nativeeventfilter.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 CefHandler* handler;
 SignalBroker* signalBroker;
@@ -25,6 +27,16 @@ CefString historyData; //Used in settings accessor
 
 int main(int argc, char *argv[])
 {
+    //Create space for extra arguments (if need be)
+    if (geteuid() == 0) {
+        char **newArgv = (char**) malloc((argc + 1) * sizeof(*newArgv));
+        memcpy(newArgv, argv, sizeof(*newArgv) * argc);
+        newArgv[argc] = "--no-sandbox";
+        argc++;
+        argv = newArgv;
+    }
+
+
     QApplication a(argc, argv);
 
     //Set Application Information
@@ -69,6 +81,7 @@ int main(int argc, char *argv[])
     CefString(&settings.locale) = "en-US";
     //settings.remote_debugging_port = 26154;
     //settings.single_process = true;
+
 
     CefRefPtr<CefEngine> app(new CefEngine);
     CefMainArgs cefArgs(argc, argv);

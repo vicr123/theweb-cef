@@ -84,6 +84,18 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     ui->hoverUrlLabel->setParent(this);
     ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);
 
+    //Is this user root?
+    if (geteuid() == 0) {
+        //Warn user that they're running as root
+        currentWarning = MainWindow::warning;
+        ui->warningLabel->setText("theWeb is being run as root. As a result, the sandbox has been disabled. You should not run theWeb as the root user.");
+
+        ui->warningOk->setVisible(true);
+        ui->warningCancel->setVisible(false);
+        ui->warningOk->setText("OK");
+        ui->warningFrame->setVisible(true);
+    }
+
     QPalette oldFraudContentPalette = ui->fraudContent->palette();
     oldFraudContentPalette.setColor(QPalette::Window, oldFraudContentPalette.color(QPalette::Window));
     QPalette oldFraudPalette = ui->fraudFrame->palette();
@@ -404,6 +416,10 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                     securityMetadata.append("Please wait...");
 
                     QSslSocket *sslSock = new QSslSocket();
+                    QList<QNetworkProxy> proxyList = QNetworkProxyFactory::systemProxyForQuery();
+                    if (proxyList.size() > 0) {
+                        sslSock->setProxy(proxyList.first());
+                    }
                     connect(sslSock, &QSslSocket::encrypted, [=]() {
                         QStringList securityMetadata;
 
