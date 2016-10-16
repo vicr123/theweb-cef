@@ -1,6 +1,6 @@
 @font-face {
-  font-family: 'Noto';
-  src: url('theweb://notofont');
+  font-family: 'Rubik-tw';
+  src: url('theweb://rubikfont');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
 }
 
@@ -14,15 +14,22 @@
     }
 }
 
+* {
+    font-family: 'Rubik-tw', sans-serif;
+}
+
 body {
     /*padding-top: 50px;*/
-    font-family: 'Noto', sans-serif;
     margin: 0px;
+}
+
+h1,h2,h3,h4,h5,h6 {
+    font-weight: 400;
 }
 
 div.navbar {
     position: fixed;
-    height: 50px;
+    height: 48px;
     top: 0px;
     left: 0px;
     width: 100%;

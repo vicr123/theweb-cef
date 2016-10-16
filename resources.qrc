@@ -19,5 +19,6 @@
         <file alias="newtab">thewebschemes/newtab.html</file>
         <file alias="oblivion">thewebschemes/oblivion.html</file>
         <file alias="history">thewebschemes/history.html</file>
+        <file alias="rubikfont">thewebschemes/rubikfont</file>
     </qresource>
 </RCC>
