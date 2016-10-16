@@ -5,6 +5,7 @@ extern SignalBroker* signalBroker;
 extern void QuitApp(int exitCode = 0);
 extern QVariantMap settingsData;
 extern QFile historyFile;
+extern CefBrowserSettings defaultBrowserSettings;
 
 CefHandler::CefHandler(QObject* parent) : QObject(parent)
 {
@@ -521,7 +522,7 @@ bool CefHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &ev
 }
 
 bool CefHandler::OnFileDialog(Browser browser, FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback) {
-    switch (mode >> 25) {
+    /*switch (mode >> 25) {
     case FILE_DIALOG_OPEN:
     case FILE_DIALOG_OPEN_MULTIPLE:
     {
@@ -534,10 +535,10 @@ bool CefHandler::OnFileDialog(Browser browser, FileDialogMode mode, const CefStr
         }
 
         QStringList filters;
-        /*for (CefString filter : accept_filters) {
+        *//*for (CefString filter : accept_filters) {
             filters.append(QString::fromStdString(filter.ToString()));
         }
-        dialog->setNameFilters(filters);*/
+        dialog->setNameFilters(filters);*//*
 
         connect(dialog, &QFileDialog::accepted, [=]() {
             QList<CefString> selectedFiles;
@@ -558,7 +559,9 @@ bool CefHandler::OnFileDialog(Browser browser, FileDialogMode mode, const CefStr
         break;
 
     }
-    return false;
+    return false;*/
+    emit signalBroker->FileDialog(browser, mode, title, default_file_path, accept_filters, selected_accept_filter, callback);
+    return true;
 }
 
 bool CefHandler::RunContextMenu(Browser browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback) {
@@ -679,7 +682,7 @@ bool CefHandler::OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame
         break;
     case OpenLinkInNewWindow:
     {
-        Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(CefWindowInfo(), this, params.get()->GetLinkUrl(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+        Browser newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(CefWindowInfo(), this, params.get()->GetLinkUrl(), defaultBrowserSettings, CefRefPtr<CefRequestContext>());
 
         MainWindow* window = new MainWindow(newBrowser);
         window->show();
@@ -687,7 +690,7 @@ bool CefHandler::OnContextMenuCommand(Browser browser, CefRefPtr<CefFrame> frame
         break;
     case OpenLinkInNewOblivion:
     {
-        CefBrowserSettings settings;
+        CefBrowserSettings settings = defaultBrowserSettings;
         settings.application_cache = STATE_DISABLED;
 
         CefRequestContextSettings contextSettings;

@@ -35,7 +35,8 @@ SOURCES += main.cpp\
     animatedstackedwidget.cpp \
     nativeeventfilter.cpp \
     hovertabbar.cpp \
-    downloadframe.cpp
+    downloadframe.cpp \
+    filepicker.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -53,7 +54,8 @@ HEADERS  += \
     animatedstackedwidget.h \
     nativeeventfilter.h \
     hovertabbar.h \
-    downloadframe.h
+    downloadframe.h \
+    filepicker.h
 
 FORMS    += \
     mainwindow.ui

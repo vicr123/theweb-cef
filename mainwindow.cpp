@@ -8,6 +8,7 @@ extern QTimer cefEventLoopTimer;
 extern QStringList certErrorUrls;
 extern QTimer batteryCheckTimer;
 extern QFile historyFile;
+extern CefBrowserSettings defaultBrowserSettings;
 
 MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     QMainWindow(parent),
@@ -80,6 +81,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     ui->hoverUrlLabel->setVisible(false);
     ui->downloadItemAreaWidget->setVisible(false);
     ui->findPanel->setVisible(false);
+    ui->SelectFileFrame->setVisible(false);
 
     ui->hoverUrlLabel->setParent(this);
     ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);
@@ -182,6 +184,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(BeforeDownload(Browser,CefRefPtr<CefDownloadItem>,CefString,CefRefPtr<CefBeforeDownloadCallback>)), this, SLOT(BeforeDownload(Browser,CefRefPtr<CefDownloadItem>,CefString,CefRefPtr<CefBeforeDownloadCallback>)));
     connect(signalBroker, SIGNAL(NewDownload(Browser,CefRefPtr<CefDownloadItem>)), this, SLOT(NewDownload(Browser,CefRefPtr<CefDownloadItem>)));
     connect(signalBroker, SIGNAL(OpenURLFromTab(Browser,CefRefPtr<CefFrame>,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool)), this, SLOT(OpenURLFromTab(Browser,CefRefPtr<CefFrame>,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool)));
+    connect(signalBroker, SIGNAL(FileDialog(Browser,CefDialogHandler::FileDialogMode,CefString,CefString,std::vector<CefString>,int,CefRefPtr<CefFileDialogCallback>)), this, SLOT(FileDialog(Browser,CefDialogHandler::FileDialogMode,CefString,CefString,std::vector<CefString>,int,CefRefPtr<CefFileDialogCallback>)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -225,7 +228,7 @@ void MainWindow::createNewTab(Browser newBrowser, bool openInBackground) {
     tabBar->addTab("New Tab");
 
     CefWindowInfo windowInfo;
-    CefBrowserSettings settings;
+    CefBrowserSettings settings = defaultBrowserSettings;
 
     if (isOblivion) {
         settings.application_cache = STATE_DISABLED;
@@ -968,7 +971,7 @@ void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const C
 
         Browser newBrowser;
         if (isOblivion) {
-            CefBrowserSettings settings;
+            CefBrowserSettings settings = defaultBrowserSettings;
             settings.application_cache = STATE_DISABLED;
 
             CefRequestContextSettings contextSettings;
@@ -976,7 +979,7 @@ void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const C
             context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
             newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url, settings, context);
         } else {
-            newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+            newBrowser = browser.get()->GetHost().get()->CreateBrowserSync(*windowInfo, CefRefPtr<CefHandler>(handler), target_url, defaultBrowserSettings, CefRefPtr<CefRequestContext>());
         }
 
         switch (target_disposition) {
@@ -1067,7 +1070,7 @@ void MainWindow::on_actionAbout_theWeb_triggered()
         browser().get()->GetMainFrame().get()->LoadURL("theweb://theweb");
     } else {
         CefWindowInfo windowInfo;
-        CefBrowserSettings settings;
+        CefBrowserSettings settings = defaultBrowserSettings;
 
         Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, handler, "theweb://theweb", settings, CefRefPtr<CefRequestContext>());
 
@@ -1081,7 +1084,7 @@ void MainWindow::on_actionSettings_triggered()
         browser().get()->GetMainFrame().get()->LoadURL("theweb://settings");
     } else {
         CefWindowInfo windowInfo;
-        CefBrowserSettings settings;
+        CefBrowserSettings settings = defaultBrowserSettings;
 
         Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, handler, "theweb://settings", settings, CefRefPtr<CefRequestContext>());
 
@@ -1530,6 +1533,15 @@ void MainWindow::updateCurrentBrowserDisplay() {
             ui->fraudFrame->setVisible(false);
         }
 
+        if (metadata.keys().contains("filePicker")) {
+            showBrowserStack = false;
+            ui->SelectFileFrame->setVisible(true);
+            tabBar->setEnabled(false);
+        } else {
+            ui->SelectFileFrame->setVisible(false);
+            tabBar->setEnabled(true);
+        }
+
         if (showBrowserStack) {
             ui->browserStack->setVisible(true);
         } else {
@@ -1683,7 +1695,7 @@ void MainWindow::ContextMenuCommand(Browser browser, int command_id, CefRefPtr<C
         {
             Browser newBrowser;
             if (isOblivion) {
-                CefBrowserSettings settings;
+                CefBrowserSettings settings = defaultBrowserSettings;
                 settings.application_cache = STATE_DISABLED;
 
                 CefRequestContextSettings contextSettings;
@@ -1691,14 +1703,14 @@ void MainWindow::ContextMenuCommand(Browser browser, int command_id, CefRefPtr<C
                 context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
                 newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), settings, context);
             } else {
-                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, params.get()->GetLinkUrl(), defaultBrowserSettings, CefRefPtr<CefRequestContext>());
             }
             createNewTab(newBrowser);
         }
             break;
         case CefHandler::DevTools:
         {
-            browser.get()->GetHost().get()->ShowDevTools(CefWindowInfo(), handler, CefBrowserSettings(), CefPoint(params.get()->GetXCoord(), params.get()->GetYCoord()));
+            browser.get()->GetHost().get()->ShowDevTools(CefWindowInfo(), handler, defaultBrowserSettings, CefPoint(params.get()->GetXCoord(), params.get()->GetYCoord()));
             handler->newWindowIsDevToolsWindow = false;
         }
             break;
@@ -1868,7 +1880,7 @@ void MainWindow::on_actionHistory_triggered()
         browser().get()->GetMainFrame().get()->LoadURL("theweb://history");
     } else {
         CefWindowInfo windowInfo;
-        CefBrowserSettings settings;
+        CefBrowserSettings settings = defaultBrowserSettings;
 
         Browser browser = CefBrowserHost::CreateBrowserSync(windowInfo, handler, "theweb://history", settings, CefRefPtr<CefRequestContext>());
 
@@ -1905,7 +1917,7 @@ void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, cons
         {
             Browser newBrowser;
             if (isOblivion) {
-                CefBrowserSettings settings;
+                CefBrowserSettings settings = defaultBrowserSettings;
                 settings.application_cache = STATE_DISABLED;
 
                 CefRequestContextSettings contextSettings;
@@ -1913,7 +1925,7 @@ void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, cons
                 context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
                 newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, settings, context);
             } else {
-                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, defaultBrowserSettings, CefRefPtr<CefRequestContext>());
             }
             createNewTab(newBrowser);
         }
@@ -1922,7 +1934,7 @@ void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, cons
         {
             Browser newBrowser;
             if (isOblivion) {
-                CefBrowserSettings settings;
+                CefBrowserSettings settings = defaultBrowserSettings;
                 settings.application_cache = STATE_DISABLED;
 
                 CefRequestContextSettings contextSettings;
@@ -1930,7 +1942,7 @@ void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, cons
                 context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
                 newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, settings, context);
             } else {
-                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, defaultBrowserSettings, CefRefPtr<CefRequestContext>());
             }
             createNewTab(newBrowser, true);
         }
@@ -1939,7 +1951,7 @@ void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, cons
         {
             Browser newBrowser;
             if (isOblivion) {
-                CefBrowserSettings settings;
+                CefBrowserSettings settings = defaultBrowserSettings;
                 settings.application_cache = STATE_DISABLED;
 
                 CefRequestContextSettings contextSettings;
@@ -1947,7 +1959,7 @@ void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, cons
                 context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
                 newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, settings, context);
             } else {
-                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, CefBrowserSettings(), CefRefPtr<CefRequestContext>());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, target_url, defaultBrowserSettings, CefRefPtr<CefRequestContext>());
             }
 
             MainWindow* window = new MainWindow(newBrowser, isOblivion);
@@ -1956,4 +1968,22 @@ void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, cons
             break;
         }
     }
+}
+
+void MainWindow::FileDialog(Browser browser, CefDialogHandler::FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback) {
+    if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN) {
+        ui->SelectFilePicker->startSelectFile(callback, FilePicker::single);
+    } else if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN_MULTIPLE) {
+        ui->SelectFilePicker->startSelectFile(callback, FilePicker::multiple);
+    } else if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN_FOLDER) {
+        ui->SelectFilePicker->startSelectFile(callback, FilePicker::singleFolder);
+    }
+    insertIntoMetadata(browser, "filePicker", true);
+    updateCurrentBrowserDisplay();
+}
+
+void MainWindow::on_SelectFilePicker_fileDone()
+{
+    removeFromMetadata(browser(), "filePicker");
+    updateCurrentBrowserDisplay();
 }

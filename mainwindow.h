@@ -78,6 +78,7 @@ public slots:
     void BeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString& suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback);
     void NewDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item);
     void OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture);
+    void FileDialog(Browser browser, CefDialogHandler::FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback);
     void ReloadSettings();
 
     void setPopup(CefPopupFeatures features = CefPopupFeatures());
@@ -164,6 +165,8 @@ private slots:
     void on_findText_textChanged(const QString &arg1);
 
     void on_actionHistory_triggered();
+
+    void on_SelectFilePicker_fileDone();
 
 private:
     Ui::MainWindow *ui;

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>1758</height>
+    <height>2052</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1077,6 +1077,27 @@
      </widget>
     </item>
     <item>
+     <widget class="QFrame" name="SelectFileFrame">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="0">
+        <widget class="FilePicker" name="SelectFilePicker" native="true"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <widget class="AnimatedStackedWidget" name="browserStack"/>
     </item>
     <item>
@@ -1117,7 +1138,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1376,6 +1397,15 @@
    <extends>QStackedWidget</extends>
    <header>animatedstackedwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FilePicker</class>
+   <extends>QWidget</extends>
+   <header>filepicker.h</header>
+   <container>1</container>
+   <slots>
+    <signal>fileDone()</signal>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources>

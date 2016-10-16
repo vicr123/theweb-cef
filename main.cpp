@@ -10,6 +10,7 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QDBusInterface>
+#include <QFontDatabase>
 #include <QNetworkProxyFactory>
 #include <nativeeventfilter.h>
 #include <unistd.h>
@@ -24,6 +25,7 @@ QStringList certErrorUrls;
 QTimer batteryCheckTimer;
 QFile historyFile(QDir::homePath() + "/.theweb/history"); //File used for reading/writing
 CefString historyData; //Used in settings accessor
+CefBrowserSettings defaultBrowserSettings;
 
 int main(int argc, char *argv[])
 {
@@ -82,12 +84,14 @@ int main(int argc, char *argv[])
     //settings.remote_debugging_port = 26154;
     //settings.single_process = true;
 
-
     CefRefPtr<CefEngine> app(new CefEngine);
     CefMainArgs cefArgs(argc, argv);
 
     //Initialize CEF
     CefInitialize(cefArgs, settings, app.get(), NULL);
+
+    //Set default browser settings
+    CefString(&defaultBrowserSettings.sans_serif_font_family) = appSettings.value("fonts/sansSerif", QFontDatabase::systemFont(QFontDatabase::GeneralFont).family()).toString().toStdString();
 
     //Create a handler
     handler = new CefHandler();
