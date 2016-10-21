@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
 
     //Set default browser settings
     CefString(&defaultBrowserSettings.sans_serif_font_family) = appSettings.value("fonts/sansSerif", QFontDatabase::systemFont(QFontDatabase::GeneralFont).family()).toString().toStdString();
+    CefString(&defaultBrowserSettings.fixed_font_family) = appSettings.value("fonts/mono", QFontDatabase::systemFont(QFontDatabase::FixedFont).family()).toString().toStdString();
 
     //Create a handler
     handler = new CefHandler();
