@@ -998,7 +998,7 @@ void MainWindow::BeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const C
         }
 */
 
-        if (target_disposition == WOD_NEW_BACKGROUND_TAB || target_disposition == WOD_NEW_FOREGROUND_TAB || target_disposition == WOD_NEW_POPUP) {
+        if (target_disposition == WOD_NEW_BACKGROUND_TAB || target_disposition == WOD_NEW_FOREGROUND_TAB || target_disposition == WOD_NEW_POPUP || target_disposition == WOD_SINGLETON_TAB) {
             handler->setNewBrowserTabWindow(this);
         }
     }

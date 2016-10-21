@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     cef_string_utf16_set((const char16*) userAgent.toStdString().data(), userAgent.length(), userAgentString, 1);
     settings.user_agent = *userAgentString;*/
 
-    CefString(&settings.user_agent) = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) theWeb/15.00 Chrome/53.0.2785.101 Safari/537.36";
+    CefString(&settings.user_agent) = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) theWeb/15.00 Chrome/54.0.2840.59 Safari/537.36";
     /*QString userAgent = QString::fromStdString(CefString(&settings.user_agent).ToString());
     userAgent.insert(userAgent.indexOf("Chrome/"), "theWeb/15.00 ");
     CefString(&settings.user_agent) = userAgent.toStdString();*/
