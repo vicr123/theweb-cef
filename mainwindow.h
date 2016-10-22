@@ -32,6 +32,11 @@
 #include "downloadframe.h"
 #include <unistd.h>
 #include <sys/types.h>
+#include <QPrinterInfo>
+#include <QComboBox>
+#include <QCheckBox>
+#include <QRadioButton>
+#include <QSpinBox>
 
 namespace Ui {
 class MainWindow;
@@ -79,6 +84,7 @@ public slots:
     void NewDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item);
     void OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture);
     void FileDialog(Browser browser, CefDialogHandler::FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback);
+    void PrintDialog(Browser browser, QPrinter* printer, bool has_selection, CefRefPtr<CefPrintDialogCallback> callback);
     void ReloadSettings();
 
     void setPopup(CefPopupFeatures features = CefPopupFeatures());
@@ -167,6 +173,12 @@ private slots:
     void on_actionHistory_triggered();
 
     void on_SelectFilePicker_fileDone();
+
+    void on_actionPrint_triggered();
+
+    void on_printCancel_clicked();
+
+    void on_printButton_clicked();
 
 private:
     Ui::MainWindow *ui;

@@ -3,10 +3,11 @@
 extern QVariantMap settingsData;
 extern QVariantMap notificationsData;
 extern CefString historyData;
+extern SignalBroker* signalBroker;
 
 CefEngine::CefEngine() : CefApp()
 {
-
+    printer = new QPrinter;
 }
 
 void CefEngine::AddRef() const {
@@ -370,4 +371,89 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
         notificationRequestPromise = NULL;
     }
     return true;
+}
+
+bool CefEngine::OnPrintDialog(bool has_selection, CefRefPtr<CefPrintDialogCallback> callback) {
+    emit signalBroker->PrintDialog(this->printingBrowser, this->printer, has_selection, callback);
+    return true;
+}
+
+void CefEngine::OnPrintStart(Browser browser) {
+    this->printingBrowser = browser;
+}
+
+void CefEngine::OnPrintSettings(CefRefPtr<CefPrintSettings> settings, bool get_defaults) {
+    if (get_defaults) {
+        getCefPrinterSettings(this->printer, settings);
+    } else {
+        printer->setCollateCopies(settings.get()->WillCollate());
+        printer->setOrientation(settings.get()->IsLandscape() ? QPrinter::Landscape : QPrinter::Portrait);
+    }
+}
+
+void CefEngine::OnPrintReset() {
+    this->printingBrowser = NULL;
+}
+
+bool CefEngine::OnPrintJob(const CefString &document_name, const CefString &pdf_file_path, CefRefPtr<CefPrintJobCallback> callback) {
+    QString path = QString::fromStdString(pdf_file_path);
+
+    //Set up the printer
+    printer->setDocName(QString::fromStdString(document_name));
+    Poppler::Document *document = Poppler::Document::load(QString::fromStdString(pdf_file_path));
+
+    //Make the output look a bit better
+    document->setRenderHint(Poppler::Document::Antialiasing);
+    document->setRenderHint(Poppler::Document::TextAntialiasing);
+
+    //Start to print the document
+    QPrinter::Margins margins = printer->margins();
+    QPainter* painter = new QPainter(this->printer);
+
+    //Iterate over all pages
+    for (int i = 0; i < document->numPages(); i++) {
+        //Render page as an image
+        QImage render = document->page(i)->renderToImage(printer->resolution(), printer->resolution());
+        //render.save("/home/victor/printTest.png");
+        //document->page(i)->renderToPainter(painter, printer->resolution(), printer->resolution());
+
+        //Draw image onto printer
+        painter->drawImage(margins.left, margins.top, render);
+
+        //Check if we need to feed a new page
+        if (i != document->numPages() - 1) {
+            //Feed a new page
+            printer->newPage();
+        }
+    }
+
+    //Complete the printing
+    painter->end();
+
+    //Tell CEF to continue
+    callback.get()->Continue();
+    return true;
+}
+
+CefRefPtr<CefPrintSettings> CefEngine::getCefPrinterSettings(QPrinter* printer, CefRefPtr<CefPrintSettings> currentSettings) {
+    currentSettings.get()->SetDeviceName(printer->printerName().toStdString());
+    currentSettings.get()->SetCollate(printer->collateCopies());
+    currentSettings.get()->SetOrientation(printer->orientation() == QPrinter::Landscape);
+    currentSettings.get()->SetDPI(printer->resolution());
+    currentSettings.get()->SetCopies(printer->numCopies());
+    currentSettings.get()->SetColorModel(printer->colorMode() == QPrinter::Color ? COLOR_MODEL_COLOR : COLOR_MODEL_GRAY);
+    currentSettings.get()->SetDuplexMode(printer->doubleSidedPrinting() ? DUPLEX_MODE_LONG_EDGE : DUPLEX_MODE_SIMPLEX);
+
+    CefSize size;
+    CefRect area;
+
+    QRect paperSize = printer->paperRect();
+    size.Set(paperSize.width(), paperSize.height());
+
+    QPrinter::Margins margins = printer->margins();
+    area.Set(margins.left, margins.top, paperSize.width() - margins.left - margins.right, paperSize.height() - margins.top - margins.bottom);
+
+    currentSettings.get()->SetPrinterPrintableArea(size, area, true);
+
+    return currentSettings;
 }

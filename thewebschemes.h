@@ -32,10 +32,10 @@ private:
 
 class theWebSchemeHandler : public CefSchemeHandlerFactory, public CefEngine
 {
-    public:
-     CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& scheme_name, CefRefPtr<CefRequest> request) override {
-       return new theWebSchemeResourceHandler();
-     }
+public:
+    CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& scheme_name, CefRefPtr<CefRequest> request) override {
+        return new theWebSchemeResourceHandler();
+    }
 };
 
 

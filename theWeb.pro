@@ -4,10 +4,10 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network x11extras dbus
+QT       += core gui network x11extras dbus printsupport
 CONFIG   += c++11
-LIBS     += libcef.so libcef_dll_wrapper.a -lX11
-INCLUDEPATH += "$$PWD/cef"
+LIBS     += libcef.so libcef_dll_wrapper.a -lX11 -lpoppler-qt5
+INCLUDEPATH += "$$PWD/cef" /usr/include/poppler/qt5
 QMAKE_LFLAGS += -Wl,-R -Wl,$$OUT_PWD
 QMAKE_CXXFLAGS += -Wno-unused-parameter
 

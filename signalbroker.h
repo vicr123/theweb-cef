@@ -5,7 +5,6 @@
 #include "cefheaders.h"
 #include "cefhandler.h"
 
-
 class SignalBroker : public QObject
 {
     Q_OBJECT
@@ -40,6 +39,7 @@ signals:
     void DownloadUpdated(Browser browser, CefRefPtr<CefDownloadItem> download_item, CefRefPtr<CefDownloadItemCallback> callback);
     void OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, const CefString &target_url, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture);
     void FileDialog(Browser browser, CefDialogHandler::FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback);
+    void PrintDialog(Browser browser, QPrinter* printer, bool has_selection, CefRefPtr<CefPrintDialogCallback> callback);
     void ReloadSettings();
 
 public slots:

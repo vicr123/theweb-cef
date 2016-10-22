@@ -66,6 +66,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     });
     tabLoading->start();
 
+    //Setup UI
     this->resize(700, 700);
     ui->errorFrame->setVisible(false);
     ui->warningFrame->setVisible(false);
@@ -82,6 +83,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     ui->downloadItemAreaWidget->setVisible(false);
     ui->findPanel->setVisible(false);
     ui->SelectFileFrame->setVisible(false);
+    ui->printFrame->setVisible(false);
 
     ui->hoverUrlLabel->setParent(this);
     ui->hoverUrlLabel->move(10, this->height() - ui->hoverUrlLabel->height() - 10);
@@ -120,6 +122,8 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     menu->addAction(ui->actionNew_Oblivion_Window);
     menu->addSeparator();
     menu->addAction(ui->actionFind);
+    menu->addSeparator();
+    menu->addAction(ui->actionPrint);
     menu->addSeparator();
     menu->addAction(ui->actionHistory);
     menu->addAction(ui->actionSettings);
@@ -185,6 +189,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(NewDownload(Browser,CefRefPtr<CefDownloadItem>)), this, SLOT(NewDownload(Browser,CefRefPtr<CefDownloadItem>)));
     connect(signalBroker, SIGNAL(OpenURLFromTab(Browser,CefRefPtr<CefFrame>,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool)), this, SLOT(OpenURLFromTab(Browser,CefRefPtr<CefFrame>,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool)));
     connect(signalBroker, SIGNAL(FileDialog(Browser,CefDialogHandler::FileDialogMode,CefString,CefString,std::vector<CefString>,int,CefRefPtr<CefFileDialogCallback>)), this, SLOT(FileDialog(Browser,CefDialogHandler::FileDialogMode,CefString,CefString,std::vector<CefString>,int,CefRefPtr<CefFileDialogCallback>)));
+    connect(signalBroker, SIGNAL(PrintDialog(Browser,QPrinter*,bool,CefRefPtr<CefPrintDialogCallback>)), this, SLOT(PrintDialog(Browser,QPrinter*,bool,CefRefPtr<CefPrintDialogCallback>)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -1359,6 +1364,7 @@ int MainWindow::indexOfBrowser(Browser browser) {
 void MainWindow::updateCurrentBrowserDisplay() {
     if (tabBar->currentIndex() != -1) {
         bool showBrowserStack = true;
+        bool enableTabBar = true;
 
         ui->spaceSearch->setCurrentUrl(QUrl(QString::fromStdString(browser().get()->GetMainFrame().get()->GetURL())));
         this->setWindowTitle(tabBar->tabData(tabBar->currentIndex()).toString().append(" - theWeb"));
@@ -1536,17 +1542,21 @@ void MainWindow::updateCurrentBrowserDisplay() {
         if (metadata.keys().contains("filePicker")) {
             showBrowserStack = false;
             ui->SelectFileFrame->setVisible(true);
-            tabBar->setEnabled(false);
+            enableTabBar = false;
         } else {
             ui->SelectFileFrame->setVisible(false);
-            tabBar->setEnabled(true);
         }
 
-        if (showBrowserStack) {
-            ui->browserStack->setVisible(true);
+        if (metadata.keys().contains("print")) {
+            showBrowserStack = false;
+            ui->printFrame->setVisible(true);
+            enableTabBar = false;
         } else {
-            ui->browserStack->setVisible(false);
+            ui->printFrame->setVisible(false);
         }
+
+        ui->browserStack->setVisible(showBrowserStack);
+        tabBar->setEnabled(enableTabBar);
     }
 }
 
@@ -1560,7 +1570,7 @@ void MainWindow::on_spaceSearch_GotFocus()
 
 void MainWindow::KeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, XEvent *os_event) {
     if (indexOfBrowser(browser) != -1 && os_event) {
-        if (os_event->xkey.type == KeyPress) {
+        if (os_event->xkey.type == 2) { //KeyPress
             if (os_event->xkey.state == ControlMask) {
                 if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_T)) { //New Tab
                     if (tabBar->isVisible()) ui->actionNew_Tab->trigger();
@@ -1574,6 +1584,8 @@ void MainWindow::KeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &even
                     ui->actionFind->trigger();
                 } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_H)) { //History
                     ui->actionHistory->trigger();
+                } else if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_P)) { //Print
+                    ui->actionPrint->trigger();
                 }
             } else if (os_event->xkey.state == (ControlMask | ShiftMask)) {
                 if (os_event->xkey.keycode == XKeysymToKeycode(QX11Info::display(), XK_N)) { //New Oblivion Window
@@ -1971,15 +1983,17 @@ void MainWindow::OpenURLFromTab(Browser browser, CefRefPtr<CefFrame> frame, cons
 }
 
 void MainWindow::FileDialog(Browser browser, CefDialogHandler::FileDialogMode mode, const CefString &title, const CefString &default_file_path, const std::vector<CefString> &accept_filters, int selected_accept_filter, CefRefPtr<CefFileDialogCallback> callback) {
-    if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN) {
-        ui->SelectFilePicker->startSelectFile(callback, FilePicker::single);
-    } else if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN_MULTIPLE) {
-        ui->SelectFilePicker->startSelectFile(callback, FilePicker::multiple);
-    } else if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN_FOLDER) {
-        ui->SelectFilePicker->startSelectFile(callback, FilePicker::singleFolder);
+    if (indexOfBrowser(browser) != -1) {
+        if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN) {
+            ui->SelectFilePicker->startSelectFile(callback, FilePicker::single);
+        } else if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN_MULTIPLE) {
+            ui->SelectFilePicker->startSelectFile(callback, FilePicker::multiple);
+        } else if ((mode & FILE_DIALOG_TYPE_MASK) == FILE_DIALOG_OPEN_FOLDER) {
+            ui->SelectFilePicker->startSelectFile(callback, FilePicker::singleFolder);
+        }
+        insertIntoMetadata(browser, "filePicker", true);
+        updateCurrentBrowserDisplay();
     }
-    insertIntoMetadata(browser, "filePicker", true);
-    updateCurrentBrowserDisplay();
 }
 
 void MainWindow::on_SelectFilePicker_fileDone()
@@ -1987,3 +2001,60 @@ void MainWindow::on_SelectFilePicker_fileDone()
     removeFromMetadata(browser(), "filePicker");
     updateCurrentBrowserDisplay();
 }
+
+void MainWindow::on_actionPrint_triggered()
+{
+    browser().get()->GetHost().get()->Print();
+}
+
+void MainWindow::PrintDialog(Browser browser, QPrinter* printer, bool has_selection, CefRefPtr<CefPrintDialogCallback> callback) {
+    if (indexOfBrowser(browser) != -1) {
+        ui->printDestination->clear();
+        for (QString printerName : QPrinterInfo::availablePrinterNames()) {
+            ui->printDestination->addItem(printerName);
+        }
+        ui->printDestination->setCurrentText(printer->printerName());
+
+        ui->printCopies->setValue(printer->copyCount());
+        ui->printDoubleSided->setChecked(printer->doubleSidedPrinting());
+        if (printer->orientation() == QPrinter::Portrait) {
+            ui->printOrientationPortrait->setChecked(true);
+        } else {
+            ui->printOrientationLandscape->setChecked(true);
+        }
+        ui->printGreyscale->setChecked(printer->colorMode() == QPrinter::GrayScale);
+
+        QVariantList printMetadata;
+        printMetadata.append(QVariant::fromValue(callback));
+        printMetadata.append(QVariant::fromValue(printer));
+
+        insertIntoMetadata(browser, "print", printMetadata);
+        updateCurrentBrowserDisplay();
+    }
+}
+
+void MainWindow::on_printCancel_clicked()
+{
+    QVariantList printMetadata = browserMetadata.at(indexOfBrowser(browser())).value("print").toList();
+    printMetadata.first().value<CefRefPtr<CefPrintDialogCallback>>().get()->Cancel();
+    removeFromMetadata(browser(), "print");
+    updateCurrentBrowserDisplay();
+}
+
+void MainWindow::on_printButton_clicked()
+{
+    QVariantList printMetadata = browserMetadata.at(indexOfBrowser(browser())).value("print").toList();
+    QPrinter* printer = printMetadata.at(1).value<QPrinter*>();
+
+    printer->setPrinterName(ui->printDestination->currentText());
+    printer->setCopyCount(ui->printCopies->value());
+    printer->setDoubleSidedPrinting(ui->printDoubleSided->isChecked());
+    printer->setOrientation(ui->printOrientationPortrait->isChecked() ? QPrinter::Portrait : QPrinter::Landscape);
+    printer->setColorMode(ui->printGreyscale->isChecked() ? QPrinter::GrayScale : QPrinter::Color);
+
+    printMetadata.first().value<CefRefPtr<CefPrintDialogCallback>>().get()->Continue(CefEngine::getCefPrinterSettings(printer));
+
+    removeFromMetadata(browser(), "print");
+    updateCurrentBrowserDisplay();
+}
+

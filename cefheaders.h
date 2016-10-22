@@ -7,6 +7,7 @@
 #include <cef/include/cef_browser.h>
 
 #include <QObject>
+#include <QPrinter>
 
 typedef CefRefPtr<CefBrowser> Browser;
 
@@ -20,6 +21,9 @@ Q_DECLARE_METATYPE(CefWindowInfo)
 Q_DECLARE_METATYPE(CefBrowserSettings)
 Q_DECLARE_METATYPE(CefRefPtr<CefJSDialogCallback>)
 Q_DECLARE_METATYPE(CefRefPtr<CefRequestCallback>)
+Q_DECLARE_METATYPE(CefRefPtr<CefPrintDialogCallback>)
+Q_DECLARE_METATYPE(QPrinter*)
+
 
 #endif // CEFHEADERS_H
 
