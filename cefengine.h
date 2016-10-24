@@ -73,7 +73,7 @@ private:
     CefRefPtr<CefV8Value> notificationRequestResolver = NULL;
     CefRefPtr<CefFrame> notificationRequestFrame = NULL;
     CefRefPtr<CefPrintSettings> printSettings;
-    QPrinter* printer;
+    QPrinter* printer = NULL;
 
     Browser printingBrowser = NULL;
 };

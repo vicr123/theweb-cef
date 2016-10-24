@@ -7,7 +7,7 @@ extern SignalBroker* signalBroker;
 
 CefEngine::CefEngine() : CefApp()
 {
-    printer = new QPrinter;
+
 }
 
 void CefEngine::AddRef() const {
@@ -379,6 +379,9 @@ bool CefEngine::OnPrintDialog(bool has_selection, CefRefPtr<CefPrintDialogCallba
 }
 
 void CefEngine::OnPrintStart(Browser browser) {
+    if (printer == NULL) {
+        printer = new QPrinter;
+    }
     this->printingBrowser = browser;
 }
 
