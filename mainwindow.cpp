@@ -487,10 +487,14 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                             }
                         //}
 
+                            if (certificate.subjectInfo(QSslCertificate::Organization).count() == 0 ||
+                                    certificate.subjectInfo(QSslCertificate::CountryName).count() == 0) {
+                                isEv = false;
+                            }
                         if (isEv) {
                             QString organization = "";
                             QString countryName = "";
-                            if (certificate.subjectInfo(QSslCertificate::CommonName).count() != 0) {
+                            if (certificate.subjectInfo(QSslCertificate::Organization).count() != 0) {
                                 organization = certificate.subjectInfo(QSslCertificate::Organization).first();
                             }
 
@@ -523,7 +527,6 @@ void MainWindow::AddressChange(Browser browser, CefRefPtr<CefFrame> frame, const
                     });
                     connect(sslSock, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
                         [=](QAbstractSocket::SocketError socketError){
-                        qDebug() << socketError;
                         QStringList securityMetadata;
                         securityMetadata.append("secure");
                         securityMetadata.append("");
@@ -1133,14 +1136,23 @@ void MainWindow::on_securityFrame_clicked()
 }
 
 void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) {
-    if (IsCorrectBrowser(browser)) {
+    if (indexOfBrowser(browser) != -1) {
         QVariantList certErrorMetadata;
 
         switch (cert_error) {
         case ERR_CERT_COMMON_NAME_INVALID:
+        {
+            QString name;
+            //CEF seems to be having some issues.
+            if (ssl_info.get() != NULL) {
+                name = QString::fromStdString(ssl_info.get()->GetSubject().get()->GetDisplayName().ToString());
+            } else {
+                name = "another server.";
+            }
             certErrorMetadata.append("You're trying to connect to <b>" + QUrl(QString::fromStdString(request_url.ToString())).host() + "</b> but the server presented itself as <b>" +
-                                      QString::fromStdString(ssl_info.get()->GetSubject().get()->GetDisplayName().ToString()) + "</b>.");
+                                      name + "</b>.");
             break;
+        }
         case ERR_CERT_DATE_INVALID:
             certErrorMetadata.append("The server presented a certificate that either seems to not be valid yet, or has expired. <b>Check your system clock "
                                       "and if it is incorrect, set it to the correct time.</b>");

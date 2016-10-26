@@ -99,7 +99,7 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
             message.get()->GetArgumentList().get()->SetString(1, args.at(0).get()->GetStringValue());
             browser.get()->SendProcessMessage(PID_BROWSER, message);
         }));
-        qDebug() << notificationsData.value(QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host(), "default").toString();
+
         notificationObject.get()->SetValue("permission", CefV8Value::CreateString(notificationsData.value(QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host(), "default").toString().toStdString()), V8_PROPERTY_ATTRIBUTE_NONE);
         notificationObject.get()->SetValue("requestPermission", CefV8Value::CreateFunction("requestPermission", new V8Function((std::function<CefRefPtr<CefV8Value>()>) [=]() {
             if (notificationObject.get()->GetValue("permission").get()->GetStringValue() == "default") {

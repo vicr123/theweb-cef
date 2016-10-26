@@ -277,7 +277,6 @@ bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProc
         }
     } else if (message.get()->GetName() == "mprisStart") {
         if (currentMprisBrowser.get() == NULL) {
-            qDebug() << "New!";
             QDBusConnection::sessionBus().registerService("org.mpris.MediaPlayer2.theWeb");
             currentMprisBrowser = browser;
 
@@ -488,7 +487,8 @@ bool CefHandler::OnResourceResponse(Browser browser, CefRefPtr<CefFrame> frame, 
 }
 
 bool CefHandler::OnCertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) {
-    emit signalBroker->CertificateError(browser, cert_error, request_url, ssl_info, callback);
+    callback.get()->AddRef();
+    emit signalBroker->CertificateError(browser, cert_error, request_url, ssl_info, NULL);
     return true;
 }
 
