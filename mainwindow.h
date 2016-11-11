@@ -11,6 +11,7 @@
 #include "downloadimagecallback.h"
 #include "oblivionrequestcontext.h"
 #include "hovertabbar.h"
+#include "certificateinfo.h"
 #include <QToolButton>
 #include <QMessageBox>
 #include <QTimer>
@@ -38,6 +39,9 @@
 #include <QRadioButton>
 #include <QSpinBox>
 
+
+class HoverTabBar;
+
 namespace Ui {
 class MainWindow;
 }
@@ -56,6 +60,9 @@ public:
         notification,
         warning
     };
+
+    bool oblivionWindow();
+    QList<Browser> browserList;
 
 public slots:
     void RenderProcessTerminated(Browser browser, CefRequestHandler::TerminationStatus status);
@@ -90,6 +97,7 @@ public slots:
     void setPopup(CefPopupFeatures features = CefPopupFeatures());
 
     void createNewTab(Browser newBrowser = NULL, bool openInBackground = false);
+    void navigate(int index, QString url);
 
 private slots:
     void on_actionExit_triggered();
@@ -186,7 +194,6 @@ private:
     Browser browser();
 
     //Browser browser;
-    QList<Browser> browserList;
     QList<QVariantMap> browserMetadata;
     QList<QIcon> browserIcons;
     void insertIntoMetadata(Browser browser, QString key, QVariant value);

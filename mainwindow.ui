@@ -110,52 +110,6 @@
      </widget>
     </item>
     <item>
-     <widget class="QFrame" name="securityInfoFrame">
-      <property name="frameShape">
-       <enum>QFrame::NoFrame</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_7">
-       <property name="leftMargin">
-        <number>20</number>
-       </property>
-       <property name="topMargin">
-        <number>20</number>
-       </property>
-       <property name="rightMargin">
-        <number>20</number>
-       </property>
-       <property name="bottomMargin">
-        <number>20</number>
-       </property>
-       <item>
-        <widget class="QLabel" name="label_4">
-         <property name="font">
-          <font>
-           <pointsize>20</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Security Info</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="securityText">
-         <property name="text">
-          <string>This website was </string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
      <widget class="ClickableFrame" name="securityFrame">
       <property name="autoFillBackground">
        <bool>true</bool>
@@ -170,6 +124,12 @@
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QLabel" name="securityPadlock">
          <property name="text">
@@ -449,6 +409,9 @@
                <iconset theme="dialog-ok">
                 <normaloff>.</normaloff>.</iconset>
               </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
              </widget>
             </item>
             <item>
@@ -459,6 +422,9 @@
               <property name="icon">
                <iconset theme="dialog-cancel">
                 <normaloff>.</normaloff>.</iconset>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -1304,7 +1270,7 @@
              <item>
               <widget class="QRadioButton" name="printOrientationPortrait">
                <property name="text">
-                <string>Portrait</string>
+                <string>Po&amp;rtrait</string>
                </property>
               </widget>
              </item>
@@ -1683,10 +1649,11 @@
   </action>
   <action name="actionPrint">
    <property name="icon">
-    <iconset theme="document-print"/>
+    <iconset theme="document-print">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>Print</string>
+    <string>&amp;Print</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>

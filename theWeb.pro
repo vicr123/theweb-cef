@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     nativeeventfilter.cpp \
     hovertabbar.cpp \
     downloadframe.cpp \
-    filepicker.cpp
+    filepicker.cpp \
+    certificateinfo.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -55,10 +56,12 @@ HEADERS  += \
     nativeeventfilter.h \
     hovertabbar.h \
     downloadframe.h \
-    filepicker.h
+    filepicker.h \
+    certificateinfo.h
 
 FORMS    += \
-    mainwindow.ui
+    mainwindow.ui \
+    certificateinfo.ui
 
 RESOURCES += \
     resources.qrc
