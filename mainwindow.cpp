@@ -1840,7 +1840,7 @@ void MainWindow::MprisPlayingStateChanged(Browser browser, bool isPlaying) {
 
 void MainWindow::NewDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item) {
     if (indexOfBrowser(browser) != -1) {
-        DownloadFrame* frame = new DownloadFrame(download_item);
+        DownloadFrame* frame = new DownloadFrame(download_item, this);
         connect(signalBroker, SIGNAL(DownloadUpdated(Browser,CefRefPtr<CefDownloadItem>,CefRefPtr<CefDownloadItemCallback>)), frame, SLOT(DownloadUpdated(Browser,CefRefPtr<CefDownloadItem>,CefRefPtr<CefDownloadItemCallback>)));
         ui->downloadItemArea->layout()->addWidget(frame);
 
@@ -1859,12 +1859,22 @@ void MainWindow::NewDownload(Browser browser, CefRefPtr<CefDownloadItem> downloa
             connect(animation, SIGNAL(finished()), animation, SLOT(deleteLater()));
             animation->start();
         }
+
+        runningDownloads++;
+        connect(frame, &DownloadFrame::Completed, [=]() {
+            runningDownloads--;
+        });
+        connect(frame, &DownloadFrame::destroyed, [=]() {
+            if (ui->downloadItemArea->layout()->count() == 1) {
+                ui->downloadItemAreaWidget->setVisible(false);
+            }
+        });
     }
 }
 
 void MainWindow::BeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> download_item, const CefString &suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) {
     if (indexOfBrowser(browser) != -1) {
-        QFileDialog* dialog = new QFileDialog;
+        /*QFileDialog* dialog = new QFileDialog;
         dialog->setAcceptMode(QFileDialog::AcceptSave);
         dialog->selectFile(QString::fromStdString(suggested_name.ToString()));
 
@@ -1878,7 +1888,12 @@ void MainWindow::BeforeDownload(Browser browser, CefRefPtr<CefDownloadItem> down
             dialog->reject();
             emit signalBroker->NewDownload(browser, download_item);
             callback.get()->Continue(dialog->selectedFiles().first().toStdString(), false);
-        }
+        }*/
+
+        //Default to ~/Downloads/[filename]
+        emit signalBroker->NewDownload(browser, download_item);
+        QString selection = QDir::homePath() + "/Downloads/" + QString::fromStdString(suggested_name);
+        callback.get()->Continue(selection.toStdString(), false);
     }
 }
 

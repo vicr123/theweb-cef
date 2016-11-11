@@ -22,7 +22,9 @@ void SpaceSearchBox::focusOutEvent(QFocusEvent *event) {
 void SpaceSearchBox::setCurrentUrl(QUrl currentUrl) {
     url = currentUrl;
 
-    updateText();
+    if (!this->hasFocus()) {
+        updateText();
+    }
 }
 
 QUrl SpaceSearchBox::currentUrl() {

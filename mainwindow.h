@@ -38,6 +38,7 @@
 #include <QCheckBox>
 #include <QRadioButton>
 #include <QSpinBox>
+#include <QScrollArea>
 
 
 class HoverTabBar;
@@ -211,7 +212,7 @@ private:
 
     warningType currentWarning = none;
 
-    CefRefPtr<CefJSDialogCallback> JsDialogCallback;
+    int runningDownloads = 0;
 
     QSettings settings;
 

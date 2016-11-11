@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>480</height>
+    <height>490</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,6 +36,18 @@
    <item>
     <widget class="QFrame" name="certInfoFrame">
      <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item row="11" column="0">
        <widget class="QLabel" name="label_11">
         <property name="text">
@@ -140,14 +152,14 @@
       <item row="6" column="1">
        <widget class="QLabel" name="issuerCommonName">
         <property name="text">
-         <string>TextLabel</string>
+         <string>thecertificate.org</string>
         </property>
        </widget>
       </item>
       <item row="11" column="1">
        <widget class="QLabel" name="expiryStart">
         <property name="text">
-         <string>TextLabel</string>
+         <string>1/1/1970</string>
         </property>
        </widget>
       </item>
@@ -161,14 +173,14 @@
       <item row="7" column="1">
        <widget class="QLabel" name="issuerOrganisation">
         <property name="text">
-         <string>TextLabel</string>
+         <string>theCertificate</string>
         </property>
        </widget>
       </item>
       <item row="8" column="1">
        <widget class="QLabel" name="issuerOrganisationalUnit">
         <property name="text">
-         <string>TextLabel</string>
+         <string>CA</string>
         </property>
        </widget>
       </item>
@@ -187,28 +199,28 @@
       <item row="1" column="1">
        <widget class="QLabel" name="subjectCommonName">
         <property name="text">
-         <string>TextLabel</string>
+         <string>thesuite.org</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
        <widget class="QLabel" name="subjectOrganisation">
         <property name="text">
-         <string>TextLabel</string>
+         <string>theSuite</string>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
        <widget class="QLabel" name="subjectOrganisationalUnit">
         <property name="text">
-         <string>TextLabel</string>
+         <string>Software</string>
         </property>
        </widget>
       </item>
       <item row="12" column="1">
        <widget class="QLabel" name="expiryEnd">
         <property name="text">
-         <string>TextLabel</string>
+         <string>31/12/9999</string>
         </property>
        </widget>
       </item>
