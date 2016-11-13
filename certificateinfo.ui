@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>490</height>
+    <width>434</width>
+    <height>553</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Certificate Information</string>
+      <string>Security Information</string>
      </property>
     </widget>
    </item>
@@ -48,190 +48,97 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="11" column="0">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>Valid From</string>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="0">
-       <widget class="QLabel" name="label_15">
-        <property name="text">
-         <string>SHA-256</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Common Name (CN)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="0" colspan="2">
-       <widget class="QLabel" name="label_10">
-        <property name="font">
-         <font>
-          <pointsize>15</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Validity Period</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Organisation (O)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Organisational Unit (OU)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="2">
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="0">
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>SHA-1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="0">
+      <item row="14" column="0">
        <widget class="QLabel" name="label_12">
         <property name="text">
          <string>Valid Until</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QLabel" name="label_6">
-        <property name="font">
-         <font>
-          <pointsize>15</pointsize>
-         </font>
+      <item row="18" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="text">
-         <string>Issued By</string>
+         <string>SHA-1</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Common Name (CN)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Organisation (O)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>Organisational Unit (OU)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLabel" name="issuerCommonName">
-        <property name="text">
-         <string>thecertificate.org</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="1">
+      <item row="13" column="1" colspan="2">
        <widget class="QLabel" name="expiryStart">
         <property name="text">
          <string>1/1/1970</string>
         </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
-      <item row="9" column="0" colspan="2">
-       <widget class="Line" name="line_2">
+      <item row="6" column="0" colspan="3">
+       <widget class="Line" name="line">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
+      <item row="8" column="1" colspan="2">
+       <widget class="QLabel" name="issuerCommonName">
+        <property name="text">
+         <string>thecertificate.org</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1" colspan="2">
        <widget class="QLabel" name="issuerOrganisation">
         <property name="text">
          <string>theCertificate</string>
         </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="QLabel" name="issuerOrganisationalUnit">
-        <property name="text">
-         <string>CA</string>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="QLabel" name="label_2">
-        <property name="font">
-         <font>
-          <pointsize>15</pointsize>
-         </font>
+      <item row="18" column="1" colspan="2">
+       <widget class="QLabel" name="sha1">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="text">
-         <string>Issued To</string>
+         <string>TextLabel</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="subjectCommonName">
-        <property name="text">
-         <string>thesuite.org</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="subjectOrganisation">
-        <property name="text">
-         <string>theSuite</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="subjectOrganisationalUnit">
-        <property name="text">
-         <string>Software</string>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="1">
-       <widget class="QLabel" name="expiryEnd">
-        <property name="text">
-         <string>31/12/9999</string>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="0" colspan="2">
+      <item row="15" column="0" colspan="3">
        <widget class="Line" name="line_3">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
-      <item row="14" column="0" colspan="2">
+      <item row="14" column="1" colspan="2">
+       <widget class="QLabel" name="expiryEnd">
+        <property name="text">
+         <string>31/12/9999</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="0" colspan="3">
        <widget class="QLabel" name="label_14">
         <property name="font">
          <font>
@@ -243,18 +150,238 @@
         </property>
        </widget>
       </item>
-      <item row="15" column="1">
-       <widget class="QLabel" name="sha256">
+      <item row="4" column="2">
+       <widget class="QFrame" name="verifiedFrame">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="verifiedTick">
+           <property name="text">
+            <string>verifiedTick</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Verified</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="3" column="1" colspan="2">
+       <widget class="QLabel" name="subjectCommonName">
         <property name="text">
-         <string>TextLabel</string>
+         <string>thesuite.org</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="16" column="1">
-       <widget class="QLabel" name="sha1">
+      <item row="7" column="0" colspan="3">
+       <widget class="QLabel" name="label_6">
+        <property name="font">
+         <font>
+          <pointsize>15</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Issued By</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="0" colspan="3">
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="13" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Valid From</string>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>SHA-256</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Common Name (CN)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="0" colspan="2">
+       <widget class="QLabel" name="label_10">
+        <property name="font">
+         <font>
+          <pointsize>15</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Validity Period</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Organisation (O)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Organisational Unit (OU)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Common Name (CN)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Organisation (O)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Organisational Unit (OU)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="1" colspan="2">
+       <widget class="QLabel" name="sha256">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>TextLabel</string>
         </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="1" colspan="2">
+       <widget class="QLabel" name="issuerOrganisationalUnit">
+        <property name="text">
+         <string>CA</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1" colspan="2">
+       <widget class="QLabel" name="subjectOrganisationalUnit">
+        <property name="text">
+         <string>Software</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="subjectOrganisation">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>theSuite</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="3">
+       <widget class="QLabel" name="label_2">
+        <property name="font">
+         <font>
+          <pointsize>15</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Issued To</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="3">
+       <widget class="QFrame" name="securitySummary">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="securityPadlock">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>padlock</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="securityDescription">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Description</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
@@ -294,7 +421,8 @@
         <string>OK</string>
        </property>
        <property name="icon">
-        <iconset theme="dialog-ok"/>
+        <iconset theme="dialog-ok">
+         <normaloff>.</normaloff>.</iconset>
        </property>
       </widget>
      </item>

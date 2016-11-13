@@ -5,6 +5,7 @@
 #include <QSslCertificate>
 #include <QSslCertificateExtension>
 #include <QLabel>
+#include <QIcon>
 
 namespace Ui {
 class CertificateInfo;
@@ -15,7 +16,7 @@ class CertificateInfo : public QDialog
     Q_OBJECT
 
 public:
-    explicit CertificateInfo(QSslCertificate certificate, QWidget *parent = 0);
+    explicit CertificateInfo(QString type, QSslCertificate certificate, QWidget *parent = 0);
     explicit CertificateInfo(QString type, QWidget *parent = 0);
     ~CertificateInfo();
 

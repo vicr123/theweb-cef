@@ -51,9 +51,13 @@ DownloadFrame::DownloadFrame(CefRefPtr<CefDownloadItem> download_item, QWidget *
     pauseButton->setFlat(true);
     connect(pauseButton, &QPushButton::clicked, [=]() {
         if (paused) {
+            paused = false;
             cancelCallback.get()->Resume();
         } else {
+            paused = true;
             cancelCallback.get()->Pause();
+            pauseButton->setIcon(QIcon::fromTheme("media-playback-start"));
+            infoLabel->setText("Paused");
         }
     });
 
@@ -99,6 +103,9 @@ void DownloadFrame::DownloadUpdated(Browser browser, CefRefPtr<CefDownloadItem> 
             progressBar->setVisible(false);
             cancelButton->setVisible(false);
             pauseButton->setVisible(false);
+
+            deleteAction->setVisible(false);
+            hideAction->setVisible(true);
         } else {
             fileNameLabel->setText(QFileInfo(QString::fromStdString(download_item.get()->GetFullPath().ToString())).fileName());
             if (paused) {

@@ -1,13 +1,44 @@
 #include "certificateinfo.h"
 #include "ui_certificateinfo.h"
 
-CertificateInfo::CertificateInfo(QSslCertificate certificate, QWidget *parent) :
+CertificateInfo::CertificateInfo(QString type, QSslCertificate certificate, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CertificateInfo)
 {
     ui->setupUi(this);
 
     this->certificate = certificate;
+
+    /*if (securityMetadata.at(0) == "certerr") {
+        ui->securityFrame->setStyleSheet("background-color: #640000; color: white;");
+        ui->securityPadlock->setPixmap(QIcon(":/icons/badsecure").pixmap(16, 16));
+    } else {
+        ui->securityPadlock->setPixmap(QIcon::fromTheme("text-html").pixmap(16, 16));
+        ui->securityFrame->setStyleSheet("");
+    }*/
+
+    if (type == "ev") {
+        ui->verifiedFrame->setStyleSheet("background-color: #006400; color: white;");
+        ui->verifiedFrame->setVisible(true);
+        ui->verifiedTick->setPixmap(QIcon::fromTheme("dialog-ok").pixmap(16, 16));
+
+        ui->securitySummary->setStyleSheet("background-color: #006400; color: white;");
+        ui->securityPadlock->setPixmap(QIcon(":/icons/lock-d").pixmap(16, 16));
+
+        ui->securityDescription->setText("Your connection to <b>" + certificate.subjectInfo(QSslCertificate::Organization).join(", ") + "</b> was encrypted, and the company has been verified by <b>" + certificate.issuerInfo(QSslCertificate::CommonName).join(", ") + "</b>.");
+    } else if (type == "secure") {
+        QColor panelColor = ui->securitySummary->palette().color(QPalette::Window);
+        if (((qreal) panelColor.red() + (qreal) panelColor.green() + (qreal) panelColor.red()) / (qreal) 3 < 127) {
+            ui->securityPadlock->setPixmap(QIcon(":/icons/lock-d").pixmap(16, 16));
+        } else {
+            ui->securityPadlock->setPixmap(QIcon(":/icons/lock-l").pixmap(16, 16));
+        }
+
+        ui->securityDescription->setText("Your connection was encrypted.");
+        ui->verifiedFrame->setVisible(false);
+    } else {
+        ui->verifiedFrame->setVisible(false);
+    }
 
     //Fill Subject Info fields
     ui->subjectCommonName->setText(certificate.subjectInfo(QSslCertificate::CommonName).join(", "));

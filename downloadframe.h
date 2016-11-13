@@ -14,6 +14,7 @@
 #include <QToolButton>
 #include <QMenu>
 #include <QMessageBox>
+#include <QTime>
 
 class DownloadFrame : public QFrame
 {

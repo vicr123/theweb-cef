@@ -1145,10 +1145,11 @@ void MainWindow::on_securityFrame_clicked()
     }*/
 
     CertificateInfo* infoWindow;
+    QString type = browserMetadata.at(indexOfBrowser(browser())).value("security").toList().at(0).toString();
     if (browserMetadata.at(indexOfBrowser(browser())).value("security").toList().count() > 2) {
-        infoWindow = new CertificateInfo(browserMetadata.at(indexOfBrowser(browser())).value("security").toList().at(2).value<QSslCertificate>(), this);
+        infoWindow = new CertificateInfo(type, browserMetadata.at(indexOfBrowser(browser())).value("security").toList().at(2).value<QSslCertificate>(), this);
     } else {
-        infoWindow = new CertificateInfo(browserMetadata.at(indexOfBrowser(browser())).value("security").toList().at(0).toString(), this);
+        infoWindow = new CertificateInfo(type, this);
     }
     infoWindow->exec();
     infoWindow->deleteLater();
