@@ -150,6 +150,11 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
         temp = searchPalette.color(QPalette::Base);
         searchPalette.setColor(QPalette::Base, searchPalette.color(QPalette::Text));
         searchPalette.setColor(QPalette::Text, temp);
+
+        temp = searchPalette.color(QPalette::Window);
+        searchPalette.setColor(QPalette::Window, searchPalette.color(QPalette::WindowText));
+        searchPalette.setColor(QPalette::WindowText, temp);
+
         ui->spaceSearch->setPalette(searchPalette);
     } else {
         menuButton->setIcon(QIcon(":/icons/icon"));
