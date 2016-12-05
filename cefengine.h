@@ -29,6 +29,8 @@
 #undef FontChange
 #undef GrayScale
 
+#include "v8interceptor.h"
+
 class CefEngine : public CefApp, public CefRefCount, public CefBrowserProcessHandler, public CefRenderProcessHandler, public CefPrintHandler
 {
 public:

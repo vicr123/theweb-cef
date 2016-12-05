@@ -208,7 +208,6 @@ bool CefHandler::OnBeforePopup(Browser browser, CefRefPtr<CefFrame> frame, const
     }
     emit signalBroker->BeforePopup(browser, frame, target_url, target_frame_name, target_disposition, user_gesture, popupFeatures, &windowInfo, settings, no_javascript_access);
     return false;
-    //return true;
 }
 
 bool CefHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) {
@@ -487,7 +486,6 @@ bool CefHandler::OnResourceResponse(Browser browser, CefRefPtr<CefFrame> frame, 
 }
 
 bool CefHandler::OnCertificateError(Browser browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) {
-    callback.get()->AddRef();
     emit signalBroker->CertificateError(browser, cert_error, request_url, ssl_info, callback);
     return true;
 }

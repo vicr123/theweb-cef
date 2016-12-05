@@ -5,6 +5,7 @@
 #include <QList>
 #include <QVector>
 #include "cefheaders.h"
+#include "v8interceptor.h"
 #include <QDebug>
 #include <QApplication>
 #include "cefengine.h"

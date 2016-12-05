@@ -32,102 +32,107 @@ void CefEngine::OnContextCreated(Browser browser, CefRefPtr<CefFrame> frame, Cef
     browser.get()->SendProcessMessage(PID_BROWSER, message);
 
     if (QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).scheme() == "theweb") {
-        //Register the theWebSettingsObject JavaScript object
-        CefRefPtr<theWebSettingsAccessor> accessor = new theWebSettingsAccessor(browser);
-        CefRefPtr<CefV8Value> JsObject = CefV8Value::CreateObject(accessor);
-        JsObject.get()->SetValue("dnt", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("home", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("toolbar", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("tabText", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("malwareProtect", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("tabPreview", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("history", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("resetBrowser", CefV8Value::CreateFunction("resetBrowser", new V8Function([=]() {
-            CefRefPtr<CefV8Value> returnVal;
-            CefRefPtr<CefV8Exception> exception;
-            context.get()->Eval("confirm(\"Reset theWeb?:Here\'s what we\'ll do.\\n"
-                                "- Reset all settings back to defaults\\n"
-                                "- Erase all history items\\n"
-                                "- Clear the cache\\n"
-                                "- Erase all cookies\\n"
-                                "\\n"
-                                "Are you sure that you want to reset theWeb?:Continue:Cancel\")", returnVal, exception);
-            if (returnVal.get()->GetBoolValue()) {
-                context.get()->Eval("confirm(\"Reset theWeb?:We're ready to reset theWeb. Once this is done, theWeb will exit. Is this OK?:Reset:Cancel\")", returnVal, exception);
-            }
-        })), V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("proxySettings", CefV8Value::CreateFunction("proxySettings", new V8Function([=]() {
-            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("showProxy");
-            browser.get()->SendProcessMessage(PID_BROWSER, message);
-        })), V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("clearData", CefV8Value::CreateFunction("clearData", new V8Function([=](CefV8ValueList &arguments) {
-            QVector<CefRefPtr<CefV8Value>> args = QVector<CefRefPtr<CefV8Value>>::fromStdVector(arguments);
-            if (args.size() == 3) {
-                //Erase History
-                if (args[0].get()->GetBoolValue()) {
-                    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("clearData_History");
-                    browser.get()->SendProcessMessage(PID_BROWSER, message);
+        {
+            //Register the theWebSettingsObject JavaScript object
+            CefRefPtr<theWebSettingsAccessor> accessor = new theWebSettingsAccessor(browser);
+            CefRefPtr<CefV8Value> JsObject = CefV8Value::CreateObject(accessor, new V8Interceptor);
+            JsObject.get()->SetValue("dnt", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("home", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("toolbar", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("tabText", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("malwareProtect", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("tabPreview", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("history", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("resetBrowser", CefV8Value::CreateFunction("resetBrowser", new V8Function([=]() {
+                CefRefPtr<CefV8Value> returnVal;
+                CefRefPtr<CefV8Exception> exception;
+                context.get()->Eval("confirm(\"Reset theWeb?:Here\'s what we\'ll do.\\n"
+                                    "- Reset all settings back to defaults\\n"
+                                    "- Erase all history items\\n"
+                                    "- Clear the cache\\n"
+                                    "- Erase all cookies\\n"
+                                    "\\n"
+                                    "Are you sure that you want to reset theWeb?:Continue:Cancel\")", "", 0, returnVal, exception);
+                if (returnVal.get()->GetBoolValue()) {
+                    context.get()->Eval("confirm(\"Reset theWeb?:We're ready to reset theWeb. Once this is done, theWeb will exit. Is this OK?:Reset:Cancel\")", "", 0, returnVal, exception);
                 }
-                //Erase Cache
-                if (args[1].get()->GetBoolValue()) {
-                    qDebug() << "Erase Cache";
-                }
+            })), V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("proxySettings", CefV8Value::CreateFunction("proxySettings", new V8Function([=]() {
+                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("showProxy");
+                browser.get()->SendProcessMessage(PID_BROWSER, message);
+            })), V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("clearData", CefV8Value::CreateFunction("clearData", new V8Function([=](CefV8ValueList &arguments) {
+                QVector<CefRefPtr<CefV8Value>> args = QVector<CefRefPtr<CefV8Value>>::fromStdVector(arguments);
+                if (args.size() == 3) {
+                    //Erase History
+                    if (args[0].get()->GetBoolValue()) {
+                        CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("clearData_History");
+                        browser.get()->SendProcessMessage(PID_BROWSER, message);
+                    }
+                    //Erase Cache
+                    if (args[1].get()->GetBoolValue()) {
+                        qDebug() << "Erase Cache";
+                    }
 
-                //Erase Cookies
-                if (args[2].get()->GetBoolValue()) {
-                    qDebug() << "Erase Cookies";
+                    //Erase Cookies
+                    if (args[2].get()->GetBoolValue()) {
+                        qDebug() << "Erase Cookies";
+                    }
                 }
-            }
-        })), V8_PROPERTY_ATTRIBUTE_NONE);
-        JsObject.get()->SetValue("goToCredits", CefV8Value::CreateFunction("goToCredits", new V8Function([=]() {
-            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("goToCredits");
-            browser.get()->SendProcessMessage(PID_BROWSER, message);
-        })), V8_PROPERTY_ATTRIBUTE_NONE);
+            })), V8_PROPERTY_ATTRIBUTE_NONE);
+            JsObject.get()->SetValue("goToCredits", CefV8Value::CreateFunction("goToCredits", new V8Function([=]() {
+                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("goToCredits");
+                browser.get()->SendProcessMessage(PID_BROWSER, message);
+            })), V8_PROPERTY_ATTRIBUTE_NONE);
 
-        context.get()->GetGlobal()->SetValue("theWebSettingsObject", JsObject, V8_PROPERTY_ATTRIBUTE_NONE);
+            context.get()->GetGlobal()->SetValue("theWebSettingsObject", JsObject, V8_PROPERTY_ATTRIBUTE_NONE);
+        }
     }
 
     {
-        CefRefPtr<CefV8Value> notificationObject = CefV8Value::CreateFunction("NotificationConstructor", new V8Function([=](CefV8ValueList &arguments) {
-            QVector<CefRefPtr<CefV8Value>> args = QVector<CefRefPtr<CefV8Value>>::fromStdVector(arguments);
+        {
+            //Register the Notifications JavaScript Object
+            CefRefPtr<CefV8Value> notificationObject = CefV8Value::CreateFunction("NotificationConstructor", new V8Function([=](CefV8ValueList &arguments) {
+                QVector<CefRefPtr<CefV8Value>> args = QVector<CefRefPtr<CefV8Value>>::fromStdVector(arguments);
 
-            if (args.count() < 1) {
-                throw new std::exception;
-            }
-            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotifications_post");
-            message.get()->GetArgumentList().get()->SetString(0, QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host().toStdString());
-            message.get()->GetArgumentList().get()->SetString(1, args.at(0).get()->GetStringValue());
-            browser.get()->SendProcessMessage(PID_BROWSER, message);
-        }));
+                if (args.count() < 1) {
+                    throw new std::exception;
+                }
+                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotifications_post");
+                message.get()->GetArgumentList().get()->SetString(0, QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host().toStdString());
+                message.get()->GetArgumentList().get()->SetString(1, args.at(0).get()->GetStringValue());
+                browser.get()->SendProcessMessage(PID_BROWSER, message);
+            }));
 
-        notificationObject.get()->SetValue("permission", CefV8Value::CreateString(notificationsData.value(QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host(), "default").toString().toStdString()), V8_PROPERTY_ATTRIBUTE_NONE);
-        notificationObject.get()->SetValue("requestPermission", CefV8Value::CreateFunction("requestPermission", new V8Function((std::function<CefRefPtr<CefV8Value>()>) [=]() {
-            if (notificationObject.get()->GetValue("permission").get()->GetStringValue() == "default") {
-                if (notificationRequestPromise == NULL) {
-                    qDebug() << context.get()->GetGlobal().get()->SetValue("theWebNotificationRequest", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
-                    CefRefPtr<CefV8Exception> exception;
-                    context.get()->Eval("new Promise(function(resolve, reject) {"
-                                            "theWebNotificationRequest = resolve;"
-                                        "});", notificationRequestPromise, exception);
-                    notificationRequestResolver = context.get()->GetGlobal().get()->GetValue("theWebNotificationRequest");
+            notificationObject.get()->SetValue("permission", CefV8Value::CreateString(notificationsData.value(QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host(), "default").toString().toStdString()), V8_PROPERTY_ATTRIBUTE_NONE);
+            notificationObject.get()->SetValue("requestPermission", CefV8Value::CreateFunction("requestPermission", new V8Function((std::function<CefRefPtr<CefV8Value>()>) [=]() {
+                if (notificationObject.get()->GetValue("permission").get()->GetStringValue() == "default") {
+                    if (notificationRequestPromise == NULL) {
+                        qDebug() << context.get()->GetGlobal().get()->SetValue("theWebNotificationRequest", V8_ACCESS_CONTROL_DEFAULT, V8_PROPERTY_ATTRIBUTE_NONE);
+                        CefRefPtr<CefV8Exception> exception;
+                        context.get()->Eval("new Promise(function(resolve, reject) {"
+                                                "theWebNotificationRequest = resolve;"
+                                            "});", "", 0, notificationRequestPromise, exception);
+                        notificationRequestResolver = context.get()->GetGlobal().get()->GetValue("theWebNotificationRequest");
 
-                    //Ask user permission to show notifications
-                    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotificationRequest");
-                    message.get()->GetArgumentList().get()->SetString(0, QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host().toStdString());
-                    browser.get()->SendProcessMessage(PID_BROWSER, message);
+                        //Ask user permission to show notifications
+                        CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("jsNotificationRequest");
+                        message.get()->GetArgumentList().get()->SetString(0, QUrl(QString::fromStdString(frame.get()->GetURL().ToString())).host().toStdString());
+                        browser.get()->SendProcessMessage(PID_BROWSER, message);
 
-                    notificationRequestFrame = frame;
+                        notificationRequestFrame = frame;
 
-                    return notificationRequestPromise;
+                        return notificationRequestPromise;
+                    } else {
+                        return CefV8Value::CreateNull();
+                    }
                 } else {
                     return CefV8Value::CreateNull();
                 }
-            } else {
-                return CefV8Value::CreateNull();
-            }
-        })), V8_PROPERTY_ATTRIBUTE_NONE);
+            })), V8_PROPERTY_ATTRIBUTE_NONE);
 
-        context.get()->GetGlobal().get()->SetValue("Notification", notificationObject, V8_PROPERTY_ATTRIBUTE_NONE);
+            context.get()->GetGlobal().get()->SetValue("Notification", notificationObject, V8_PROPERTY_ATTRIBUTE_NONE);
+        }
     }
 }
 
@@ -193,7 +198,7 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
                 //Get all <video> elements
                 CefRefPtr<CefV8Value> returnVal;
                 CefRefPtr<CefV8Exception> exception;
-                context.get()->Eval("document.getElementsByTagName('video').length;", returnVal, exception);
+                context.get()->Eval("document.getElementsByTagName('video').length;", "", 0, returnVal, exception);
 
                 if (returnVal.get() == NULL) {
                     mprisElementTagType = "";
@@ -203,7 +208,7 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
                         mprisElementTagType = "video";
                     } else {
                         //No <video> elements. Get all <audio> elements
-                        context.get()->Eval("document.getElementsByTagName('audio').length;", returnVal, exception);
+                        context.get()->Eval("document.getElementsByTagName('audio').length;", "", 0, returnVal, exception);
                         if (returnVal.get()->GetIntValue() > 0) {
                             //Audio found.
                             mprisElementTagType = "audio";
@@ -221,20 +226,20 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
                     browser.get()->SendProcessMessage(PID_BROWSER, message);
 
                     //Get if the video is paused
-                    context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].paused", returnVal, exception);
+                    context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].paused", "", 0, returnVal, exception);
                     videoPlaying = !returnVal.get()->GetBoolValue();
 
                     CefString title, artist, album;
 
                     //Provide extra information for videos from youtube.com
                     if (QUrl(QString::fromStdString(videoFrame.get()->GetURL().ToString())).host().startsWith("www.youtube.com")) {
-                        context.get()->Eval("document.getElementById('eow-title').innerHTML", returnVal, exception);
+                        context.get()->Eval("document.getElementById('eow-title').innerHTML", "", 0, returnVal, exception);
                         if (returnVal.get() != NULL) {
                             title = QString::fromStdString(returnVal.get()->GetStringValue().ToString()).trimmed().replace("&amp;", "&")
                                     .replace("&lt;", "<").replace("&gt;", ">").toStdString();
                         }
 
-                        context.get()->Eval("document.getElementById('watch7-user-header').childNodes[3].childNodes[1].innerHTML", returnVal, exception);
+                        context.get()->Eval("document.getElementById('watch7-user-header').childNodes[3].childNodes[1].innerHTML", "", 0, returnVal, exception);
                         if (returnVal.get() != NULL) {
                             artist = QString::fromStdString(returnVal.get()->GetStringValue().ToString()).replace("&amp;", "&")
                                     .replace("&lt;", "<").replace("&gt;", ">").toStdString();
@@ -271,10 +276,10 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
         CefRefPtr<CefV8Exception> exception;
         if (videoPlaying) {
             //The media is playing, pause the media.
-            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].pause()", returnVal, exception);
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].pause()", "", 0, returnVal, exception);
         } else {
             //The media is paused, play the media.
-            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].play()", returnVal, exception);
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].play()", "", 0, returnVal, exception);
         }
 
         //Exit the V8 Context
@@ -292,7 +297,7 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
             //The media is paused, play the media.
             CefRefPtr<CefV8Value> returnVal;
             CefRefPtr<CefV8Exception> exception;
-            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].play()", returnVal, exception);
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].play()", "", 0, returnVal, exception);
 
             //Exit the V8 Context
             context.get()->Exit();
@@ -310,7 +315,7 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
             //The media is playing, pause the media.
             CefRefPtr<CefV8Value> returnVal;
             CefRefPtr<CefV8Exception> exception;
-            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].pause()", returnVal, exception);
+            context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].pause()", "", 0, returnVal, exception);
 
             //Exit the V8 Context
             context.get()->Exit();
@@ -327,7 +332,7 @@ bool CefEngine::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProce
         //Set the media to 0 seconds
         CefRefPtr<CefV8Value> returnVal;
         CefRefPtr<CefV8Exception> exception;
-        context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].currentTime = 0", returnVal, exception);
+        context.get()->Eval("document.getElementsByTagName('" + mprisElementTagType.toStdString() + "')[0].currentTime = 0", "", 0, returnVal, exception);
 
         //Exit the V8 Context
         context.get()->Exit();

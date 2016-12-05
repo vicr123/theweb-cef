@@ -37,7 +37,8 @@ SOURCES += main.cpp\
     hovertabbar.cpp \
     downloadframe.cpp \
     filepicker.cpp \
-    certificateinfo.cpp
+    certificateinfo.cpp \
+    v8interceptor.cpp
 
 HEADERS  += \
     cefheaders.h \
@@ -57,7 +58,8 @@ HEADERS  += \
     hovertabbar.h \
     downloadframe.h \
     filepicker.h \
-    certificateinfo.h
+    certificateinfo.h \
+    v8interceptor.h
 
 FORMS    += \
     mainwindow.ui \
