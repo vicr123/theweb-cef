@@ -6,6 +6,8 @@
 #include <QUrl>
 #include <QPaintEvent>
 #include <QDebug>
+#include <QPainter>
+#include <QFontMetrics>
 
 class SpaceSearchBox : public QLineEdit
 {
@@ -28,6 +30,8 @@ public:
     QUrl currentUrl();
     void setCurrentSecurity(SecurityType securityType);
     SecurityType CurrentSecurity();
+    void setHoverText(QString text);
+    void clearHoverText();
 signals:
     void GotFocus();
 
@@ -36,10 +40,12 @@ public slots:
 private:
     void focusInEvent(QFocusEvent* event);
     void focusOutEvent(QFocusEvent* event);
+    void paintEvent(QPaintEvent* event);
 
     void updateText();
 
     QUrl url;
+    QString hoverText;
     SecurityType sec = None;
 };
 

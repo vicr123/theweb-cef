@@ -66,64 +66,65 @@ void HoverTabBar::dropEvent(QDropEvent* event) {
     const QMimeData* data = event->mimeData();
     int tabAtIndex = tabAt(event->pos());
 
-    //Direction:
-    //0: None
-    //1: Left
-    //2: Right
+    if (data->hasUrls() && data->urls().count() > 0) {
+        //Direction:
+        //0: None
+        //1: Left
+        //2: Right
 
-    int direction = 0;
-    //Go 5 pixels in both directions so we can see where to open this new tab
-    int x = event->pos().x();
-    while (x - 5 != event->pos().x()) {
-        x++;
-        if (tabAt(QPoint(x, event->pos().y())) != tabAtIndex) {
-            direction = 2;
-            break;
-        }
-    }
-
-    if (direction == 0) {
-        x = event->pos().x();
-        while (x + 5 != event->pos().x()) {
-            x--;
+        int direction = 0;
+        //Go 5 pixels in both directions so we can see where to open this new tab
+        int x = event->pos().x();
+        while (x - 5 != event->pos().x()) {
+            x++;
             if (tabAt(QPoint(x, event->pos().y())) != tabAtIndex) {
-                direction = 1;
+                direction = 2;
                 break;
             }
         }
-    }
 
-    QString url = data->urls().first().toString();
-
-    if (direction == 0) {
-        //Spawn tab and replace
-        //mainWindow->navigate(tabAtIndex, url);
-        //mainWindow->browserList.at(index).get()->GetMainFrame().get()->LoadURL(url.toStdString());
-
-        qDebug() << "Spawn Browser and replace tab";
-    } else {
-        Browser newBrowser;
-        if (mainWindow->oblivionWindow()) {
-            CefBrowserSettings settings = defaultBrowserSettings;
-            settings.application_cache = STATE_DISABLED;
-
-            CefRequestContextSettings contextSettings;
-            CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
-            context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
-            newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, url.toStdString(), settings, context);
-        } else {
-            newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, url.toStdString(), defaultBrowserSettings, CefRefPtr<CefRequestContext>());
+        if (direction == 0) {
+            x = event->pos().x();
+            while (x + 5 != event->pos().x()) {
+                x--;
+                if (tabAt(QPoint(x, event->pos().y())) != tabAtIndex) {
+                    direction = 1;
+                    break;
+                }
+            }
         }
 
-        if (direction == 1) {
-            //Spawn tab on left
-            mainWindow->createNewTab(newBrowser);
-            qDebug() << "Load on left";
+        QString url = data->urls().first().toString();
+
+        if (direction == 0) {
+            //Spawn tab and replace
+            //mainWindow->navigate(tabAtIndex, url);
+            //mainWindow->browserList.at(index).get()->GetMainFrame().get()->LoadURL(url.toStdString());
+
+            qDebug() << "Spawn Browser and replace tab";
         } else {
-            //Spawn tab on right
-            mainWindow->createNewTab(newBrowser);
-            qDebug() << "Load on right";
+            Browser newBrowser;
+            if (mainWindow->oblivionWindow()) {
+                CefBrowserSettings settings = defaultBrowserSettings;
+                settings.application_cache = STATE_DISABLED;
+
+                CefRequestContextSettings contextSettings;
+                CefRefPtr<CefRequestContext> context = CefRequestContext::CreateContext(contextSettings, new OblivionRequestContextHandler);
+                context.get()->RegisterSchemeHandlerFactory("theweb", "theweb", new theWebSchemeHandler());
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, url.toStdString(), settings, context);
+            } else {
+                newBrowser = CefBrowserHost::CreateBrowserSync(CefWindowInfo(), handler, url.toStdString(), defaultBrowserSettings, CefRefPtr<CefRequestContext>());
+            }
+
+            if (direction == 1) {
+                //Spawn tab on left
+                mainWindow->createNewTab(newBrowser);
+                qDebug() << "Load on left";
+            } else {
+                //Spawn tab on right
+                mainWindow->createNewTab(newBrowser);
+                qDebug() << "Load on right";
+            }
         }
     }
-
 }

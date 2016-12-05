@@ -204,6 +204,7 @@ MainWindow::MainWindow(Browser newBrowser, bool isOblivion, QWidget *parent) :
     connect(signalBroker, SIGNAL(OpenURLFromTab(Browser,CefRefPtr<CefFrame>,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool)), this, SLOT(OpenURLFromTab(Browser,CefRefPtr<CefFrame>,CefString,CefLifeSpanHandler::WindowOpenDisposition,bool)));
     connect(signalBroker, SIGNAL(FileDialog(Browser,CefDialogHandler::FileDialogMode,CefString,CefString,std::vector<CefString>,int,CefRefPtr<CefFileDialogCallback>)), this, SLOT(FileDialog(Browser,CefDialogHandler::FileDialogMode,CefString,CefString,std::vector<CefString>,int,CefRefPtr<CefFileDialogCallback>)));
     connect(signalBroker, SIGNAL(PrintDialog(Browser,QPrinter*,bool,CefRefPtr<CefPrintDialogCallback>)), this, SLOT(PrintDialog(Browser,QPrinter*,bool,CefRefPtr<CefPrintDialogCallback>)));
+    connect(signalBroker, SIGNAL(StatusMessage(Browser,CefString)), this, SLOT(StatusMessage(Browser,CefString)));
     connect(signalBroker, SIGNAL(ReloadSettings()), this, SLOT(ReloadSettings()));
 
     createNewTab(newBrowser);
@@ -1169,11 +1170,11 @@ void MainWindow::CertificateError(Browser browser, cef_errorcode_t cert_error, c
         {
             QString name;
             //CEF seems to be having some issues.
-            if (ssl_info.get() != NULL) {
-                name = QString::fromStdString(ssl_info.get()->GetSubject().get()->GetDisplayName().ToString());
-            } else {
+            //if (ssl_info.get() != NULL && ssl_info.get()->GetSubject().get() != NULL) {
+                //name = QString::fromStdString(ssl_info.get()->GetSubject().get()->GetDisplayName().ToString());
+            //} else {
                 name = "another server.";
-            }
+            //}
             certErrorMetadata.append("You're trying to connect to <b>" + QUrl(QString::fromStdString(request_url.ToString())).host() + "</b> but the server presented itself as <b>" +
                                       name + "</b>.");
             break;
@@ -2116,4 +2117,10 @@ bool MainWindow::oblivionWindow() {
 }
 
 void MainWindow::navigate(int index, QString url) {
+}
+
+void MainWindow::StatusMessage(Browser browser, const CefString &value) {
+    if (indexOfBrowser(browser) != -1) {
+        ui->spaceSearch->setHoverText(QString::fromStdString(value));
+    }
 }

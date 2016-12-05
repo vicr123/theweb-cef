@@ -713,6 +713,10 @@ void CefHandler::OnProtocolExecution(Browser browser, const CefString &url, bool
     allow_os_execution = false;
 }
 
+void CefHandler::OnStatusMessage(Browser browser, const CefString &value) {
+    emit signalBroker->StatusMessage(browser, value);
+}
+
 bool CefHandler::OnTooltip(Browser browser, CefString &text) {
     emit signalBroker->Tooltip(browser, text);
     return true;

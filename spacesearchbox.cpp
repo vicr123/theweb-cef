@@ -75,3 +75,28 @@ void SpaceSearchBox::updateText() {
 SpaceSearchBox::SecurityType SpaceSearchBox::CurrentSecurity() {
     return sec;
 }
+
+void SpaceSearchBox::setHoverText(QString text) {
+    hoverText = text;
+    this->update();
+}
+
+void SpaceSearchBox::clearHoverText() {
+    hoverText = "";
+    this->update();
+}
+
+void SpaceSearchBox::paintEvent(QPaintEvent *event) {
+    QLineEdit::paintEvent(event);
+
+    if (hoverText != "") {
+        int width = this->width() - 30;
+        width -= this->fontMetrics().width(this->text());
+
+        QString renderText = this->fontMetrics().elidedText(hoverText, Qt::ElideMiddle, width);
+
+        QPainter painter(this);
+        painter.setPen(this->palette().color(QPalette::Disabled, QPalette::WindowText));
+        painter.drawText(0, 0, this->width() - 5, this->height(), Qt::AlignVCenter | Qt::AlignRight, renderText);
+    }
+}
