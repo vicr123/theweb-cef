@@ -1,5 +1,6 @@
 # theWeb
 Web Browser based on CEF and Qt
+**⚠️ This project is discontinued, and may have security holes. Use at your own risk.**
 
 ## Screenshots
 ![Screenshot 1](https://raw.githubusercontent.com/vicr123/theWeb/master/images/screen1.png)
