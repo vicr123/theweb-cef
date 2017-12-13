@@ -73,6 +73,7 @@ macx {
     cef.files = "$$PWD/../libcef/Release/Chromium Embedded Framework.framework"
     cef.path = Contents/Frameworks
     QMAKE_BUNDLE_DATA = helper cef
+    ICON = icon.icns
 }
 
 RESOURCES += \
