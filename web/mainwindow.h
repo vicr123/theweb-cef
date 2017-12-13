@@ -8,10 +8,13 @@
 #include <QFrame>
 #include <QBoxLayout>
 #include <QStackedWidget>
-#include <ttoast.h>
 #include <QLineEdit>
 #include <QToolBar>
 #include "bar.h"
+
+#ifdef Q_OS_LINUX
+#include <ttoast.h>
+#endif
 
 class BrowserTab;
 

@@ -3,6 +3,7 @@
 
 #include <include/cef_client.h>
 #include <QList>
+#include <QApplication>
 #include "browsertab.h"
 
 class BrowserTab;

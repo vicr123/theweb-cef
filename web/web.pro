@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = theweb
+TARGET = theWeb
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -48,11 +48,33 @@ FORMS += \
         mainwindow.ui \
     browserdialog.ui
 
+TRANSLATIONS += \
+    translations\vi_VN.ts
+
 unix:!macx: {
     QT += thelib x11extras
     INCLUDEPATH += /opt/cef/
     LIBS += /opt/cef/Release/libcef.so /opt/cef/libcef_dll_wrapper/libcef_dll_wrapper.a -lX11
+    TARGET = theweb
+
+    target.path = /opt/theweb/
+    INSTALLS += target
+}
+
+macx {
+    INCLUDEPATH += ../libcef/
+    LIBS += -F$$PWD/../libcef/Release/ -framework "Chromium Embedded Framework" $$PWD/../libcef/libcef_dll_wrapper/libcef_dll_wrapper.a
+
+    QMAKE_RPATHDIR += @executable_path/../
+
+    helper.files = "$$OUT_PWD/../macos-helper/theWeb Helper.app"
+    helper.path = Contents/Frameworks
+
+    cef.files = "$$PWD/../libcef/Release/Chromium Embedded Framework.framework"
+    cef.path = Contents/Frameworks
+    QMAKE_BUNDLE_DATA = helper cef
 }
 
 RESOURCES += \
     pages.qrc
+

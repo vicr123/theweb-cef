@@ -12,7 +12,7 @@ BrowserTab::BrowserTab(MainWindow* parent, CefRefPtr<CefBrowser> browser) : QWid
 
     CefWindowInfo windowInfo;
     CefBrowserSettings browserSettings;
-    windowInfo.SetAsWindowless(this->window()->winId());
+    windowInfo.SetAsWindowless(NULL /*this->window()->winId()*/);
     browserSettings.background_color = 0xFFFFFFFF;
 
     if (browser == nullptr) {
@@ -104,11 +104,13 @@ void BrowserTab::loadStateChange(bool isLoading, bool canGoBack, bool canGoForwa
 void BrowserTab::setFullScreen(bool isFullScreen) {
     mainWindow->setFullScreen(this, isFullScreen);
 
+#ifdef Q_OS_LINUX
     tToast* toast = new tToast();
     toast->setText(tr("Full Screen"));
     toast->setText(tr("This website is now full screen."));
     toast->show(mainWindow);
     connect(toast, SIGNAL(dismissed()), toast, SLOT(deleteLater()));
+#endif
 }
 
 void BrowserTab::resizeEvent(QResizeEvent* event) {

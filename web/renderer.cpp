@@ -595,7 +595,13 @@ KeyboardCode KeyboardCodeFromNative(unsigned int keysym) {
   }
   return VKEY_UNKNOWN;
 }
+#elif defined(Q_OS_MAC)
+KeyboardCode KeyboardCodeFromNative(unsigned int keysym) {
+    return (KeyboardCode) keysym;
+}
 #endif
+
+
 
 Renderer::Renderer(CefRefPtr<CefBrowser> browser, QWidget *parent) : QWidget(parent)
 {
@@ -818,7 +824,7 @@ void Renderer::wheelEvent(QWheelEvent *event) {
     host.get()->SendMouseWheelEvent(cefEvent, event->angleDelta().x(), event->angleDelta().y());
 }
 
-void Renderer::setCursor(unsigned long cursor, CefRenderHandler::CursorType type, const CefCursorInfo &custom_cursor_info) {
+void Renderer::setCursor(CefCursorHandle cursor, CefRenderHandler::CursorType type, const CefCursorInfo &custom_cursor_info) {
     QCursor cur;
 
     switch (type) {
