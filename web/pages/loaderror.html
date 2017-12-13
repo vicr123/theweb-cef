@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <title>%1</title>
+        <style>
+            body {
+                font-family: sans-serif;
+            }
+            
+            h1 {
+                font-size: 20pt;
+            }
+            
+            div.wrapper {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            div.buttonWrapper {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            div.content {
+                min-width: 600px;
+            }
+            
+            a.button {
+                display: inline-block;
+                background-color: rgb(0, 0, 200);
+                color: white;
+                padding: 6px;
+                text-decoration: none;
+                cursor: hand;
+            }
+            
+            span.errorCode {
+                color: gray;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="content">
+                <h1>Can't connect to webpage</h1>
+                <p>%2</p>
+                <p>%3</p>
+                
+                <div class="buttonWrapper">
+                    <span class="errorCode">%4</span>
+                    <a class="button" onclick="location.reload();">Reload</a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
