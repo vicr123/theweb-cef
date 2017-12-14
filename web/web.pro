@@ -49,7 +49,7 @@ FORMS += \
     browserdialog.ui
 
 TRANSLATIONS += \
-    translations\vi_VN.ts
+    translations/vi_VN.ts
 
 unix:!macx: {
     QT += thelib x11extras
