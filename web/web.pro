@@ -63,7 +63,9 @@ unix:!macx: {
 
 macx {
     INCLUDEPATH += ../libcef/
-    LIBS += -F$$PWD/../libcef/Release/ -framework "Chromium Embedded Framework" $$PWD/../libcef/libcef_dll_wrapper/libcef_dll_wrapper.a
+    LIBS += -F$$PWD/../libcef/Release/ -framework "Chromium Embedded Framework" \
+                $$PWD/../libcef/libcef_dll_wrapper/libcef_dll_wrapper.a \
+                -framework CoreFoundation
 
     QMAKE_RPATHDIR += @executable_path/../
 
@@ -72,10 +74,18 @@ macx {
 
     cef.files = "$$PWD/../libcef/Release/Chromium Embedded Framework.framework"
     cef.path = Contents/Frameworks
-    QMAKE_BUNDLE_DATA = helper cef
+
+    translations.files = translations/
+    translations.path = Contents/translations
+
+    QMAKE_BUNDLE_DATA = helper cef translations
     ICON = icon.icns
 }
 
 RESOURCES += \
     pages.qrc
+
+macx {
+    RESOURCES += icons.qrc
+}
 

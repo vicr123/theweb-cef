@@ -15,6 +15,10 @@ class TabButton : public QPushButton
 
     public slots:
         void setLoading(bool isLoading);
+        void setText(QString text);
+
+    signals:
+        void textChange(QString newText);
 
     private:
         void paintEvent(QPaintEvent* event);

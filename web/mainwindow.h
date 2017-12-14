@@ -50,12 +50,20 @@ class MainWindow : public QMainWindow
 
         void on_actionReload_triggered();
 
-    private:
+        void on_actionNew_Tab_triggered();
+
+        void on_actionNew_Window_triggered();
+
+private:
         Ui::MainWindow *ui;
 
         QSettings settings;
         Bar* addressBar;
         void closeEvent(QCloseEvent* event);
+
+#ifdef Q_OS_MAC
+        QTabBar* tabBar;
+#endif
 };
 
 #endif // MAINWINDOW_H

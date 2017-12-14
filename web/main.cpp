@@ -6,6 +6,12 @@
 #include <QFontDatabase>
 #include "cef/client.h"
 #include <QDir>
+#include <QTranslator>
+#include <QLibraryInfo>
+
+#ifdef Q_OS_MAC
+    #include <CoreFoundation/CFBundle.h>
+#endif
 
 Client* cefClient;
 CefBrowserSettings::struct_type browserSettings;
@@ -34,6 +40,34 @@ int main(int argc, char *argv[])
     a.setApplicationName("theWeb");
 
     a.setQuitOnLastWindowClosed(true);
+
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(),
+            QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    a.installTranslator(&qtTranslator);
+
+    QTranslator localTranslator;
+
+#ifdef Q_OS_MAC
+    a.setAttribute(Qt::AA_DontShowIconsInMenus, true);
+
+    QIcon::setThemeName("contemporary");
+
+    CFURLRef appUrlRef = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFStringRef macPath = CFURLCopyFileSystemPath(appUrlRef,
+                                           kCFURLPOSIXPathStyle);
+    const char *pathPtr = CFStringGetCStringPtr(macPath,
+                                           CFStringGetSystemEncoding());
+
+    localTranslator.load(QLocale::system().name(), QString::fromLocal8Bit(pathPtr) + "/Contents/translations/");
+
+    CFRelease(appUrlRef);
+    CFRelease(macPath);
+#elif defined(Q_OS_LINUX)
+    localTranslator.load(QLocale::system().name(), "/usr/share/theweb/translations");
+#endif
+
+    a.installTranslator(&localTranslator);
 
     cefClient = new Client();
 

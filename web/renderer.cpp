@@ -710,6 +710,10 @@ void Renderer::mousePressEvent(QMouseEvent *event) {
     }
 
     host.get()->SendMouseClickEvent(cefEvent, mouse, false, 1);
+
+#ifdef Q_OS_MAC
+    QWidget::mousePressEvent(event);
+#endif
 }
 
 void Renderer::mouseReleaseEvent(QMouseEvent *event) {
@@ -727,6 +731,10 @@ void Renderer::mouseReleaseEvent(QMouseEvent *event) {
     }
 
     host.get()->SendMouseClickEvent(cefEvent, mouse, true, 1);
+
+#ifdef Q_OS_MAC
+    QWidget::mouseReleaseEvent(event);
+#endif
 }
 
 void Renderer::mouseDoubleClickEvent(QMouseEvent *event) {
@@ -775,10 +783,6 @@ void Renderer::keyPressEvent(QKeyEvent *event) {
     if (event->modifiers() & Qt::AltModifier) {
         modifiers |= EVENTFLAG_ALT_DOWN;
     }
-
-#ifdef Q_OS_LINUX
-
-#endif
 
     cefEvent.modifiers = modifiers;
 

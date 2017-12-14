@@ -14,11 +14,26 @@ MainWindow::MainWindow(CefRefPtr<CefBrowser> browser, QWidget *parent) :
 
     ui->menuBar->setVisible(false);
 
+#ifdef Q_OS_MAC
+    tabBar = new QTabBar();
+    tabBar->setTabsClosable(true);
+    tabBar->setDocumentMode(true);
+    ((QBoxLayout*) ui->centralWidget->layout())->insertWidget(0, tabBar);
+    connect(tabBar, SIGNAL(currentChanged(int)), ui->tabs, SLOT(setCurrentIndex(int)));
+    connect(tabBar, &QTabBar::tabCloseRequested, [=](int index) {
+        ((BrowserTab*) ui->tabs->widget(index))->requestClose();
+    });
+    this->setDocumentMode(true);
+
+    ui->tabBar->setVisible(false);
+#endif
+
     addressBar = new Bar;
     ui->mainToolBar->addWidget(addressBar);
     connect(addressBar, &QLineEdit::returnPressed, [=] {
         CURRENT_TAB->getBrowser().get()->GetMainFrame().get()->LoadURL(addressBar->text().toStdString());
     });
+
 
     createNewTab(browser);
 }
@@ -30,10 +45,24 @@ MainWindow::~MainWindow()
 
 void MainWindow::createNewTab(CefRefPtr<CefBrowser> browser) {
     BrowserTab* tab = new BrowserTab(this, browser);
-    ((QBoxLayout*) ui->tabScrollContents->layout())->addWidget(tab->getTabButton());
     ui->tabs->addWidget(tab);
 
+#ifdef Q_OS_MAC
+    tabBar->addTab(tab->getTabButton()->text());
+    connect(tab->getTabButton(), &TabButton::textChange, [=](QString text) {
+        int index = ui->tabs->indexOf(tab);
+        tabBar->setTabText(index, text);
+    });
+#else
+    ((QBoxLayout*) ui->tabScrollContents->layout())->addWidget(tab->getTabButton());
+#endif
+
     connect(tab, &BrowserTab::destroyed, [=] {
+#ifdef Q_OS_MAC
+        int index = ui->tabs->indexOf(tab);
+        tabBar->removeTab(index);
+#endif
+
         ui->tabs->removeWidget(tab);
         if (ui->tabs->count() == 0) {
             this->close();
@@ -121,4 +150,18 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         ((BrowserTab*) ui->tabs->widget(i))->requestClose();
     }
     event->ignore();
+}
+
+void MainWindow::on_actionNew_Tab_triggered()
+{
+    on_newTabButton_clicked();
+}
+
+void MainWindow::on_actionNew_Window_triggered()
+{
+    cefClient->setNewTabWindow(nullptr);
+
+    CefWindowInfo windowInfo;
+    windowInfo.SetAsWindowless(NULL);
+    CefBrowserHost::CreateBrowser(windowInfo, cefClient, "http://www.google.com/", browserSettings, CefRefPtr<CefRequestContext>());
 }

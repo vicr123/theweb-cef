@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/contemporary/actions/16/go-next.svg</file>
+        <file>icons/contemporary/actions/16/go-previous.svg</file>
+        <file>icons/contemporary/actions/16/tab-new.svg</file>
+        <file>icons/contemporary/actions/16/view-refresh.svg</file>
+        <file>icons/contemporary/actions/16/window-close.svg</file>
+        <file>icons/contemporary/actions/16/window-new.svg</file>
+        <file>icons/contemporary/index.theme</file>
+    </qresource>
+</RCC>

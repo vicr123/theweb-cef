@@ -37,3 +37,8 @@ void TabButton::paintEvent(QPaintEvent *event) {
         painter.drawRect(rect);
     }
 }
+
+void TabButton::setText(QString text) {
+    QPushButton::setText(text);
+    emit textChange(text);
+}
