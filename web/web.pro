@@ -69,7 +69,7 @@ macx {
 
     QMAKE_RPATHDIR += @executable_path/../
 
-    helper.files = "$$OUT_PWD/../macos-helper/theWeb Helper.app"
+    helper.files = "$$OUT_PWD/../macos-helper/theWeb Helper.app/"
     helper.path = Contents/Frameworks
 
     cef.files = "$$PWD/../libcef/Release/Chromium Embedded Framework.framework"

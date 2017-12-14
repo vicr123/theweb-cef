@@ -596,12 +596,465 @@ KeyboardCode KeyboardCodeFromNative(unsigned int keysym) {
   return VKEY_UNKNOWN;
 }
 #elif defined(Q_OS_MAC)
-KeyboardCode KeyboardCodeFromNative(unsigned int keysym) {
-    return (KeyboardCode) keysym;
+// From ui/events/keycodes/keyboard_code_conversion_mac.mm.
+KeyboardCode KeyboardCodeFromNative(unsigned short keyCode) {
+  static const KeyboardCode kKeyboardCodes[] = {
+    /* 0 */ VKEY_A,
+    /* 1 */ VKEY_S,
+    /* 2 */ VKEY_D,
+    /* 3 */ VKEY_F,
+    /* 4 */ VKEY_H,
+    /* 5 */ VKEY_G,
+    /* 6 */ VKEY_Z,
+    /* 7 */ VKEY_X,
+    /* 8 */ VKEY_C,
+    /* 9 */ VKEY_V,
+    /* 0x0A */ VKEY_OEM_3, // Section key.
+    /* 0x0B */ VKEY_B,
+    /* 0x0C */ VKEY_Q,
+    /* 0x0D */ VKEY_W,
+    /* 0x0E */ VKEY_E,
+    /* 0x0F */ VKEY_R,
+    /* 0x10 */ VKEY_Y,
+    /* 0x11 */ VKEY_T,
+    /* 0x12 */ VKEY_1,
+    /* 0x13 */ VKEY_2,
+    /* 0x14 */ VKEY_3,
+    /* 0x15 */ VKEY_4,
+    /* 0x16 */ VKEY_6,
+    /* 0x17 */ VKEY_5,
+    /* 0x18 */ VKEY_OEM_PLUS, // =+
+    /* 0x19 */ VKEY_9,
+    /* 0x1A */ VKEY_7,
+    /* 0x1B */ VKEY_OEM_MINUS, // -_
+    /* 0x1C */ VKEY_8,
+    /* 0x1D */ VKEY_0,
+    /* 0x1E */ VKEY_OEM_6, // ]}
+    /* 0x1F */ VKEY_O,
+    /* 0x20 */ VKEY_U,
+    /* 0x21 */ VKEY_OEM_4, // {[
+    /* 0x22 */ VKEY_I,
+    /* 0x23 */ VKEY_P,
+    /* 0x24 */ VKEY_RETURN, // Return
+    /* 0x25 */ VKEY_L,
+    /* 0x26 */ VKEY_J,
+    /* 0x27 */ VKEY_OEM_7, // '"
+    /* 0x28 */ VKEY_K,
+    /* 0x29 */ VKEY_OEM_1, // ;:
+    /* 0x2A */ VKEY_OEM_5, // \|
+    /* 0x2B */ VKEY_OEM_COMMA, // ,<
+    /* 0x2C */ VKEY_OEM_2, // /?
+    /* 0x2D */ VKEY_N,
+    /* 0x2E */ VKEY_M,
+    /* 0x2F */ VKEY_OEM_PERIOD, // .>
+    /* 0x30 */ VKEY_TAB,
+    /* 0x31 */ VKEY_SPACE,
+    /* 0x32 */ VKEY_OEM_3, // `~
+    /* 0x33 */ VKEY_BACK, // Backspace
+    /* 0x34 */ VKEY_UNKNOWN, // n/a
+    /* 0x35 */ VKEY_ESCAPE,
+    /* 0x36 */ VKEY_APPS, // Right Command
+    /* 0x37 */ VKEY_LWIN, // Left Command
+    /* 0x38 */ VKEY_SHIFT, // Left Shift
+    /* 0x39 */ VKEY_CAPITAL, // Caps Lock
+    /* 0x3A */ VKEY_MENU, // Left Option
+    /* 0x3B */ VKEY_CONTROL, // Left Ctrl
+    /* 0x3C */ VKEY_SHIFT, // Right Shift
+    /* 0x3D */ VKEY_MENU, // Right Option
+    /* 0x3E */ VKEY_CONTROL, // Right Ctrl
+    /* 0x3F */ VKEY_UNKNOWN, // fn
+    /* 0x40 */ VKEY_F17,
+    /* 0x41 */ VKEY_DECIMAL, // Num Pad .
+    /* 0x42 */ VKEY_UNKNOWN, // n/a
+    /* 0x43 */ VKEY_MULTIPLY, // Num Pad *
+    /* 0x44 */ VKEY_UNKNOWN, // n/a
+    /* 0x45 */ VKEY_ADD, // Num Pad +
+    /* 0x46 */ VKEY_UNKNOWN, // n/a
+    /* 0x47 */ VKEY_CLEAR, // Num Pad Clear
+    /* 0x48 */ VKEY_VOLUME_UP,
+    /* 0x49 */ VKEY_VOLUME_DOWN,
+    /* 0x4A */ VKEY_VOLUME_MUTE,
+    /* 0x4B */ VKEY_DIVIDE, // Num Pad /
+    /* 0x4C */ VKEY_RETURN, // Num Pad Enter
+    /* 0x4D */ VKEY_UNKNOWN, // n/a
+    /* 0x4E */ VKEY_SUBTRACT, // Num Pad -
+    /* 0x4F */ VKEY_F18,
+    /* 0x50 */ VKEY_F19,
+    /* 0x51 */ VKEY_OEM_PLUS, // Num Pad =.
+    /* 0x52 */ VKEY_NUMPAD0,
+    /* 0x53 */ VKEY_NUMPAD1,
+    /* 0x54 */ VKEY_NUMPAD2,
+    /* 0x55 */ VKEY_NUMPAD3,
+    /* 0x56 */ VKEY_NUMPAD4,
+    /* 0x57 */ VKEY_NUMPAD5,
+    /* 0x58 */ VKEY_NUMPAD6,
+    /* 0x59 */ VKEY_NUMPAD7,
+    /* 0x5A */ VKEY_F20,
+    /* 0x5B */ VKEY_NUMPAD8,
+    /* 0x5C */ VKEY_NUMPAD9,
+    /* 0x5D */ VKEY_UNKNOWN, // Yen (JIS Keyboard Only)
+    /* 0x5E */ VKEY_UNKNOWN, // Underscore (JIS Keyboard Only)
+    /* 0x5F */ VKEY_UNKNOWN, // KeypadComma (JIS Keyboard Only)
+    /* 0x60 */ VKEY_F5,
+    /* 0x61 */ VKEY_F6,
+    /* 0x62 */ VKEY_F7,
+    /* 0x63 */ VKEY_F3,
+    /* 0x64 */ VKEY_F8,
+    /* 0x65 */ VKEY_F9,
+    /* 0x66 */ VKEY_UNKNOWN, // Eisu (JIS Keyboard Only)
+    /* 0x67 */ VKEY_F11,
+    /* 0x68 */ VKEY_UNKNOWN, // Kana (JIS Keyboard Only)
+    /* 0x69 */ VKEY_F13,
+    /* 0x6A */ VKEY_F16,
+    /* 0x6B */ VKEY_F14,
+    /* 0x6C */ VKEY_UNKNOWN, // n/a
+    /* 0x6D */ VKEY_F10,
+    /* 0x6E */ VKEY_APPS, // Context Menu key
+    /* 0x6F */ VKEY_F12,
+    /* 0x70 */ VKEY_UNKNOWN, // n/a
+    /* 0x71 */ VKEY_F15,
+    /* 0x72 */ VKEY_INSERT, // Help
+    /* 0x73 */ VKEY_HOME, // Home
+    /* 0x74 */ VKEY_PRIOR, // Page Up
+    /* 0x75 */ VKEY_DELETE, // Forward Delete
+    /* 0x76 */ VKEY_F4,
+    /* 0x77 */ VKEY_END, // End
+    /* 0x78 */ VKEY_F2,
+    /* 0x79 */ VKEY_NEXT, // Page Down
+    /* 0x7A */ VKEY_F1,
+    /* 0x7B */ VKEY_LEFT, // Left Arrow
+    /* 0x7C */ VKEY_RIGHT, // Right Arrow
+    /* 0x7D */ VKEY_DOWN, // Down Arrow
+    /* 0x7E */ VKEY_UP, // Up Arrow
+    /* 0x7F */ VKEY_UNKNOWN // n/a
+  };
+  if (keyCode >= 0x80)
+    return VKEY_UNKNOWN;
+  return kKeyboardCodes[keyCode];
 }
+
 #endif
 
+KeyboardCode KeyboardCodeFromQtKey(int key) {
+    switch (key) {
+      case Qt::Key_Backspace:
+        return VKEY_BACK;
+      case Qt::Key_Delete:
+        return VKEY_DELETE;
+      case Qt::Key_Tab:
+        return VKEY_TAB;
+      case Qt::Key_Return:
+      case Qt::Key_Enter:
+        return VKEY_RETURN;
+      case Qt::Key_Clear:
+        return VKEY_CLEAR;
+      case Qt::Key_Space:
+        return VKEY_SPACE;
+      case Qt::Key_Home:
+        return VKEY_HOME;
+      case Qt::Key_End:
+        return VKEY_END;
+      case Qt::Key_PageUp:
+        return VKEY_PRIOR;
+      case Qt::Key_PageDown:
+        return VKEY_NEXT;
+      case Qt::Key_Left:
+        return VKEY_LEFT;
+      case Qt::Key_Right:
+        return VKEY_RIGHT;
+      case Qt::Key_Down:
+        return VKEY_DOWN;
+      case Qt::Key_Up:
+        return VKEY_UP;
+      case Qt::Key_Escape:
+        return VKEY_ESCAPE;
+      case Qt::Key_Kana_Shift:
+        return VKEY_KANA;
+      case Qt::Key_Hangul:
+        return VKEY_HANGUL;
+      case Qt::Key_Hangul_Hanja:
+        return VKEY_HANJA;
+      case Qt::Key_Kanji:
+        return VKEY_KANJI;
+      case Qt::Key_Henkan:
+        return VKEY_CONVERT;
+      case Qt::Key_Muhenkan:
+        return VKEY_NONCONVERT;
+      case Qt::Key_Zenkaku_Hankaku:
+        return VKEY_DBE_DBCSCHAR;
+      case Qt::Key_A:
+        return VKEY_A;
+      case Qt::Key_B:
+        return VKEY_B;
+      case Qt::Key_C:
+        return VKEY_C;
+      case Qt::Key_D:
+        return VKEY_D;
+      case Qt::Key_E:
+        return VKEY_E;
+      case Qt::Key_F:
+        return VKEY_F;
+      case Qt::Key_G:
+        return VKEY_G;
+      case Qt::Key_H:
+        return VKEY_H;
+      case Qt::Key_I:
+        return VKEY_I;
+      case Qt::Key_J:
+        return VKEY_J;
+      case Qt::Key_K:
+        return VKEY_K;
+      case Qt::Key_L:
+        return VKEY_L;
+      case Qt::Key_M:
+        return VKEY_M;
+      case Qt::Key_N:
+        return VKEY_N;
+      case Qt::Key_O:
+        return VKEY_O;
+      case Qt::Key_P:
+        return VKEY_P;
+      case Qt::Key_Q:
+        return VKEY_Q;
+      case Qt::Key_R:
+        return VKEY_R;
+      case Qt::Key_S:
+        return VKEY_S;
+      case Qt::Key_T:
+        return VKEY_T;
+      case Qt::Key_U:
+        return VKEY_U;
+      case Qt::Key_V:
+        return VKEY_V;
+      case Qt::Key_W:
+        return VKEY_W;
+      case Qt::Key_X:
+        return VKEY_X;
+      case Qt::Key_Y:
+        return VKEY_Y;
+      case Qt::Key_Z:
+        return VKEY_Z;
 
+      case Qt::Key_ParenRight:
+      case Qt::Key_0:
+        return VKEY_0;
+      case Qt::Key_Exclam:
+      case Qt::Key_1:
+        return VKEY_1;
+      case Qt::Key_At:
+      case Qt::Key_2:
+        return VKEY_2;
+      case Qt::Key_NumberSign:
+      case Qt::Key_3:
+        return VKEY_3;
+      case Qt::Key_Dollar:
+      case Qt::Key_4:
+        return VKEY_4;
+      case Qt::Key_Percent:
+      case Qt::Key_5:
+        return VKEY_5;
+      case Qt::Key_AsciiCircum:
+      case Qt::Key_6:
+        return VKEY_6;
+      case Qt::Key_Ampersand:
+      case Qt::Key_7:
+        return VKEY_7;
+      case Qt::Key_Asterisk:
+      case Qt::Key_8:
+        return VKEY_8;
+      case Qt::Key_ParenLeft:
+      case Qt::Key_9:
+        return VKEY_9;
+
+      case Qt::Key_multiply:
+        return VKEY_MULTIPLY;
+      case Qt::Key_division:
+        return VKEY_DIVIDE;
+      case Qt::Key_Plus:
+      case Qt::Key_Equal:
+        return VKEY_OEM_PLUS;
+      case Qt::Key_Comma:
+        return VKEY_OEM_COMMA;
+      case Qt::Key_Minus:
+        return VKEY_OEM_MINUS;
+      case Qt::Key_Period:
+        return VKEY_OEM_PERIOD;
+      case Qt::Key_Colon:
+      case Qt::Key_Semicolon:
+        return VKEY_OEM_1;
+      case Qt::Key_Question:
+      case Qt::Key_Slash:
+        return VKEY_OEM_2;
+      case Qt::Key_AsciiTilde:
+      case Qt::Key_QuoteLeft:
+        return VKEY_OEM_3;
+      case Qt::Key_BracketLeft:
+      case Qt::Key_BraceLeft:
+        return VKEY_OEM_4;
+      case Qt::Key_Backslash:
+      case Qt::Key_Bar:
+        return VKEY_OEM_5;
+      case Qt::Key_BracketRight:
+      case Qt::Key_BraceRight:
+        return VKEY_OEM_6;
+      case Qt::Key_QuoteDbl:
+        return VKEY_OEM_7;
+      case Qt::Key_Shift:
+        return VKEY_SHIFT;
+      case Qt::Key_Control:
+        return VKEY_CONTROL;
+      case Qt::Key_Meta:
+      case Qt::Key_Alt:
+        return VKEY_MENU;
+      case Qt::Key_Pause:
+        return VKEY_PAUSE;
+      case Qt::Key_CapsLock:
+        return VKEY_CAPITAL;
+      case Qt::Key_NumLock:
+        return VKEY_NUMLOCK;
+      case Qt::Key_ScrollLock:
+        return VKEY_SCROLL;
+      case Qt::Key_Select:
+        return VKEY_SELECT;
+      case Qt::Key_Print:
+        return VKEY_PRINT;
+      case Qt::Key_Execute:
+        return VKEY_EXECUTE;
+      case Qt::Key_Insert:
+        return VKEY_INSERT;
+      case Qt::Key_Help:
+        return VKEY_HELP;
+      case Qt::Key_Super_L:
+        return VKEY_LWIN;
+      case Qt::Key_Super_R:
+        return VKEY_RWIN;
+      case Qt::Key_Menu:
+        return VKEY_APPS;
+      case Qt::Key_F1:
+        return VKEY_F1;
+      case Qt::Key_F2:
+        return VKEY_F2;
+      case Qt::Key_F3:
+        return VKEY_F3;
+      case Qt::Key_F4:
+        return VKEY_F4;
+      case Qt::Key_F5:
+        return VKEY_F5;
+      case Qt::Key_F6:
+        return VKEY_F6;
+      case Qt::Key_F7:
+        return VKEY_F7;
+      case Qt::Key_F8:
+        return VKEY_F8;
+      case Qt::Key_F9:
+        return VKEY_F9;
+      case Qt::Key_F10:
+        return VKEY_F10;
+      case Qt::Key_F11:
+        return VKEY_F11;
+      case Qt::Key_F12:
+        return VKEY_F12;
+      case Qt::Key_F13:
+        return VKEY_F13;
+      case Qt::Key_F14:
+        return VKEY_F14;
+      case Qt::Key_F15:
+        return VKEY_F15;
+      case Qt::Key_F16:
+        return VKEY_F16;
+      case Qt::Key_F17:
+        return VKEY_F17;
+      case Qt::Key_F18:
+        return VKEY_F18;
+      case Qt::Key_F19:
+        return VKEY_F19;
+      case Qt::Key_F20:
+        return VKEY_F20;
+      case Qt::Key_F21:
+        return VKEY_F21;
+      case Qt::Key_F22:
+        return VKEY_F22;
+      case Qt::Key_F23:
+        return VKEY_F23;
+      case Qt::Key_F24:
+        return VKEY_F24;
+
+
+      // When evdev is in use, /usr/share/X11/xkb/symbols/inet maps F13-18 keys
+      // to the special XF86XK symbols to support Microsoft Ergonomic keyboards:
+      // https://bugs.freedesktop.org/show_bug.cgi?id=5783
+      // In Chrome, we map these X key symbols back to F13-18 since we don't have
+      // VKEYs for these XF86XK symbols.
+      case Qt::Key_Tools:
+        return VKEY_F13;
+      case Qt::Key_Launch5:
+        return VKEY_F14;
+      case Qt::Key_Launch6:
+        return VKEY_F15;
+      case Qt::Key_Launch7:
+        return VKEY_F16;
+      case Qt::Key_Launch8:
+        return VKEY_F17;
+      case Qt::Key_Launch9:
+        return VKEY_F18;
+      case Qt::Key_Refresh:
+      case Qt::Key_History:
+      case Qt::Key_OpenUrl:
+      case Qt::Key_AddFavorite:
+      case Qt::Key_Go:
+      case Qt::Key_ZoomIn:
+      case Qt::Key_ZoomOut:
+        // ui::AcceleratorGtk tries to convert the XF86XK_ keysyms on Chrome
+        // startup. It's safe to return VKEY_UNKNOWN here since ui::AcceleratorGtk
+        // also checks a Gdk keysym. http://crbug.com/109843
+        return VKEY_UNKNOWN;
+      // For supporting multimedia buttons on a USB keyboard.
+      case Qt::Key_Back:
+        return VKEY_BROWSER_BACK;
+      case Qt::Key_Forward:
+        return VKEY_BROWSER_FORWARD;
+      case Qt::Key_Reload:
+        return VKEY_BROWSER_REFRESH;
+      case Qt::Key_Stop:
+        return VKEY_BROWSER_STOP;
+      case Qt::Key_Search:
+        return VKEY_BROWSER_SEARCH;
+      case Qt::Key_Favorites:
+        return VKEY_BROWSER_FAVORITES;
+      case Qt::Key_HomePage:
+        return VKEY_BROWSER_HOME;
+      case Qt::Key_VolumeMute:
+        return VKEY_VOLUME_MUTE;
+      case Qt::Key_VolumeDown:
+        return VKEY_VOLUME_DOWN;
+      case Qt::Key_VolumeUp:
+        return VKEY_VOLUME_UP;
+      case Qt::Key_AudioForward:
+        return VKEY_MEDIA_NEXT_TRACK;
+      case Qt::Key_AudioRewind:
+        return VKEY_MEDIA_PREV_TRACK;
+      case Qt::Key_Play:
+        return VKEY_MEDIA_PLAY_PAUSE;
+      case Qt::Key_MailForward:
+        return VKEY_MEDIA_LAUNCH_MAIL;
+      case Qt::Key_LaunchA:  // F3 on an Apple keyboard.
+        return VKEY_MEDIA_LAUNCH_APP1;
+      case Qt::Key_LaunchB:  // F4 on an Apple keyboard.
+      case Qt::Key_Calculator:
+        return VKEY_MEDIA_LAUNCH_APP2;
+      case Qt::Key_WLAN:
+        return VKEY_WLAN;
+      case Qt::Key_PowerOff:
+        return VKEY_POWER;
+      case Qt::Key_KeyboardBrightnessDown:
+        return VKEY_KBD_BRIGHTNESS_DOWN;
+      case Qt::Key_KeyboardBrightnessUp:
+        return VKEY_KBD_BRIGHTNESS_UP;
+
+        // TODO(sad): some keycodes are still missing.
+    }
+    return VKEY_UNKNOWN;
+}
 
 Renderer::Renderer(CefRefPtr<CefBrowser> browser, QWidget *parent) : QWidget(parent)
 {
@@ -757,12 +1210,8 @@ void Renderer::mouseDoubleClickEvent(QMouseEvent *event) {
 
 void Renderer::keyPressEvent(QKeyEvent *event) {
     CefKeyEvent::struct_type cefEvent;
-    cefEvent.windows_key_code = KeyboardCodeFromNative(event->nativeVirtualKey());
-    //cefEvent.windows_key_code = event->nativeScanCode();
-    //cefEvent.windows_key_code = 0;
+    cefEvent.windows_key_code = KeyboardCodeFromQtKey(event->key());
     cefEvent.native_key_code = event->nativeVirtualKey();
-    //cefEvent.modifiers = cef_event_flags_t::EVENTFLAG_CAPS_LOCK_ON;
-    cefEvent.focus_on_editable_field = 0;
 
     if (cefEvent.windows_key_code == VKEY_RETURN) {
         cefEvent.character = '\r';
@@ -774,6 +1223,18 @@ void Renderer::keyPressEvent(QKeyEvent *event) {
     }
 
     int modifiers = EVENTFLAG_NONE;
+
+#ifdef Q_OS_MAC
+    if (event->modifiers() & Qt::ControlModifier) {
+        modifiers |= EVENTFLAG_COMMAND_DOWN;
+    }
+    if (event->modifiers() & Qt::ShiftModifier) {
+        modifiers |= EVENTFLAG_SHIFT_DOWN;
+    }
+    if (event->modifiers() & Qt::MetaModifier) {
+        modifiers |= EVENTFLAG_CONTROL_DOWN;
+    }
+#else
     if (event->modifiers() & Qt::ControlModifier) {
         modifiers |= EVENTFLAG_CONTROL_DOWN;
     }
@@ -783,6 +1244,7 @@ void Renderer::keyPressEvent(QKeyEvent *event) {
     if (event->modifiers() & Qt::AltModifier) {
         modifiers |= EVENTFLAG_ALT_DOWN;
     }
+#endif
 
     cefEvent.modifiers = modifiers;
 
@@ -794,22 +1256,46 @@ void Renderer::keyPressEvent(QKeyEvent *event) {
 
 void Renderer::keyReleaseEvent(QKeyEvent *event) {
     CefKeyEvent::struct_type cefEvent;
-    cefEvent.windows_key_code = KeyboardCodeFromNative(event->nativeVirtualKey());
-    //cefEvent.windows_key_code = event->nativeScanCode();
-    //cefEvent.windows_key_code = 0;
+    cefEvent.windows_key_code = KeyboardCodeFromQtKey(event->key());
     cefEvent.native_key_code = event->nativeVirtualKey();
-    cefEvent.modifiers = cef_event_flags_t::EVENTFLAG_CAPS_LOCK_ON;
-    cefEvent.focus_on_editable_field = 0;
-    cefEvent.type = cef_key_event_type_t::KEYEVENT_KEYUP;
 
-    QString text = event->text();
-    if (!text.isEmpty()) {
-        cefEvent.character = text.at(0).toLatin1();
+    if (cefEvent.windows_key_code == VKEY_RETURN) {
+        cefEvent.character = '\r';
+    } else {
+        QString text = event->text();
+        if (!text.isEmpty()) {
+            cefEvent.character = text.at(0).toLatin1();
+        }
     }
 
-    CefKeyEvent cefKeyEvent;
-    cefKeyEvent.AttachTo(cefEvent);
-    host.get()->SendKeyEvent(cefKeyEvent);
+    int modifiers = EVENTFLAG_NONE;
+
+#ifdef Q_OS_MAC
+    if (event->modifiers() & Qt::ControlModifier) {
+        modifiers |= EVENTFLAG_COMMAND_DOWN;
+    }
+    if (event->modifiers() & Qt::ShiftModifier) {
+        modifiers |= EVENTFLAG_SHIFT_DOWN;
+    }
+    if (event->modifiers() & Qt::MetaModifier) {
+        modifiers |= EVENTFLAG_CONTROL_DOWN;
+    }
+#else
+    if (event->modifiers() & Qt::ControlModifier) {
+        modifiers |= EVENTFLAG_CONTROL_DOWN;
+    }
+    if (event->modifiers() & Qt::ShiftModifier) {
+        modifiers |= EVENTFLAG_SHIFT_DOWN;
+    }
+    if (event->modifiers() & Qt::AltModifier) {
+        modifiers |= EVENTFLAG_ALT_DOWN;
+    }
+#endif
+
+    cefEvent.modifiers = modifiers;
+
+    cefEvent.type = cef_key_event_type_t::KEYEVENT_KEYUP;
+    host.get()->SendKeyEvent(cefEvent);
 }
 
 void Renderer::focusInEvent(QFocusEvent *event) {
