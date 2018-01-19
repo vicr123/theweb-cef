@@ -54,12 +54,16 @@ class MainWindow : public QMainWindow
 
         void on_actionNew_Window_triggered();
 
-private:
+        void on_actionExit_triggered();
+
+    private:
         Ui::MainWindow *ui;
 
         QSettings settings;
         Bar* addressBar;
         void closeEvent(QCloseEvent* event);
+
+        bool wasMaximisedBeforeFullScreen;
 
 #ifdef Q_OS_MAC
         QTabBar* tabBar;

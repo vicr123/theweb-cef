@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -32,7 +32,8 @@ SOURCES += \
     renderer.cpp \
     browserdialog.cpp \
     bar.cpp \
-    tabbutton.cpp
+    tabbutton.cpp \
+    schemehandler.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -42,7 +43,8 @@ HEADERS += \
     renderer.h \
     browserdialog.h \
     bar.h \
-    tabbutton.h
+    tabbutton.h \
+    schemehandler.h
 
 FORMS += \
         mainwindow.ui \
@@ -83,9 +85,7 @@ macx {
 }
 
 RESOURCES += \
-    pages.qrc
+    pages.qrc \
+    icons.qrc
 
-macx {
-    RESOURCES += icons.qrc
-}
 

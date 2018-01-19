@@ -8,6 +8,8 @@ BrowserDialog::BrowserDialog(QWidget *parent) :
     ui->setupUi(this);
 
     ui->jsDialogFrame->installEventFilter(this);
+    ui->AuthDialogFrame->installEventFilter(this);
+    ui->certErrorFrame->setFixedWidth(700);
 }
 
 BrowserDialog::~BrowserDialog()
@@ -89,15 +91,16 @@ void BrowserDialog::on_jsDialogCancel_clicked()
 }
 
 bool BrowserDialog::eventFilter(QObject *watched, QEvent *event) {
-    if (watched == ui->jsDialogFrame && event->type() == QEvent::Paint) {
-        QPainter painter(ui->jsDialogFrame);
+    if ((watched == ui->jsDialogFrame || watched == ui->AuthDialogFrame) && event->type() == QEvent::Paint) {
+        QWidget* w = (QWidget*) watched;
+        QPainter painter(w);
 
         painter.setPen(Qt::transparent);
-        painter.setBrush(ui->jsDialogFrame->palette().brush(QPalette::Window));
-        painter.drawRect(0, 0, ui->jsDialogFrame->width(), ui->jsDialogFrame->height());
+        painter.setBrush(w->palette().brush(QPalette::Window));
+        painter.drawRect(0, 0, w->width(), w->height());
 
-        painter.setPen(ui->jsDialogFrame->palette().color(QPalette::WindowText));
-        painter.drawLine(0, 0, ui->jsDialogFrame->width(), 0);
+        painter.setPen(w->palette().color(QPalette::WindowText));
+        painter.drawLine(0, 0, w->width(), 0);
         return true;
     }
     return false;
@@ -113,4 +116,64 @@ void BrowserDialog::reset() {
         jsCallback.get()->Continue(false, "");
     }
     dismiss();
+}
+
+void BrowserDialog::authenticate(QString host, QString realm, CefRefPtr<CefAuthCallback> callback) {
+    ui->httpAuthHost->setText(tr("Log in to %1").arg(host));
+    ui->httpAuthRealm->setText(realm);
+    this->authCallback = callback;
+    ui->stackedWidget->setCurrentIndex(1);
+    ui->httpAuthUsername->setText("");
+    ui->httpAuthPassword->setText("");
+
+    activate();
+}
+
+void BrowserDialog::on_httpAuthCancel_clicked()
+{
+    authCallback.get()->Cancel();
+    dismiss();
+}
+
+void BrowserDialog::on_httpAuthOk_clicked()
+{
+    authCallback.get()->Continue(ui->httpAuthUsername->text().toStdString(), ui->httpAuthPassword->text().toStdString());
+    dismiss();
+}
+
+void BrowserDialog::certificate(QString extraInformation, bool isHSTS, CefRefPtr<CefRequestCallback> callback) {
+    ui->stackedWidget->setCurrentIndex(2);
+    ui->certErrorExtra->setText(extraInformation);
+    ui->certErrorExtra->setVisible(false);
+    ui->certErrorAction->setText(tr("Go Back"));
+    ui->certErrorAction->setIcon(QIcon::fromTheme("go-previous"));
+    ui->certErrorAction->setProperty("type", "positive");
+    this->reqCallback = callback;
+
+    activate();
+}
+void BrowserDialog::on_certErrorAction_clicked()
+{
+    if (ui->certErrorExtra->isVisible()) {
+        this->reqCallback.get()->Continue(true);
+    } else {
+        this->reqCallback.get()->Continue(false);
+    }
+
+    dismiss();
+}
+
+void BrowserDialog::on_certErrorMore_clicked()
+{
+    if (ui->certErrorExtra->isVisible()) {
+        ui->certErrorExtra->setVisible(false);
+        ui->certErrorAction->setText(tr("Go Back"));
+        ui->certErrorAction->setIcon(QIcon::fromTheme("go-previous"));
+        ui->certErrorAction->setProperty("type", "positive");
+    } else {
+        ui->certErrorExtra->setVisible(true);
+        ui->certErrorAction->setText(tr("Continue Anyway"));
+        ui->certErrorAction->setIcon(QIcon::fromTheme("go-next"));
+        ui->certErrorAction->setProperty("type", "destructive");
+    }
 }

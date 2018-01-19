@@ -12,7 +12,7 @@ class App : public CefApp, public CefBrowserProcessHandler
         virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override;
 
         // CefBrowserProcessHandler methods:
-        virtual void OnContextInitialized() OVERRIDE;
+        void OnContextInitialized() override;
 
     private:
         IMPLEMENT_REFCOUNTING(App)

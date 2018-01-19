@@ -4,6 +4,9 @@
         <style>
             body {
                 font-family: sans-serif;
+                background-color: %5;
+                color: %6;
+                padding-top: 50px;
             }
             
             h1 {
@@ -13,8 +16,16 @@
             div.wrapper {
                 display: flex;
                 flex-direction: row;
-                align-items: center;
+                align-items: flex-start;
                 justify-content: center;
+            }
+            
+            div.imageSpacer {
+                display: flex;
+                flex-direction: row;
+                align-items: stretch;
+                justify-content: flex-start;
+                height: 100%;
             }
             
             div.buttonWrapper {
@@ -25,15 +36,20 @@
             
             div.content {
                 min-width: 600px;
+                padding-left: 9px;
             }
             
             a.button {
                 display: inline-block;
-                background-color: rgb(0, 0, 200);
-                color: white;
+                background-color: %7;
+                color: %8;
                 padding: 6px;
                 text-decoration: none;
                 cursor: hand;
+            }
+            
+            a.button img {
+                padding-right: 6px;
             }
             
             span.errorCode {
@@ -43,16 +59,37 @@
     </head>
     <body>
         <div class="wrapper">
+            <h1><img src="theweb://icon/dialog-warning" /></h1>
             <div class="content">
                 <h1>Can't connect to webpage</h1>
                 <p>%2</p>
-                <p>%3</p>
                 
                 <div class="buttonWrapper">
                     <span class="errorCode">%4</span>
-                    <a class="button" onclick="location.reload();">Reload</a>
+                    <div>
+                        <a class="button" onclick="toggleExtraContent()" id="extraContentButton"><img src="theweb://icon/go-down" height="16"/>More Information</a>
+                        <a class="button" onclick="location.reload();"><img src="theweb://icon/view-refresh" height="16"/> Reload</a>
+                    </div>
+                </div>
+                <div id="extraContent" style="visibility: hidden;">
+                    <hr />
+                    <p id="extraContentText">%3</p>
                 </div>
             </div>
         </div>
+        
+        <script>
+            function toggleExtraContent() {
+                if (document.getElementById('extraContent').style.visibility == 'hidden') {
+                    document.getElementById('extraContent').style.visibility = 'visible';
+                } else {
+                    document.getElementById('extraContent').style.visibility = 'hidden';
+                }
+            }
+            
+            if (document.getElementById("extraContentText").innerHTML == "") {
+                document.getElementById("extraContentButton").style.visibility = 'hidden';
+            }
+        </script>
     </body>
 </html>

@@ -1077,6 +1077,11 @@ QRect Renderer::RootScreenRect() {
 }
 
 void Renderer::paint(CefRenderHandler::PaintElementType type, QList<QRect> dirty, const void *buffer, int width, int height) {
+    if (width != this->width() || height != this->height()) {
+        qDebug() << "Render Size Mismatch!";
+        host.get()->WasResized();
+    }
+
     if (image.width() != width || image.height() != height) {
         image = QImage(width, height, QImage::Format_ARGB32);
     }
@@ -1155,11 +1160,11 @@ void Renderer::mousePressEvent(QMouseEvent *event) {
 
     CefBrowserHost::MouseButtonType mouse;
     if (event->button() == Qt::LeftButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_LEFT;
+        mouse = MBT_LEFT;
     } else if (event->button() == Qt::RightButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_RIGHT;
+        mouse = MBT_RIGHT;
     } else if (event->button() == Qt::MiddleButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_MIDDLE;
+        mouse = MBT_MIDDLE;
     }
 
     host.get()->SendMouseClickEvent(cefEvent, mouse, false, 1);
@@ -1176,11 +1181,11 @@ void Renderer::mouseReleaseEvent(QMouseEvent *event) {
 
     CefBrowserHost::MouseButtonType mouse;
     if (event->button() == Qt::LeftButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_LEFT;
+        mouse = MBT_LEFT;
     } else if (event->button() == Qt::RightButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_RIGHT;
+        mouse = MBT_RIGHT;
     } else if (event->button() == Qt::MiddleButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_MIDDLE;
+        mouse = MBT_MIDDLE;
     }
 
     host.get()->SendMouseClickEvent(cefEvent, mouse, true, 1);
@@ -1197,11 +1202,11 @@ void Renderer::mouseDoubleClickEvent(QMouseEvent *event) {
 
     CefBrowserHost::MouseButtonType mouse;
     if (event->button() == Qt::LeftButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_LEFT;
+        mouse = MBT_LEFT;
     } else if (event->button() == Qt::RightButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_RIGHT;
+        mouse = MBT_RIGHT;
     } else if (event->button() == Qt::MiddleButton) {
-        mouse = CefBrowserHost::MouseButtonType::MBT_MIDDLE;
+        mouse = MBT_MIDDLE;
     }
 
     host.get()->SendMouseClickEvent(cefEvent, mouse, false, 2);
@@ -1318,14 +1323,17 @@ void Renderer::setCursor(CefCursorHandle cursor, CefRenderHandler::CursorType ty
     QCursor cur;
 
     switch (type) {
-        case CefRenderHandler::CursorType::CT_POINTER:
+        case CT_POINTER:
             cur.setShape(Qt::ArrowCursor);
             break;
-        case CefRenderHandler::CursorType::CT_HAND:
+        case CT_HAND:
             cur.setShape(Qt::PointingHandCursor);
             break;
-        case CefRenderHandler::CursorType::CT_IBEAM:
+        case CT_IBEAM:
             cur.setShape(Qt::IBeamCursor);
+            break;
+        case CT_NONE:
+            cur.setShape(Qt::BlankCursor);
             break;
     }
 

@@ -4,6 +4,7 @@
 #include <include/cef_client.h>
 #include <QList>
 #include <QApplication>
+#include <QClipboard>
 #include "browsertab.h"
 
 class BrowserTab;
@@ -15,11 +16,20 @@ class Client : public CefClient,
         public CefRequestHandler,
         public CefLoadHandler,
         public CefRenderHandler,
-        public CefJSDialogHandler
+        public CefJSDialogHandler,
+        public CefContextMenuHandler
 {
     public:
         Client();
         void registerTab(BrowserTab* tab);
+
+        enum MenuItemIds {
+            LinkSubmenu = MENU_ID_USER_FIRST, CopyLink, OpenLinkInNewTab, OpenLinkInNewWindow, OpenLinkInNewOblivion,
+            MisspelledWordSubmenu,
+            TextSubmenu,
+            EditableSubmenu,
+            Generic, DevTools
+        };
 
         CefRefPtr<CefDisplayHandler> GetDisplayHandler() override {
             return this;
@@ -39,6 +49,9 @@ class Client : public CefClient,
         CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() override {
             return this;
         }
+        CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override {
+            return this;
+        }
 
         void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
         void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;
@@ -53,7 +66,16 @@ class Client : public CefClient,
         bool OnBeforePopup(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString &target_url, const CefString &target_frame_name, CefLifeSpanHandler::WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures &popupFeatures, CefWindowInfo &windowInfo, CefRefPtr<CefClient> &client, CefBrowserSettings &settings, bool *no_javascript_access) override;
         void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
         void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl) override;
-        bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser, const CefString &message_text, bool is_reload, CefRefPtr<CefJSDialogCallback> callback);
+        bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser, const CefString &message_text, bool is_reload, CefRefPtr<CefJSDialogCallback> callback) override;
+        void OnFaviconURLChange(CefRefPtr<CefBrowser> browser, const std::vector<CefString>& availableUrls) override;
+        bool GetAuthCredentials(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, bool isProxy, const CefString &host, int port, const CefString &realm, const CefString &scheme, CefRefPtr<CefAuthCallback> callback) override;
+        bool OnCertificateError(CefRefPtr<CefBrowser> browser, cef_errorcode_t cert_error, const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info, CefRefPtr<CefRequestCallback> callback) override;
+        bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, bool is_redirect) override;
+        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) override;
+        bool RunContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback) override;
+        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) override;
+        void OnStatusMessage(CefRefPtr<CefBrowser> browser, const CefString& message) override;
+
 
         void setNewTabWindow(MainWindow* newTabWindow);
 

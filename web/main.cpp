@@ -8,6 +8,7 @@
 #include <QDir>
 #include <QTranslator>
 #include <QLibraryInfo>
+#include <QDesktopWidget>
 
 #ifdef Q_OS_MAC
     #include <CoreFoundation/CFBundle.h>
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
 
     CefSettings cSettings;
     CefString(&cSettings.cache_path) = QDir::homePath().append("/.theweb/cache").toStdString();
+    CefString(&cSettings.product_version) = "theWeb/16.00 Chrome/62";
 
     CefRefPtr<App> app(new App);
     CefInitialize(main_args, cSettings, app.get(), NULL);
@@ -77,11 +79,12 @@ int main(int argc, char *argv[])
     CefWindowInfo windowInfo;
     windowInfo.SetAsWindowless(NULL);
     browserSettings.background_color = 0xFFFFFFFF;
+    browserSettings.windowless_frame_rate = 60;
     CefString(&browserSettings.sans_serif_font_family) = QFontDatabase::systemFont(QFontDatabase::GeneralFont).family().toStdString();
     CefString(&browserSettings.fixed_font_family) = QFontDatabase::systemFont(QFontDatabase::FixedFont).family().toStdString();
     CefBrowserHost::CreateBrowser(windowInfo, cefClient, "http://www.google.com/", browserSettings, CefRefPtr<CefRequestContext>());
 
-    CefEventLoopTimer.setInterval(0);
+    CefEventLoopTimer.setInterval(10);
     QObject::connect(&CefEventLoopTimer, &QTimer::timeout, [=] {
         CefDoMessageLoopWork();
     });
@@ -89,7 +92,7 @@ int main(int argc, char *argv[])
 
     int exec = a.exec();
 
-    CefCookieManager::GetGlobalManager(NULL).get()->FlushStore(NULL);
+    CefCookieManager::GetGlobalManager(nullptr).get()->FlushStore(nullptr);
     CefShutdown();
 
     return exec;
@@ -98,4 +101,9 @@ int main(int argc, char *argv[])
 void QuitApp(int exitCode = 0) {
     CefEventLoopTimer.stop();
     QApplication::exit(exitCode);
+}
+
+float getDPIScaling() {
+    float currentDPI = QApplication::desktop()->logicalDpiX();
+    return currentDPI / (float) 96;
 }

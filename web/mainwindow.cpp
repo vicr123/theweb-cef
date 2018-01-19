@@ -23,6 +23,7 @@ MainWindow::MainWindow(CefRefPtr<CefBrowser> browser, QWidget *parent) :
     connect(tabBar, &QTabBar::tabCloseRequested, [=](int index) {
         ((BrowserTab*) ui->tabs->widget(index))->requestClose();
     });
+    connect(ui->tabs, SIGNAL(currentChanged(int)), tabBar, SLOT(setCurrentIndex(int)));
     this->setDocumentMode(true);
 
     ui->tabBar->setVisible(false);
@@ -34,6 +35,17 @@ MainWindow::MainWindow(CefRefPtr<CefBrowser> browser, QWidget *parent) :
         CURRENT_TAB->getBrowser().get()->GetMainFrame().get()->LoadURL(addressBar->text().toStdString());
     });
 
+    QMenu* menuButtonMenu = new QMenu();
+    menuButtonMenu->addAction(ui->actionNew_Tab);
+    menuButtonMenu->addAction(ui->actionNew_Window);
+    menuButtonMenu->addSeparator();
+    menuButtonMenu->addAction(ui->actionExit);
+
+    QToolButton* menuButton = new QToolButton();
+    menuButton->setMenu(menuButtonMenu);
+    menuButton->setPopupMode(QToolButton::InstantPopup);
+    menuButton->setIcon(QIcon::fromTheme("theweb", QIcon(":/icons/contemporary/apps/32/theweb.svg")));
+    ui->mainToolBar->insertWidget(ui->actionBack, menuButton);
 
     createNewTab(browser);
 }
@@ -46,6 +58,7 @@ MainWindow::~MainWindow()
 void MainWindow::createNewTab(CefRefPtr<CefBrowser> browser) {
     BrowserTab* tab = new BrowserTab(this, browser);
     ui->tabs->addWidget(tab);
+    ui->tabs->setCurrentWidget(tab);
 
 #ifdef Q_OS_MAC
     tabBar->addTab(tab->getTabButton()->text());
@@ -75,6 +88,7 @@ void MainWindow::createNewTab(CefRefPtr<CefBrowser> browser) {
     });
     connect(tab, &BrowserTab::activate, [=] {
         ui->tabs->setCurrentWidget(tab);
+        tab->setFocus();
     });
 }
 
@@ -124,12 +138,16 @@ void MainWindow::on_actionForward_triggered()
 
 void MainWindow::setFullScreen(BrowserTab* tab, bool isFullScreen) {
     if (isFullScreen) {
+        wasMaximisedBeforeFullScreen = this->isMaximized();
         this->showFullScreen();
         ui->mainToolBar->setVisible(false);
         ui->tabBar->setVisible(false);
         ui->tabs->setCurrentWidget(tab);
     } else {
         this->showNormal();
+        if (wasMaximisedBeforeFullScreen) {
+            this->showMaximized();
+        }
         ui->mainToolBar->setVisible(true);
         ui->tabBar->setVisible(true);
     }
@@ -164,4 +182,9 @@ void MainWindow::on_actionNew_Window_triggered()
     CefWindowInfo windowInfo;
     windowInfo.SetAsWindowless(NULL);
     CefBrowserHost::CreateBrowser(windowInfo, cefClient, "http://www.google.com/", browserSettings, CefRefPtr<CefRequestContext>());
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    this->close();
 }

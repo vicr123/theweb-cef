@@ -7,5 +7,6 @@
         <file>icons/contemporary/actions/16/window-close.svg</file>
         <file>icons/contemporary/actions/16/window-new.svg</file>
         <file>icons/contemporary/index.theme</file>
+        <file>icons/contemporary/apps/32/theweb.svg</file>
     </qresource>
 </RCC>

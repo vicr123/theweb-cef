@@ -29,6 +29,8 @@ class BrowserDialog : public QWidget
         void confirm(QString message, CefRefPtr<CefJSDialogCallback> callback);
         void prompt(QString message, QString def, CefRefPtr<CefJSDialogCallback> callback);
         void beforeUnload(bool isReload, CefRefPtr<CefJSDialogCallback> callback);
+        void authenticate(QString host, QString realm, CefRefPtr<CefAuthCallback> callback);
+        void certificate(QString extraInformation, bool isHSTS, CefRefPtr<CefRequestCallback> callback);
         void reset();
 
     signals:
@@ -42,12 +44,22 @@ class BrowserDialog : public QWidget
 
         void on_reloadButton_clicked();
 
+        void on_httpAuthCancel_clicked();
+
+        void on_httpAuthOk_clicked();
+
+        void on_certErrorAction_clicked();
+
+        void on_certErrorMore_clicked();
+
     private:
         Ui::BrowserDialog *ui;
 
         bool eventFilter(QObject *watched, QEvent *event);
 
         CefRefPtr<CefJSDialogCallback> jsCallback;
+        CefRefPtr<CefAuthCallback> authCallback;
+        CefRefPtr<CefRequestCallback> reqCallback;
 };
 
 #endif // BROWSERDIALOG_H
